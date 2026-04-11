@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Cpu, MemoryStick, Sparkles, Zap } from 'lucide-react'
+import { Cpu, MemoryStick, Sparkles, Zap, Monitor } from 'lucide-react'
 import type { HardwareInfo, LoadedModelInfo } from '@shared/types'
 import { useSystemMetrics } from '@/hooks/useSystemMetrics'
 
@@ -150,9 +150,30 @@ export function HardwareIndicator() {
         )}
       </div>
 
+      {/* GPU info (always visible if a GPU is detected) */}
+      {hardware?.gpu && (
+        <div className="mt-3 flex items-start gap-1.5 border-t border-brand-border pt-2">
+          <Monitor size={10} className="mt-0.5 flex-shrink-0 text-brand-cyan" />
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-1.5 text-[10px] text-brand-text-dim">
+              <span className="font-mono uppercase tracking-wider">GPU</span>
+              <span className="ml-auto font-mono tabular-nums text-brand-text">
+                {totalVramGb.toFixed(1)} GB
+              </span>
+            </div>
+            <p
+              className="truncate text-[9px] text-brand-text-dim/70"
+              title={hardware.gpu.name}
+            >
+              {hardware.gpu.name}
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Profile footer */}
       {hardware && (
-        <p className="mt-3 border-t border-brand-border pt-2 text-[9px] uppercase tracking-wider text-brand-text-dim">
+        <p className="mt-2 border-t border-brand-border pt-2 text-[9px] uppercase tracking-wider text-brand-text-dim">
           Profil: <span className="text-brand-text-dim">{profileLabels[hardware.profile] ?? hardware.profile}</span>
           {hardware.gpu && (
             <> · <span className="text-brand-text-dim">{hardware.gpu.vendor.toUpperCase()}</span></>

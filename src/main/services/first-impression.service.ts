@@ -91,10 +91,12 @@ export async function generateFirstImpression(
     return null
   }
 
-  // Take the first 2000 chars as the sample
-  const sample = doc.extractedText.slice(0, 2000)
+  // Take only the first 800 chars as the sample - keeps the prompt tiny
+  // so the model can answer in 1-3 seconds even on small hardware.
+  const sample = doc.extractedText.slice(0, 800)
   const prompt = buildFirstImpressionPrompt(sample)
 
+  const startTime = Date.now()
   logger.info('first-impression', 'Generating for document', {
     documentId,
     sampleLength: sample.length,
@@ -112,7 +114,10 @@ export async function generateFirstImpression(
       stream: false,
       options: {
         temperature: 0.1,
-        num_ctx: 4096
+        // Small context window: the entire prompt + sample fits in ~1500 tokens
+        num_ctx: 2048,
+        // Hard-cap output: we only need ~100 tokens of JSON
+        num_predict: 200
       }
     })
 
@@ -164,7 +169,8 @@ export async function generateFirstImpression(
     logger.info('first-impression', 'Generated successfully', {
       documentId,
       documentType,
-      recommendedMode
+      recommendedMode,
+      durationMs: Date.now() - startTime
     })
 
     return {

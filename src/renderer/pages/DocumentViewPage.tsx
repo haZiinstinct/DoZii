@@ -77,28 +77,38 @@ export function DocumentViewPage() {
       setDoc(d ?? null)
       setLoading(false)
     })
-    // Check if a first impression exists, otherwise poll briefly (it's generated
-    // in background right after import so it might not be ready immediately)
+    // Check if a first impression exists, otherwise poll briefly.
+    // Fast polling for the first 10 seconds (it usually arrives in 2-5s on
+    // small models), then slower polling up to 60 seconds total.
     setFirstImpressionDismissed(false)
     setFirstImpression(null)
-    let attempts = 0
-    const maxAttempts = 30 // 30 * 2s = 60s max
+    let cancelled = false
+    const startTime = Date.now()
+    const maxDurationMs = 60_000
+
     const poll = async () => {
+      if (cancelled) return
       const fi = await window.api.documents.getFirstImpression(id)
+      if (cancelled) return
       if (fi) {
         setFirstImpression(fi)
         setFirstImpressionLoading(false)
         return
       }
-      attempts++
-      if (attempts >= maxAttempts) {
+      const elapsed = Date.now() - startTime
+      if (elapsed >= maxDurationMs) {
         setFirstImpressionLoading(false)
         return
       }
       setFirstImpressionLoading(true)
-      setTimeout(poll, 2000)
+      // Fast polling (500ms) for first 10 seconds, then slow (2s)
+      const delay = elapsed < 10_000 ? 500 : 2000
+      setTimeout(poll, delay)
     }
     poll()
+    return () => {
+      cancelled = true
+    }
   }, [id])
 
   const handleGenerateFirstImpression = async () => {

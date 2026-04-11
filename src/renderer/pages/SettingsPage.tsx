@@ -40,6 +40,9 @@ const profileLabels: Record<string, string> = {
   power: 'Power'
 }
 
+// Curated list: 4 CPU + 4 GPU models, schwach -> stark.
+// Alle CPU-Modelle laufen auf normalen Laptops (4-8 GB RAM),
+// alle GPU-Modelle brauchen eine dedizierte Grafikkarte.
 const cpuModels: SuggestedModel[] = [
   {
     name: 'gemma3:1b',
@@ -47,15 +50,7 @@ const cpuModels: SuggestedModel[] = [
     size: '~0.8 GB',
     minRamGb: 4,
     runtime: 'cpu',
-    strengths: 'Ultraleicht, laeuft auf jedem Rechner'
-  },
-  {
-    name: 'llama3.2:1b',
-    displayName: 'Llama 3.2 (1B)',
-    size: '~1.3 GB',
-    minRamGb: 4,
-    runtime: 'cpu',
-    strengths: "Meta's kleinstes, solide Basics"
+    strengths: 'Ultraleicht - laeuft auf jedem alten Laptop'
   },
   {
     name: 'gemma2:2b',
@@ -71,7 +66,7 @@ const cpuModels: SuggestedModel[] = [
     size: '~2 GB',
     minRamGb: 8,
     runtime: 'cpu',
-    strengths: 'Bewaehrt, zuverlaessig'
+    strengths: 'Bewaehrt, zuverlaessig, Meta-Qualitaet'
   },
   {
     name: 'qwen2.5:3b',
@@ -79,15 +74,7 @@ const cpuModels: SuggestedModel[] = [
     size: '~2 GB',
     minRamGb: 8,
     runtime: 'cpu',
-    strengths: 'Stark bei Deutsch + JSON'
-  },
-  {
-    name: 'phi3.5:mini',
-    displayName: 'Phi 3.5 Mini',
-    size: '~2.2 GB',
-    minRamGb: 8,
-    runtime: 'cpu',
-    strengths: 'Microsoft, top Instruction-Following'
+    strengths: 'Stark bei Deutsch + JSON (Empfehlung)'
   }
 ]
 
@@ -109,24 +96,6 @@ const gpuModels: SuggestedModel[] = [
     minVramGb: 8,
     runtime: 'gpu',
     strengths: 'Meta-Klassiker, bewaehrt'
-  },
-  {
-    name: 'gemma2:9b',
-    displayName: 'Gemma 2 (9B)',
-    size: '~5.5 GB',
-    minRamGb: 14,
-    minVramGb: 10,
-    runtime: 'gpu',
-    strengths: 'Googles Mittelklasse-Champion'
-  },
-  {
-    name: 'qwen2.5:14b',
-    displayName: 'Qwen 2.5 (14B)',
-    size: '~9 GB',
-    minRamGb: 16,
-    minVramGb: 12,
-    runtime: 'gpu',
-    strengths: 'Stark fuer lange Dokumente'
   },
   {
     name: 'mistral-small:24b',

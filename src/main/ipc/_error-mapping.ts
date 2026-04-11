@@ -5,6 +5,24 @@
 export function friendlyError(raw: string): string {
   const lower = raw.toLowerCase()
 
+  // Ollama model runner crash (the llama.cpp subprocess died)
+  if (
+    /model runner.+stopped|model runner.+crashed|model runner.+exit/i.test(raw) ||
+    /llama runner process.+exit|llama runner.+stopped/i.test(raw)
+  ) {
+    return (
+      'Das Modell ist beim Laden abgestuerzt (Ollama model runner).\n\n' +
+      'Das passiert meist wenn:\n' +
+      '• Das Modell zu gross fuer deinen verfuegbaren RAM/VRAM ist\n' +
+      '• Der Prompt (besonders Arbeitszeugnis-Decoder) zu lang fuer das Modell ist\n' +
+      '• Andere Programme viel Speicher belegen\n\n' +
+      'Loesungen:\n' +
+      '• Waehle ein kleineres Modell (z.B. qwen2.5:3b fuer CPU oder qwen2.5:7b fuer GPU)\n' +
+      '• Schliesse andere Programme die RAM/VRAM verbrauchen\n' +
+      '• Starte Ollama neu (Einstellungen -> Stoppen -> Starten)'
+    )
+  }
+
   // Transient network / socket issues (undici / fetch errors)
   if (
     /fetch failed|socket hang up|econnreset|und_err_socket|und_err_closed|network error/i.test(raw)
