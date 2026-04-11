@@ -1,0 +1,45 @@
+{
+  "nav": {
+    "upload": "Upload",
+    "analysis": "Analyse",
+    "history": "Historie",
+    "settings": "Einstellungen"
+  },
+  "upload": {
+    "title": "Dokument hochladen",
+    "description": "Ziehe Dateien hierher oder klicke zum Auswaehlen"
+  },
+  "analysis": {
+    "title": "Dokumentenanalyse",
+    "modes": {
+      "grammar": "Rechtschreibung & Grammatik",
+      "formulation": "Bessere Formulierungen",
+      "arbeitszeugnis": "Arbeitszeugnis-Decoder",
+      "summary": "Zusammenfassung",
+      "freeform": "Freie Frage"
+    }
+  },
+  "history": {
+    "title": "Historie",
+    "empty": "Noch keine Dokumente analysiert"
+  },
+  "settings": {
+    "title": "Einstellungen",
+    "ollama": "Ollama Verbindung",
+    "hardware": "Hardware",
+    "language": "Sprache",
+    "connected": "Verbunden",
+    "disconnected": "Nicht erreichbar"
+  },
+  "welcome": {
+    "title": "DoZii",
+    "subtitle": "Lokale Dokumentenanalyse - 100% offline, 100% privat",
+    "privacy": "Keine Daten verlassen deinen Rechner",
+    "scanning": "Hardware wird erkannt...",
+    "recommended": "Empfohlenes Modell",
+    "start": "Starten"
+  },
+  "common": {
+    "profile": "Profil"
+  }
+}

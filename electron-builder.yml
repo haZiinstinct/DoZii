@@ -1,0 +1,29 @@
+appId: org.hazii.dozii
+productName: DoZii
+directories:
+  buildResources: build
+files:
+  - '!**/.vscode/*'
+  - '!src/*'
+  - '!electron.vite.config.*'
+  - '!{.eslintignore,.eslintrc.cjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md}'
+  - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
+asarUnpack:
+  - resources/**
+win:
+  executableName: DoZii
+  icon: resources/icon.ico
+  target:
+    - nsis
+  signAndEditExecutable: false
+nsis:
+  artifactName: DoZii-Setup-${version}.${ext}
+  shortcutName: DoZii
+  uninstallDisplayName: DoZii
+  createDesktopShortcut: always
+  installerIcon: resources/icon.ico
+  uninstallerIcon: resources/icon.ico
+  installerHeaderIcon: resources/icon.ico
+extraResources:
+  - from: resources/
+    to: resources/

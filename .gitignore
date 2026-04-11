@@ -1,0 +1,32 @@
+# Dependencies
+node_modules/
+
+# Build output
+out/
+dist/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Editor / Claude Code local settings
+.vscode/
+.idea/
+*.swp
+.claude/settings.local.json
+
+# Env / secrets
+.env
+.env.local
+.env.*.local
+
+# Electron build cache
+.cache/
+
+# Temp
+*.tmp
+.tmp/

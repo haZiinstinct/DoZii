@@ -1,0 +1,167 @@
+@import "tailwindcss";
+
+/* Self-hosted fonts - KEIN CDN, 100% offline */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/inter-latin.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/fonts/inter-latin.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/inter-latin.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/jetbrains-mono-latin.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/jetbrains-mono-latin.woff2') format('woff2');
+}
+
+/* haZii Brand Design System */
+@theme {
+  --color-brand-dark: #0a0a0f;
+  --color-brand-darker: #06060a;
+  --color-brand-card: #12121a;
+  --color-brand-card-hover: #1a1a25;
+
+  --color-brand-cyan: #00d4ff;
+  --color-brand-cyan-dim: #00a8cc;
+  --color-brand-cyan-glow: rgba(0, 212, 255, 0.15);
+
+  --color-brand-border: rgba(255, 255, 255, 0.08);
+  --color-brand-border-hover: rgba(0, 212, 255, 0.3);
+
+  --color-brand-text: #e2e8f0;
+  --color-brand-text-dim: #94a3b8;
+  --color-brand-text-bright: #f8fafc;
+
+  --color-brand-red: #ef4444;
+  --color-brand-amber: #f59e0b;
+  --color-brand-green: #22c55e;
+
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Consolas', monospace;
+
+  /* Animations */
+  --animate-fade-up: fade-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  --animate-glow-pulse: glow-pulse 3s ease-in-out infinite;
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes glow-pulse {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(0, 212, 255, 0.08);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(0, 212, 255, 0.2);
+  }
+}
+
+/* Light theme override - applied via data-theme="light" on <html> */
+html[data-theme='light'] {
+  --color-brand-dark: #f8fafc;
+  --color-brand-darker: #eef2f7;
+  --color-brand-card: #ffffff;
+  --color-brand-card-hover: #f1f5f9;
+
+  --color-brand-cyan: #0891b2;
+  --color-brand-cyan-dim: #0e7490;
+  --color-brand-cyan-glow: rgba(8, 145, 178, 0.15);
+
+  --color-brand-border: rgba(15, 23, 42, 0.12);
+  --color-brand-border-hover: rgba(8, 145, 178, 0.3);
+
+  --color-brand-text: #1e293b;
+  --color-brand-text-dim: #64748b;
+  --color-brand-text-bright: #0f172a;
+}
+
+/* Global styles */
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-sans);
+  background-color: var(--color-brand-dark);
+  color: var(--color-brand-text);
+  overflow: hidden;
+  user-select: none;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-brand-darker);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Text selection */
+::selection {
+  background-color: rgba(0, 212, 255, 0.25);
+  color: #ffffff;
+}
+
+/* Focus styles */
+:focus-visible {
+  outline: 2px solid var(--color-brand-cyan);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* Titlebar drag region */
+.titlebar-drag {
+  -webkit-app-region: drag;
+}
+
+.titlebar-no-drag {
+  -webkit-app-region: no-drag;
+}
