@@ -59,8 +59,7 @@ export function registerDocumentsIpc(): void {
     return result.canceled ? [] : result.filePaths
   })
 
-  // Directory-picker for bulk import: user picks a folder, we enumerate
-  // all supported files inside (non-recursive, shallow scan).
+  // Bulk import: shallow scan, non-recursive.
   ipcMain.handle('documents:openDirectoryDialog', async (event) => {
     const win = BrowserWindow.fromWebContents(event.sender)
     if (!win) return []
@@ -95,17 +94,6 @@ export function registerDocumentsIpc(): void {
     logger.info('documents.ipc', 'Importing document', { filePath })
     try {
       const doc = await importDocument(filePath)
-
-      // Fire-and-forget: generate first impression in background if a model is set.
-      // Non-blocking - the user sees the document immediately even if Ollama is slow.
-      const model = getSelectedModel()
-      if (model) {
-        setImmediate(() => {
-          generateFirstImpression(doc.id, model).catch(() => {
-            /* already logged inside the service - non-fatal */
-          })
-        })
-      }
 
       logger.info('documents.ipc', 'Document imported', {
         id: doc.id,

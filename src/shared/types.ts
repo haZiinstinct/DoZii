@@ -162,6 +162,7 @@ export interface SuggestedModel {
   runtime: ModelRuntime    // Which tab
   strengths: string        // 'Stark in Deutsch + JSON'
   recommended?: boolean    // Show EMPFOHLEN badge
+  budgetLaptopFriendly?: boolean  // Runs on weak hardware + can still decode Arbeitszeugnisse
 }
 
 // ============================================================================

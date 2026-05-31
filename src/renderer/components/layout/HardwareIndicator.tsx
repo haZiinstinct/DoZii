@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Cpu, MemoryStick, Sparkles, Zap, Monitor } from 'lucide-react'
+import { Cpu, MemoryStick, Sparkles } from 'lucide-react'
 import type { HardwareInfo, LoadedModelInfo } from '@shared/types'
 import { useSystemMetrics } from '@/hooks/useSystemMetrics'
 
@@ -62,7 +62,7 @@ export function HardwareIndicator() {
   const { metrics } = useSystemMetrics()
   const [hardware, setHardware] = useState<HardwareInfo | null>(null)
 
-  // Fetch static hardware once (for profile label + total VRAM reference)
+  // Fetch static hardware once for the profile label
   useEffect(() => {
     window.api.hardware.detect().then(setHardware).catch(() => {
       /* ignore - indicator still works without profile label */
@@ -71,7 +71,6 @@ export function HardwareIndicator() {
 
   const primaryModel = metrics ? pickPrimaryModel(metrics.loadedModels) : null
   const isActive = (metrics?.activeStreamCount ?? 0) > 0
-  const totalVramGb = hardware?.gpu ? hardware.gpu.vramMb / 1024 : 0
 
   return (
     <div className="rounded-xl border border-brand-border bg-brand-card/40 p-3">
@@ -123,7 +122,6 @@ export function HardwareIndicator() {
         )}
       </div>
 
-      {/* Live bars */}
       <div className="space-y-2">
         <BarRow
           label="CPU"
@@ -140,44 +138,15 @@ export function HardwareIndicator() {
               : undefined
           }
         />
-        {primaryModel && primaryModel.sizeVramBytes > 0 && totalVramGb > 0 && (
-          <BarRow
-            label="VRAM"
-            icon={<Zap size={10} />}
-            percent={primaryModel.vramPercent}
-            detail={`${(primaryModel.sizeVramBytes / (1024 * 1024 * 1024)).toFixed(1)} / ${totalVramGb.toFixed(1)} GB`}
-          />
-        )}
       </div>
-
-      {/* GPU info (always visible if a GPU is detected) */}
-      {hardware?.gpu && (
-        <div className="mt-3 flex items-start gap-1.5 border-t border-brand-border pt-2">
-          <Monitor size={10} className="mt-0.5 flex-shrink-0 text-brand-cyan" />
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-1.5 text-[10px] text-brand-text-dim">
-              <span className="font-mono uppercase tracking-wider">GPU</span>
-              <span className="ml-auto font-mono tabular-nums text-brand-text">
-                {totalVramGb.toFixed(1)} GB
-              </span>
-            </div>
-            <p
-              className="truncate text-[9px] text-brand-text-dim/70"
-              title={hardware.gpu.name}
-            >
-              {hardware.gpu.name}
-            </p>
-          </div>
-        </div>
-      )}
 
       {/* Profile footer */}
       {hardware && (
-        <p className="mt-2 border-t border-brand-border pt-2 text-[9px] uppercase tracking-wider text-brand-text-dim">
-          Profil: <span className="text-brand-text-dim">{profileLabels[hardware.profile] ?? hardware.profile}</span>
-          {hardware.gpu && (
-            <> · <span className="text-brand-text-dim">{hardware.gpu.vendor.toUpperCase()}</span></>
-          )}
+        <p className="mt-3 border-t border-brand-border pt-2 text-[9px] uppercase tracking-wider text-brand-text-dim">
+          Profil:{' '}
+          <span className="text-brand-text-dim">
+            {profileLabels[hardware.profile] ?? hardware.profile}
+          </span>
         </p>
       )}
     </div>

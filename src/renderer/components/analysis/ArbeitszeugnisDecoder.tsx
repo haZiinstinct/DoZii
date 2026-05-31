@@ -14,12 +14,15 @@ import {
   ChevronDown,
   ChevronUp,
   ShieldCheck,
-  LogOut
+  LogOut,
+  Flag
 } from 'lucide-react'
 import type {
   ArbeitszeugnisResult,
   ZeugnisSeverity,
-  ZeugnisAssessment
+  ZeugnisAssessment,
+  ZeugnisCodedPhrase,
+  ZeugnisGrade
 } from '@/lib/parse-analysis'
 
 interface Props {
@@ -35,15 +38,58 @@ const gradeLabels: Record<number, string> = {
   6: 'Ungenuegend'
 }
 
-function gradeColor(grade: number): { bg: string; text: string; border: string; ring: string } {
-  if (grade <= 1) return { bg: 'bg-brand-green/10', text: 'text-brand-green', border: 'border-brand-green/30', ring: 'ring-brand-green/20' }
-  if (grade <= 2) return { bg: 'bg-brand-cyan/10', text: 'text-brand-cyan', border: 'border-brand-cyan/30', ring: 'ring-brand-cyan/20' }
-  if (grade <= 3) return { bg: 'bg-brand-amber/10', text: 'text-brand-amber', border: 'border-brand-amber/30', ring: 'ring-brand-amber/20' }
-  if (grade <= 4) return { bg: 'bg-orange-500/10', text: 'text-orange-400', border: 'border-orange-500/30', ring: 'ring-orange-500/20' }
-  return { bg: 'bg-brand-red/10', text: 'text-brand-red', border: 'border-brand-red/30', ring: 'ring-brand-red/20' }
+function gradeColor(grade: number): {
+  bg: string
+  text: string
+  border: string
+  ring: string
+  fill: string
+} {
+  if (grade <= 1)
+    return {
+      bg: 'bg-brand-green/10',
+      text: 'text-brand-green',
+      border: 'border-brand-green/30',
+      ring: 'ring-brand-green/20',
+      fill: 'bg-brand-green'
+    }
+  if (grade <= 2)
+    return {
+      bg: 'bg-brand-cyan/10',
+      text: 'text-brand-cyan',
+      border: 'border-brand-cyan/30',
+      ring: 'ring-brand-cyan/20',
+      fill: 'bg-brand-cyan'
+    }
+  if (grade <= 3)
+    return {
+      bg: 'bg-brand-amber/10',
+      text: 'text-brand-amber',
+      border: 'border-brand-amber/30',
+      ring: 'ring-brand-amber/20',
+      fill: 'bg-brand-amber'
+    }
+  if (grade <= 4)
+    return {
+      bg: 'bg-orange-500/10',
+      text: 'text-orange-400',
+      border: 'border-orange-500/30',
+      ring: 'ring-orange-500/20',
+      fill: 'bg-orange-500'
+    }
+  return {
+    bg: 'bg-brand-red/10',
+    text: 'text-brand-red',
+    border: 'border-brand-red/30',
+    ring: 'ring-brand-red/20',
+    fill: 'bg-brand-red'
+  }
 }
 
-const severityConfig: Record<ZeugnisSeverity, { bg: string; border: string; text: string; icon: React.ReactNode; label: string }> = {
+const severityConfig: Record<
+  ZeugnisSeverity,
+  { bg: string; border: string; text: string; icon: React.ReactNode; label: string }
+> = {
   green: {
     bg: 'bg-brand-green/5',
     border: 'border-brand-green/30',
@@ -95,17 +141,115 @@ function assessmentColor(assessment: ZeugnisAssessment): string {
   }
 }
 
-export function ArbeitszeugnisDecoder({ result }: Props) {
-  const [expandedPhrase, setExpandedPhrase] = useState<number | null>(null)
-  const [infoOpen, setInfoOpen] = useState(true)
-  const contentGrade = result.contentGrade.grade
-  const contentColors = gradeColor(contentGrade)
-  const contentLabel = result.contentGrade.label ?? gradeLabels[contentGrade] ?? ''
-  const craftGrade = result.craftGrade.grade
-  const craftColors = gradeColor(craftGrade)
-  const craftLabel = result.craftGrade.label ?? gradeLabels[craftGrade] ?? ''
+function GradeScale({
+  grade,
+  fillClass
+}: {
+  grade: number
+  fillClass: string
+}): React.ReactElement {
+  return (
+    <div className="flex items-center gap-1.5">
+      {[1, 2, 3, 4, 5, 6].map((n) => (
+        <div
+          key={n}
+          className={`h-3 flex-1 rounded-full transition-colors ${
+            n <= grade ? fillClass : 'bg-brand-border'
+          }`}
+        />
+      ))}
+    </div>
+  )
+}
 
-  // If the model detected this isn't a real Arbeitszeugnis, show a clear warning
+function GradeHero({
+  title,
+  data
+}: {
+  title: string
+  data: ZeugnisGrade
+}): React.ReactElement {
+  const colors = gradeColor(data.grade)
+  const label = data.label ?? gradeLabels[data.grade] ?? ''
+  return (
+    <div className={`rounded-2xl border p-6 ${colors.border} ${colors.bg}`}>
+      <div className="mb-3 flex items-center gap-2">
+        <Award size={14} className={colors.text} />
+        <p className="text-xs font-semibold uppercase tracking-wider text-brand-text-dim">
+          {title}
+        </p>
+        <span className="ml-auto rounded-lg border border-brand-border bg-brand-darker/60 px-2 py-0.5 text-[10px] font-semibold uppercase text-brand-text-dim">
+          Konfidenz: {data.confidence}
+        </span>
+      </div>
+
+      <div className="mb-3 flex items-baseline gap-3">
+        <span className={`font-mono text-3xl font-bold ${colors.text}`}>Note {data.grade}</span>
+        <span className={`text-lg font-semibold ${colors.text}`}>{label}</span>
+      </div>
+
+      <GradeScale grade={data.grade} fillClass={colors.fill} />
+
+      {data.reasoning && (
+        <p className="mt-3 text-xs leading-relaxed text-brand-text">{data.reasoning}</p>
+      )}
+    </div>
+  )
+}
+
+function RedFlagsBlock({ phrases }: { phrases: ZeugnisCodedPhrase[] }): React.ReactElement | null {
+  const redPhrases = phrases.filter((p) => p.severity === 'red').slice(0, 3)
+  if (redPhrases.length === 0) return null
+
+  return (
+    <div className="rounded-2xl border border-brand-red/30 bg-brand-red/5 p-6">
+      <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-brand-red">
+        <Flag size={14} />
+        Rote Flaggen ({redPhrases.length})
+      </h3>
+      <div className="space-y-3">
+        {redPhrases.map((p, idx) => (
+          <div
+            key={idx}
+            className="flex items-start gap-3 rounded-xl border border-brand-red/20 bg-brand-darker/40 p-3"
+          >
+            <AlertOctagon size={16} className="mt-0.5 flex-shrink-0 text-brand-red" />
+            <div className="min-w-0 flex-1">
+              <blockquote className="mb-1 border-l-2 border-brand-red/40 pl-3 text-sm italic text-brand-text">
+                &quot;{p.phrase}&quot;
+              </blockquote>
+              <p className="text-xs text-brand-red">
+                <span className="font-semibold">Wirklich gemeint:</span> {p.decoded}
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+export function ArbeitszeugnisDecoder({ result }: Props): React.ReactElement {
+  // Red phrases start expanded so the worst findings are visible without a click.
+  // Keyed by result identity via lazy init so a new analysis resets the state.
+  const [expanded, setExpanded] = useState<Set<number>>(() => {
+    const set = new Set<number>()
+    result.codedPhrases.forEach((cp, idx) => {
+      if (cp.severity === 'red') set.add(idx)
+    })
+    return set
+  })
+  const [infoOpen, setInfoOpen] = useState(true)
+
+  const toggleExpanded = (idx: number): void => {
+    setExpanded((prev) => {
+      const next = new Set(prev)
+      if (next.has(idx)) next.delete(idx)
+      else next.add(idx)
+      return next
+    })
+  }
+
   if (result.notGenuineZeugnis) {
     return (
       <div className="rounded-2xl border border-brand-amber/30 bg-brand-amber/5 p-6">
@@ -129,7 +273,6 @@ export function ArbeitszeugnisDecoder({ result }: Props) {
 
   return (
     <div className="space-y-6">
-      {/* Info-Box: explains the dual-grade system */}
       {infoOpen && (
         <div className="rounded-2xl border border-brand-cyan/20 bg-brand-cyan/5 p-4">
           <div className="flex items-start gap-3">
@@ -137,14 +280,13 @@ export function ArbeitszeugnisDecoder({ result }: Props) {
               <Award size={14} />
             </div>
             <div className="flex-1 text-xs text-brand-text-dim leading-relaxed">
-              <p className="text-brand-cyan font-semibold mb-1">Zwei Noten - zwei Perspektiven</p>
+              <p className="mb-1 font-semibold text-brand-cyan">Zwei Noten - zwei Perspektiven</p>
               <p>
                 <strong className="text-brand-text">Inhalt</strong> = was das Zeugnis ueber
                 dich AUSSAGT (Leistungsbewertung, versteckte Codes, rote Flaggen).{' '}
                 <strong className="text-brand-text">Struktur</strong> = wie geschickt/professionell
                 es VERFASST ist (Vollstaendigkeit, HR-Konformitaet, sprachliche Qualitaet).
-                Beide sind unabhaengig: ein perfekt formuliertes Zeugnis (Struktur 1) kann
-                inhaltlich hinterhaeltig schlecht sein (Inhalt 5).
+                Beide sind unabhaengig.
               </p>
             </div>
             <button
@@ -158,85 +300,19 @@ export function ArbeitszeugnisDecoder({ result }: Props) {
         </div>
       )}
 
-      {/* Dual Hero - Inhalt & Struktur */}
       <div className="grid gap-4 md:grid-cols-2">
-        {/* Inhalts-Note */}
-        <div
-          className={`rounded-2xl border p-6 ${contentColors.border} ${contentColors.bg}`}
-        >
-          <div className="flex items-start gap-4">
-            <div
-              className={`flex h-20 w-20 flex-shrink-0 items-center justify-center rounded-2xl ring-4 ${contentColors.ring} ${contentColors.bg} border ${contentColors.border}`}
-            >
-              <span className={`font-mono text-4xl font-bold ${contentColors.text}`}>
-                {contentGrade}
-              </span>
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="mb-1 flex items-center gap-2">
-                <Award size={14} className={contentColors.text} />
-                <p className="text-xs font-semibold uppercase tracking-wider text-brand-text-dim">
-                  Inhalt
-                </p>
-              </div>
-              <h2 className={`text-xl font-bold ${contentColors.text}`}>{contentLabel}</h2>
-              <div className="mt-1">
-                <span className="rounded-lg border border-brand-border bg-brand-darker/60 px-2 py-0.5 text-[10px] font-semibold uppercase text-brand-text-dim">
-                  Konfidenz: {result.contentGrade.confidence}
-                </span>
-              </div>
-              {result.contentGrade.reasoning && (
-                <p className="mt-2 text-xs leading-relaxed text-brand-text">
-                  {result.contentGrade.reasoning}
-                </p>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Struktur-Note */}
-        <div
-          className={`rounded-2xl border p-6 ${craftColors.border} ${craftColors.bg}`}
-        >
-          <div className="flex items-start gap-4">
-            <div
-              className={`flex h-20 w-20 flex-shrink-0 items-center justify-center rounded-2xl ring-4 ${craftColors.ring} ${craftColors.bg} border ${craftColors.border}`}
-            >
-              <span className={`font-mono text-4xl font-bold ${craftColors.text}`}>
-                {craftGrade}
-              </span>
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="mb-1 flex items-center gap-2">
-                <Award size={14} className={craftColors.text} />
-                <p className="text-xs font-semibold uppercase tracking-wider text-brand-text-dim">
-                  Struktur & Handwerk
-                </p>
-              </div>
-              <h2 className={`text-xl font-bold ${craftColors.text}`}>{craftLabel}</h2>
-              <div className="mt-1">
-                <span className="rounded-lg border border-brand-border bg-brand-darker/60 px-2 py-0.5 text-[10px] font-semibold uppercase text-brand-text-dim">
-                  Konfidenz: {result.craftGrade.confidence}
-                </span>
-              </div>
-              {result.craftGrade.reasoning && (
-                <p className="mt-2 text-xs leading-relaxed text-brand-text">
-                  {result.craftGrade.reasoning}
-                </p>
-              )}
-            </div>
-          </div>
-        </div>
+        <GradeHero title="Inhalt" data={result.contentGrade} />
+        <GradeHero title="Struktur & Handwerk" data={result.craftGrade} />
       </div>
 
-      {/* Document type line */}
       <div className="flex items-center gap-2 text-xs text-brand-text-dim">
         <span className="rounded-lg border border-brand-border bg-brand-darker/60 px-2 py-0.5 font-mono text-[10px] uppercase">
           {result.documentType}
         </span>
       </div>
 
-      {/* Sections */}
+      <RedFlagsBlock phrases={result.codedPhrases} />
+
       {result.sections.length > 0 && (
         <div className="rounded-2xl border border-brand-border bg-brand-card/40 p-6">
           <h3 className="mb-4 text-xs font-semibold uppercase tracking-wider text-brand-text-dim">
@@ -271,7 +347,7 @@ export function ArbeitszeugnisDecoder({ result }: Props) {
                   </div>
                   {section.excerpt && (
                     <blockquote className="my-2 border-l-2 border-brand-cyan/40 pl-3 text-xs italic text-brand-text-dim">
-                      "{section.excerpt}"
+                      &quot;{section.excerpt}&quot;
                     </blockquote>
                   )}
                   {section.assessment && (
@@ -284,19 +360,19 @@ export function ArbeitszeugnisDecoder({ result }: Props) {
         </div>
       )}
 
-      {/* Coded phrases */}
       {result.codedPhrases.length > 0 && (
         <div>
           <h3 className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-brand-text-dim">
             <AlertTriangle size={12} />
-            Versteckte Codes ({result.codedPhrases.length})
+            Alle versteckten Codes ({result.codedPhrases.length})
           </h3>
           <div className="space-y-3">
             {result.codedPhrases.map((cp, idx) => {
               const sev = severityConfig[cp.severity] ?? severityConfig.yellow
               const hasSuggestion =
-                cp.suggestion && (cp.suggestion.note2 || cp.suggestion.note3 || cp.suggestion.howToNegotiate)
-              const isExpanded = expandedPhrase === idx
+                cp.suggestion &&
+                (cp.suggestion.note2 || cp.suggestion.note3 || cp.suggestion.howToNegotiate)
+              const isExpanded = expanded.has(idx)
               return (
                 <div
                   key={idx}
@@ -326,7 +402,7 @@ export function ArbeitszeugnisDecoder({ result }: Props) {
                   {hasSuggestion && (
                     <>
                       <button
-                        onClick={() => setExpandedPhrase(isExpanded ? null : idx)}
+                        onClick={() => toggleExpanded(idx)}
                         className="mt-3 flex items-center gap-1.5 rounded-lg border border-brand-border bg-brand-darker/60 px-3 py-1.5 text-xs text-brand-text-dim transition-colors hover:border-brand-cyan/30 hover:text-brand-cyan"
                       >
                         {isExpanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
@@ -379,7 +455,6 @@ export function ArbeitszeugnisDecoder({ result }: Props) {
         </div>
       )}
 
-      {/* Missing elements */}
       {result.missingElements.length > 0 && (
         <div className="rounded-2xl border border-brand-red/30 bg-brand-red/5 p-6">
           <h3 className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-brand-red">
@@ -403,8 +478,9 @@ export function ArbeitszeugnisDecoder({ result }: Props) {
         </div>
       )}
 
-      {/* Closing formula */}
-      {(result.closingFormula.regret || result.closingFormula.wishes || result.closingFormula.thanks) && (
+      {(result.closingFormula.regret ||
+        result.closingFormula.wishes ||
+        result.closingFormula.thanks) && (
         <div>
           <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-brand-text-dim">
             Schlussformel
@@ -439,7 +515,7 @@ export function ArbeitszeugnisDecoder({ result }: Props) {
                   {assessmentIcon(data?.assessment ?? null)}
                 </div>
                 {data?.excerpt ? (
-                  <p className="text-xs italic text-brand-text">"{data.excerpt}"</p>
+                  <p className="text-xs italic text-brand-text">&quot;{data.excerpt}&quot;</p>
                 ) : (
                   <p className="text-xs italic text-brand-red">Fehlt</p>
                 )}
@@ -449,7 +525,6 @@ export function ArbeitszeugnisDecoder({ result }: Props) {
         </div>
       )}
 
-      {/* Summary / Fazit */}
       {result.summary && (
         <div className="rounded-2xl border border-brand-cyan/20 bg-brand-cyan/5 p-6">
           <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-brand-cyan">

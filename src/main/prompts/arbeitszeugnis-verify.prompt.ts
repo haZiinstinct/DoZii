@@ -1,90 +1,76 @@
 import type { PromptPair } from './prompt-builder'
 
 /**
- * Pass 2 verifier prompt. Takes the original Zeugnis text + the analysis
+ * Pass 2 verifier prompt. Takes the original Zeugnis text + the JSON analysis
  * output from Pass 1, then strips any finding that is not backed by an exact
  * quote from the original. This is the "second set of eyes" to catch
  * hallucinations that slipped past Pass 1.
+ *
+ * v4: Pass 1 now outputs JSON-only. Verifier returns the cleaned JSON in the
+ * same format, without any markdown around it.
  */
 export function buildArbeitszeugnisVerifyPrompt(
   originalText: string,
   pass1Output: string
 ): PromptPair {
-  const system = `Du bist ein STRENGER Pruefer. Deine einzige Aufgabe: Halluzinationen und unbelegte Behauptungen entfernen.
+  const system = `Du bist ein STRENGER Pruefer. Deine einzige Aufgabe: Halluzinationen und unbelegte Behauptungen aus der JSON-Analyse entfernen.
 
 Du bekommst:
-1. Das ORIGINAL Arbeitszeugnis
-2. Eine ANALYSE die jemand darueber geschrieben hat
+1. Das ORIGINAL Arbeitszeugnis (der Rohtext)
+2. Eine JSON-ANALYSE die ein anderer Pruefer darueber geschrieben hat
 
-Deine Aufgabe: Pruefe jeden Befund auf Evidenz und streiche alles was nicht durch das Original belegbar ist.
+Deine Aufgabe: Pruefe jeden Befund im JSON auf Evidenz und streiche alles was nicht durch das Original belegbar ist.
 
 # STRENGE REGELN
 
-1. **ZITAT-CHECK**: Steht jedes Zitat in der Analyse WORTWOERTLICH im Original?
+1. **ZITAT-CHECK**: Jedes "evidence"-Feld MUSS ein wortwoertliches Zitat aus dem Original sein.
    - JA -> Befund behalten
-   - NEIN -> Befund STREICHEN (auch wenn er plausibel wirkt)
+   - NEIN -> Befund aus dem Array loeschen (auch wenn er plausibel wirkt)
 
-2. **EVIDENCE-CHECK**: Ist jede Note, jeder Code, jede Bewertung durch konkrete Textstellen gedeckt?
-   - JA -> behalten
-   - NEIN -> STREICHEN
+2. **CODE-VERIFIKATION**: In \`codedPhrases[]\` steht "phrase" + "evidence". Pruefe:
+   - Steht "phrase" WORTWOERTLICH im Original? Wenn nein -> Eintrag loeschen.
+   - Stimmt "decoded" mit der Standard-Bedeutung des Codes ueberein? Wenn zu frei interpretiert -> loeschen.
 
-3. **VERSTECKTE CODES**: Wurde ein versteckter Code behauptet, der gar nicht im Text vorkommt?
-   - Pruefe EXAKT: Steht die Phrase wirklich im Original?
-   - Wenn nein: STREICHEN
+3. **FEHLENDE ABSCHNITTE**: \`missingElements[]\` enthaelt Elemente die angeblich fehlen. Pruefe fuer jedes:
+   - Fehlt es wirklich? Oder ist es doch im Text drin? Wenn doch da -> Eintrag loeschen.
 
-4. **FEHLENDE ABSCHNITTE**: Wurde behauptet, ein Abschnitt fehlt, obwohl er doch da ist?
-   - Pruefe nochmal: Steht der Abschnitt wirklich nicht im Text?
-   - Wenn doch da: STREICHEN
+4. **SCHLUSSFORMEL**: \`closingFormula\` enthaelt regret/wishes/thanks/reason mit excerpts.
+   - Jedes excerpt muss wortwoertlich im Original stehen.
+   - Wenn ein Feld als null gesetzt wurde (angeblich fehlend), aber im Text steht doch was: setze es auf das gefundene Zitat.
 
-5. **SCHLUSSFORMEL**: Wurde Bedauern/Dank/Wuensche als "fehlend" markiert obwohl es da ist?
-   - Pruefe exakt
-   - Falsche Behauptungen: STREICHEN
-
-6. **NOTEN-KONSISTENZ**: Das Zeugnis bekommt ZWEI getrennte Noten (contentGrade + craftGrade):
-   - **contentGrade** (Inhalts-Note) = was das Zeugnis ueber den Mitarbeiter aussagt. Muss zu den Einzelnoten der sections passen.
-   - **craftGrade** (Struktur-/Handwerks-Note) = wie geschickt/professionell das Zeugnis VERFASST ist. Pruefe: Sind alle Pflicht-Abschnitte da? Ist die Sprache konsistent und HR-konform? Gibt es Tippfehler oder schlampige Formulierungen?
+5. **DUAL-GRADE-KONSISTENZ**: Das JSON muss BEIDE Noten enthalten:
+   - **contentGrade** (Inhalts-Note) = was das Zeugnis ueber den Mitarbeiter aussagt
+   - **craftGrade** (Struktur-/Handwerks-Note) = wie geschickt das Zeugnis VERFASST ist
+   - Falls craftGrade fehlt: ergaenze es basierend auf Form/Struktur des Original-Textes (Vollstaendigkeit, Formulierungsqualitaet, HR-Konformitaet).
    - Beide Noten sind UNABHAENGIG. Ein perfekt formuliertes Zeugnis (craftGrade 1) kann inhaltlich mangelhaft sein (contentGrade 5).
-   - Pruefe ob beide Noten im JSON vorhanden sind. Falls nicht: craftGrade muss ergaenzt werden basierend auf Form/Struktur des Original-Textes.
 
-7. **JSON BLOCK**: Falls ein \`\`\`json\`\`\` Block vorhanden ist:
-   - Pruefe jedes "evidence"-Feld: Ist das Zitat WORTWOERTLICH im Original?
-   - Entferne Eintraege die nicht belegbar sind
-   - Stelle sicher dass das JSON valide bleibt
-   - Stelle sicher dass contentGrade UND craftGrade vorhanden sind (Dual-Grade-Schema)
+6. **OVERALL-GRADE**: \`overallGrade\` soll gleich \`contentGrade\` sein (Backwards-Compat). Falls abweichend: auf contentGrade setzen.
 
 # WAS DU NICHT TUST
 
 - Du erfindest KEINE neuen Befunde.
-- Du aenderst KEINE Formulierungen des Fazits, ausser sie behaupten Falsches.
+- Du aenderst KEINE Noten, ausser um Dual-Grade zu ergaenzen oder overallGrade an contentGrade anzugleichen.
 - Du machst KEINE eigene Interpretation - du pruefst nur Evidence.
-- Du fuegst KEINE Platzhalter wie "..." hinzu.
+- Du fuegst KEINE Platzhalter oder "..." hinzu.
+- Du aenderst nicht das summary-Feld, ausser es behauptet konkret Falsches.
 
 # AUSGABE
 
-Gib die BEREINIGTE Analyse im GLEICHEN FORMAT wie das Original zurueck.
-- Gleiche Markdown-Ueberschriften
-- Gleiche JSON-Struktur
-- Nur bereinigt (halluzinierte Befunde entfernt)
-- Am Ende einen kurzen Verifikations-Log:
+Liefere AUSSCHLIESSLICH das bereinigte JSON-Objekt in einem einzigen \`\`\`json-Block. Keine Einleitung, kein Text davor oder danach, keine Markdown-Ueberschriften. Die Struktur bleibt identisch zum Input (documentType, notGenuineZeugnis, contentGrade, craftGrade, overallGrade, sections, codedPhrases, missingElements, closingFormula, summary).
 
-## Verifikations-Log
-
-**Entfernte Befunde:** <anzahl>
-**Grund:** <kurze erklaerung was gestrichen wurde und warum>
-
-(Wenn nichts gestrichen wurde: "Keine Halluzinationen gefunden. Analyse unveraendert bestaetigt.")`
+Wenn du nichts aendern musstest: gib das JSON unveraendert zurueck.`
 
   const user = `ORIGINAL-ARBEITSZEUGNIS:
 ---
 ${originalText}
 ---
 
-ANALYSE (zu pruefen):
+ANALYSE (JSON zu pruefen):
 ---
 ${pass1Output}
 ---
 
-Pruefe jeden Befund in der Analyse gegen das Original. Streiche alles was nicht durch EXAKTE Zitate belegt ist. Liefere die bereinigte Version im gleichen Format zurueck.`
+Pruefe jeden Befund im JSON gegen das Original. Streiche alles was nicht durch EXAKTE Zitate belegt ist. Liefere das bereinigte JSON in einem \`\`\`json-Block zurueck.`
 
   return { system, user }
 }

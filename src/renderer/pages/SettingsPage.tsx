@@ -18,7 +18,8 @@ import {
   Laptop,
   Key,
   Award,
-  Square
+  Square,
+  Flag
 } from 'lucide-react'
 import type {
   AppSettings,
@@ -40,9 +41,7 @@ const profileLabels: Record<string, string> = {
   power: 'Power'
 }
 
-// Curated list: 4 CPU + 4 GPU models, schwach -> stark.
-// Alle CPU-Modelle laufen auf normalen Laptops (4-8 GB RAM),
-// alle GPU-Modelle brauchen eine dedizierte Grafikkarte.
+// budgetLaptopFriendly: runs on 8 GB RAM CPU-only, ~30-90s per Arbeitszeugnis.
 const cpuModels: SuggestedModel[] = [
   {
     name: 'gemma3:1b',
@@ -66,7 +65,8 @@ const cpuModels: SuggestedModel[] = [
     size: '~2 GB',
     minRamGb: 8,
     runtime: 'cpu',
-    strengths: 'Bewaehrt, zuverlaessig, Meta-Qualitaet'
+    strengths: 'Bewaehrt, zuverlaessig, Meta-Qualitaet',
+    budgetLaptopFriendly: true
   },
   {
     name: 'qwen2.5:3b',
@@ -74,7 +74,8 @@ const cpuModels: SuggestedModel[] = [
     size: '~2 GB',
     minRamGb: 8,
     runtime: 'cpu',
-    strengths: 'Stark bei Deutsch + JSON (Empfehlung)'
+    strengths: 'Stark bei Deutsch + JSON (Empfehlung)',
+    budgetLaptopFriendly: true
   }
 ]
 
@@ -582,9 +583,22 @@ export function SettingsPage() {
           </div>
 
           {modelTab === 'cpu' && (
-            <p className="text-xs text-brand-text-dim">
-              Laeuft ohne dedizierte Grafikkarte - nur RAM wird gebraucht.
-            </p>
+            <div className="space-y-2">
+              <p className="text-xs text-brand-text-dim">
+                Laeuft ohne dedizierte Grafikkarte - nur RAM wird gebraucht.
+              </p>
+              <div className="flex items-start gap-2 rounded-xl border border-brand-amber/20 bg-brand-amber/5 p-3">
+                <Flag size={12} className="mt-0.5 flex-shrink-0 text-brand-amber" />
+                <p className="text-xs text-brand-text-dim leading-relaxed">
+                  Modelle mit dem{' '}
+                  <span className="inline-flex items-center gap-1 rounded bg-brand-amber/20 px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase text-brand-amber">
+                    BUDGET-TAUGLICH
+                  </span>
+                  {' '}Badge laufen auch auf schwacher Hardware (ab 8 GB RAM, kein GPU noetig) und
+                  schaffen trotzdem Arbeitszeugnis-Dekodierung - nur mit ~30-90 Sekunden pro Analyse statt &lt;10s.
+                </p>
+              </div>
+            </div>
           )}
           {modelTab === 'gpu' && (
             <p className="text-xs text-brand-text-dim">
@@ -623,6 +637,15 @@ export function SettingsPage() {
                     {isRecommended && (
                       <span className="rounded bg-brand-cyan/20 px-1.5 py-0.5 text-[10px] font-semibold text-brand-cyan">
                         EMPFOHLEN
+                      </span>
+                    )}
+                    {m.budgetLaptopFriendly && (
+                      <span
+                        className="inline-flex items-center gap-1 rounded bg-brand-amber/20 px-1.5 py-0.5 text-[10px] font-semibold text-brand-amber"
+                        title="Laeuft auch auf schwacher Hardware und schafft Arbeitszeugnis-Dekodierung"
+                      >
+                        <Flag size={8} />
+                        BUDGET-TAUGLICH
                       </span>
                     )}
                   </div>

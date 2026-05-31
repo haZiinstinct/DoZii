@@ -73,39 +73,18 @@ export function DocumentViewPage() {
 
   useEffect(() => {
     if (!id) return
+    let cancelled = false
     window.api.documents.getById(id).then((d) => {
+      if (cancelled) return
       setDoc(d ?? null)
       setLoading(false)
     })
-    // Check if a first impression exists, otherwise poll briefly.
-    // Fast polling for the first 10 seconds (it usually arrives in 2-5s on
-    // small models), then slower polling up to 60 seconds total.
     setFirstImpressionDismissed(false)
     setFirstImpression(null)
-    let cancelled = false
-    const startTime = Date.now()
-    const maxDurationMs = 60_000
-
-    const poll = async () => {
+    window.api.documents.getFirstImpression(id).then((fi) => {
       if (cancelled) return
-      const fi = await window.api.documents.getFirstImpression(id)
-      if (cancelled) return
-      if (fi) {
-        setFirstImpression(fi)
-        setFirstImpressionLoading(false)
-        return
-      }
-      const elapsed = Date.now() - startTime
-      if (elapsed >= maxDurationMs) {
-        setFirstImpressionLoading(false)
-        return
-      }
-      setFirstImpressionLoading(true)
-      // Fast polling (500ms) for first 10 seconds, then slow (2s)
-      const delay = elapsed < 10_000 ? 500 : 2000
-      setTimeout(poll, delay)
-    }
-    poll()
+      setFirstImpression(fi)
+    })
     return () => {
       cancelled = true
     }
