@@ -95,7 +95,7 @@ export async function generateFirstImpression(
     const content = response.message?.content ?? ''
     const parsed = extractJsonObject(content)
     if (!parsed) {
-      // Privacy: Modell-Antwort enthaelt Dokumentinhalt - nur Laenge loggen
+      // Privacy: Modell-Antwort enthält Dokumentinhalt - nur Länge loggen
       logger.warn('first-impression', 'Could not parse JSON from model response', {
         documentId,
         contentLength: content.length

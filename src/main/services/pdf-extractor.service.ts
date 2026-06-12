@@ -20,16 +20,16 @@ export async function extractPdf(filePath: string): Promise<PdfResult> {
   } catch (err) {
     const raw = err instanceof Error ? err.message : String(err)
     // pdf.js wirft PasswordException("No password given") bzw. -Meldungen mit
-    // "password" fuer verschluesselte PDFs - dem Nutzer konkret sagen, was los ist.
+    // "password" für verschlüsselte PDFs - dem Nutzer konkret sagen, was los ist.
     if (/password|encrypted/i.test(raw)) {
       throw new Error(
-        'Das PDF ist passwortgeschuetzt. Bitte den Schutz entfernen (z.B. "Drucken als PDF") und erneut importieren.',
+        'Das PDF ist passwortgeschützt. Bitte den Schutz entfernen (z.B. "Drucken als PDF") und erneut importieren.',
         { cause: err }
       )
     }
     if (/invalid pdf|corrupt|malformed|missing pdf header|FormatError/i.test(raw)) {
       throw new Error(
-        'Das PDF ist beschaedigt oder kein gueltiges PDF. Bitte die Datei neu erstellen oder als Bild importieren.',
+        'Das PDF ist beschädigt oder kein gültiges PDF. Bitte die Datei neu erstellen oder als Bild importieren.',
         { cause: err }
       )
     }

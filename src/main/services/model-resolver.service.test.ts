@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-// Electron-abhaengige Module mocken, damit der Resolver isoliert testbar ist
+// Electron-abhängige Module mocken, damit der Resolver isoliert testbar ist
 vi.mock('./logger.service', () => ({
   logger: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }
 }))
@@ -25,14 +25,14 @@ beforeEach(() => {
 })
 
 describe('resolveActiveModel', () => {
-  it('1. Prioritaet: explizit gewaehltes Modell (Cache)', async () => {
+  it('1. Priorität: explizit gewähltes Modell (Cache)', async () => {
     setSelectedModel('qwen2.5:7b')
     const result = await resolveActiveModel()
     expect(result).toEqual({ kind: 'ok', model: 'qwen2.5:7b' })
     expect(mockCheckStatus).not.toHaveBeenCalled()
   })
 
-  it('2. Prioritaet: persistierte Settings', async () => {
+  it('2. Priorität: persistierte Settings', async () => {
     mockGetSettings.mockReturnValue({ selectedModel: 'llama3.1:8b' })
     const result = await resolveActiveModel()
     expect(result).toEqual({ kind: 'ok', model: 'llama3.1:8b' })
@@ -53,7 +53,7 @@ describe('resolveActiveModel', () => {
     expect(result.kind).toBe('no-models-installed')
   })
 
-  it('3. Prioritaet: erstes installiertes Modell als Fallback', async () => {
+  it('3. Priorität: erstes installiertes Modell als Fallback', async () => {
     mockGetSettings.mockReturnValue({ selectedModel: '' })
     mockCheckStatus.mockResolvedValue({ connected: true })
     mockListModels.mockResolvedValue([{ name: 'gemma3:1b' }, { name: 'qwen2.5:3b' }])
@@ -61,7 +61,7 @@ describe('resolveActiveModel', () => {
     expect(result).toEqual({ kind: 'ok', model: 'gemma3:1b' })
   })
 
-  it('Settings-Fehler ist nicht fatal - faellt auf Ollama-Liste zurueck', async () => {
+  it('Settings-Fehler ist nicht fatal - fällt auf Ollama-Liste zurück', async () => {
     mockGetSettings.mockImplementation(() => {
       throw new Error('store kaputt')
     })

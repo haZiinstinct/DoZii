@@ -94,7 +94,7 @@ export function UploadPage() {
     setError(null)
     const paths = await window.api.documents.openDirectoryDialog()
     if (paths.length === 0) {
-      setError('Keine unterstuetzten Dateien in diesem Ordner gefunden.')
+      setError('Keine unterstützten Dateien in diesem Ordner gefunden.')
       return
     }
     await handleImport(paths)
@@ -118,7 +118,7 @@ export function UploadPage() {
       .filter((p): p is string => Boolean(p))
 
     if (paths.length === 0) {
-      setError('Dateipfade konnten nicht ausgelesen werden. Bitte "Klick zum Auswaehlen" benutzen.')
+      setError('Dateipfade konnten nicht ausgelesen werden. Bitte "Klick zum Auswählen" benutzen.')
       return
     }
 
@@ -159,7 +159,7 @@ export function UploadPage() {
               Dokument hochladen
             </h2>
             <p className="mb-6 text-sm text-brand-text-dim">
-              Ziehe Dateien hierher oder klicke zum Auswaehlen
+              Ziehe Dateien hierher oder klicke zum Auswählen
             </p>
             <div className="mb-4 flex justify-center gap-3">
               {[
@@ -193,7 +193,7 @@ export function UploadPage() {
         <kbd className="rounded border border-brand-border bg-brand-card/50 px-1.5 py-0.5 font-mono text-[10px]">
           Ctrl + K
         </kbd>{' '}
-        fuer globale Suche oeffnen
+        für globale Suche öffnen
       </p>
 
       {/* Error display */}
@@ -219,7 +219,7 @@ export function UploadPage() {
               <CheckCircle2 size={16} className="text-brand-green" />
               <span className="flex-1 truncate text-sm text-brand-text">{doc.filename}</span>
               <span className="text-xs text-brand-text-dim">
-                {doc.wordCount.toLocaleString()} Woerter
+                {doc.wordCount.toLocaleString()} Wörter
               </span>
             </button>
           ))}

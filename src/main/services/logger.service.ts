@@ -13,8 +13,8 @@ interface LogEntry {
 }
 
 const MAX_LOG_FILES = 14 // Keep last 14 days
-// Schutz vor Error-Loops: ab dieser Groesse pro Tagesdatei nicht mehr auf Disk
-// schreiben (Konsole laeuft weiter). Check alle 200 Eintraege, um statSync zu sparen.
+// Schutz vor Error-Loops: ab dieser Größe pro Tagesdatei nicht mehr auf Disk
+// schreiben (Konsole läuft weiter). Check alle 200 Einträge, um statSync zu sparen.
 const MAX_LOG_FILE_BYTES = 5 * 1024 * 1024
 const SIZE_CHECK_INTERVAL = 200
 const LEVEL_COLORS: Record<LogLevel, string> = {
@@ -106,7 +106,7 @@ class Logger {
               ts: new Date().toISOString(),
               lvl: 'warn',
               src: 'logger',
-              msg: `Log-Limit (${MAX_LOG_FILE_BYTES} Bytes) erreicht - Datei-Logging bis zur naechsten Rotation pausiert`
+              msg: `Log-Limit (${MAX_LOG_FILE_BYTES} Bytes) erreicht - Datei-Logging bis zur nächsten Rotation pausiert`
             }) + '\n',
             'utf8'
           )

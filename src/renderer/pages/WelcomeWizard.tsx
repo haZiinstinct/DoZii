@@ -160,8 +160,8 @@ export function WelcomeWizard() {
                 }
               />
               <span className="text-sm text-brand-text">
-                {ollamaState === 'checking' && 'Ollama wird geprueft...'}
-                {ollamaState === 'connected' && 'Ollama laeuft auf localhost:11434'}
+                {ollamaState === 'checking' && 'Ollama wird geprüft...'}
+                {ollamaState === 'connected' && 'Ollama läuft auf localhost:11434'}
                 {ollamaState === 'installed-not-running' && 'Ollama installiert aber nicht aktiv'}
                 {ollamaState === 'not-installed' && 'Ollama nicht gefunden'}
               </span>

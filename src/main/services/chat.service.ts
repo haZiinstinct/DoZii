@@ -9,9 +9,9 @@ import { fitTextToTokenBudget } from '../prompts/token-budget'
 import { logger } from './logger.service'
 import type { ChatMessage, ChatRole } from '@shared/types'
 
-// Budget-Aufteilung fuer num_ctx=8192: Dokument ~3500 Tokens, Historie
-// ~8000 Zeichen (~2300 Tokens), Rest fuer Antwort + Overhead. Ohne diese
-// Grenzen verwirft Ollama bei Ueberlauf still die AELTESTEN Tokens - also
+// Budget-Aufteilung für num_ctx=8192: Dokument ~3500 Tokens, Historie
+// ~8000 Zeichen (~2300 Tokens), Rest für Antwort + Overhead. Ohne diese
+// Grenzen verwirft Ollama bei Überlauf still die AELTESTEN Tokens - also
 // ausgerechnet den System-Prompt mit dem Dokument.
 const MAX_HISTORY_CHARS = 8_000
 const DOC_TOKEN_BUDGET = 3_500
@@ -19,7 +19,7 @@ const DOC_TOKEN_BUDGET = 3_500
 function buildSystemPrompt(documentText: string, language: string): string {
   const isGerman = language === 'de'
   return isGerman
-    ? `Du bist ein hilfreicher Dokumentenassistent fuer DoZii. Der Nutzer hat dir ein Dokument gegeben und stellt dir Fragen dazu. Antworte praezise und hilfreich auf Deutsch. Beziehe dich, wenn moeglich, auf konkrete Stellen im Dokument.
+    ? `Du bist ein hilfreicher Dokumentenassistent für DoZii. Der Nutzer hat dir ein Dokument gegeben und stellt dir Fragen dazu. Antworte präzise und hilfreich auf Deutsch. Beziehe dich, wenn möglich, auf konkrete Stellen im Dokument.
 
 --- DOKUMENT ---
 ${documentText}

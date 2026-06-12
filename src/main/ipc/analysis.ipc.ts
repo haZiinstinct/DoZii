@@ -19,7 +19,7 @@ const VALID_MODES: ReadonlySet<AnalysisMode> = new Set<AnalysisMode>([
 ])
 
 // Freitext-Fragen sind UI-Eingaben, keine Dokumente - 5000 Zeichen reichen
-// und schuetzen vor versehentlich eingefuegten Riesen-Payloads.
+// und schützen vor versehentlich eingefügten Riesen-Payloads.
 const MAX_USER_QUESTION_CHARS = 5000
 
 function isValidMode(mode: unknown): mode is AnalysisMode {
@@ -44,7 +44,7 @@ export function registerAnalysisIpc(): void {
 
       if (typeof docId !== 'string' || !isValidMode(mode)) {
         logger.warn('analysis.ipc', 'Invalid analysis request rejected', { docId, mode })
-        win.webContents.send('analysis:error', 'Ungueltige Analyse-Anfrage')
+        win.webContents.send('analysis:error', 'Ungültige Analyse-Anfrage')
         return null
       }
       if (userQuestion !== undefined) {

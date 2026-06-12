@@ -3,8 +3,8 @@ import { friendlyError } from './_error-mapping'
 
 describe('friendlyError', () => {
   it('reicht unbekannte Fehlermeldungen durch', () => {
-    const result = friendlyError('voellig unbekannter fehler')
-    expect(result).toBe('voellig unbekannter fehler')
+    const result = friendlyError('völlig unbekannter fehler')
+    expect(result).toBe('völlig unbekannter fehler')
   })
 
   it('erkennt fehlendes Modell', () => {
@@ -14,7 +14,7 @@ describe('friendlyError', () => {
 
   it('erkennt Model-Runner-Absturz', () => {
     const result = friendlyError('Error: llama runner process has exited unexpectedly')
-    expect(result).toContain('abgestuerzt')
+    expect(result).toContain('abgestürzt')
   })
 
   it('erkennt transiente Netzwerkfehler', () => {
@@ -28,13 +28,13 @@ describe('friendlyError', () => {
   })
 
   it('erkennt Timeouts', () => {
-    expect(friendlyError('Request timed out after 60000ms')).toContain('Zeitueberschreitung')
-    expect(friendlyError('ETIMEDOUT')).toContain('Zeitueberschreitung')
+    expect(friendlyError('Request timed out after 60000ms')).toContain('Zeitüberschreitung')
+    expect(friendlyError('ETIMEDOUT')).toContain('Zeitüberschreitung')
   })
 
-  it('erkennt beschaedigte Modelle', () => {
-    expect(friendlyError('error loading model: tensor dtype mismatch')).toContain('beschaedigt')
-    expect(friendlyError('unable to load model: invalid quantization')).toContain('beschaedigt')
+  it('erkennt beschädigte Modelle', () => {
+    expect(friendlyError('error loading model: tensor dtype mismatch')).toContain('beschädigt')
+    expect(friendlyError('unable to load model: invalid quantization')).toContain('beschädigt')
   })
 
   it('erkennt volle Festplatte', () => {
@@ -45,7 +45,7 @@ describe('friendlyError', () => {
     expect(friendlyError('CUDA error: out of memory')).toContain('Nicht genug Speicher')
   })
 
-  it('erkennt Kontextfenster-Ueberlauf', () => {
+  it('erkennt Kontextfenster-Überlauf', () => {
     expect(friendlyError('prompt context too long, exceeds limit')).toContain('zu lang')
   })
 })

@@ -34,7 +34,7 @@ export function FormulationSuggestions({ result }: Props) {
         </div>
         {result.toneRecommendation && (
           <p className="mt-2 text-sm text-brand-text-dim">
-            <span className="font-semibold text-brand-text">Tonalitaet:</span>{' '}
+            <span className="font-semibold text-brand-text">Tonalität:</span>{' '}
             {result.toneRecommendation}
           </p>
         )}
@@ -49,7 +49,7 @@ export function FormulationSuggestions({ result }: Props) {
       {result.suggestions.length > 0 && (
         <div className="space-y-3">
           <h3 className="text-xs font-semibold uppercase tracking-wider text-brand-text-dim">
-            {result.suggestions.length} Verbesserungsvorschlaege
+            {result.suggestions.length} Verbesserungsvorschläge
           </h3>
           {result.suggestions.map((s) => (
             <div
@@ -101,7 +101,7 @@ export function FormulationSuggestions({ result }: Props) {
         <div className="rounded-2xl border border-brand-cyan/20 bg-brand-cyan/5 p-5">
           <div className="mb-3 flex items-center justify-between">
             <h3 className="text-xs font-semibold uppercase tracking-wider text-brand-cyan">
-              Ueberarbeitete Gesamtversion
+              Überarbeitete Gesamtversion
             </h3>
             <button
               onClick={handleCopy}

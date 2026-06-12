@@ -103,7 +103,7 @@ export function HistoryPage() {
                     <p className="truncate text-sm font-medium text-brand-text">{doc.filename}</p>
                     <p className="text-xs text-brand-text-dim">
                       {formatDate(doc.createdAt)}
-                      {doc.wordCount ? ` · ${doc.wordCount.toLocaleString()} Woerter` : ''}
+                      {doc.wordCount ? ` · ${doc.wordCount.toLocaleString()} Wörter` : ''}
                       {doc.detectedLanguage
                         ? ` · ${doc.detectedLanguage === 'de' ? 'DE' : 'EN'}`
                         : ''}
@@ -113,7 +113,7 @@ export function HistoryPage() {
                 <button
                   onClick={() => handleDelete(doc.id)}
                   className="flex h-8 w-8 items-center justify-center rounded-lg text-brand-text-dim opacity-0 transition-all hover:bg-brand-red/10 hover:text-brand-red group-hover:opacity-100"
-                  title="Dokument loeschen"
+                  title="Dokument löschen"
                 >
                   <Trash2 size={14} />
                 </button>

@@ -4,7 +4,7 @@ import { copyFileSync } from 'fs'
  * Minimales Migrationssystem auf Basis von PRAGMA user_version.
  *
  * Regeln:
- * - Jede Migration laeuft in einer eigenen Transaktion und hebt user_version an.
+ * - Jede Migration läuft in einer eigenen Transaktion und hebt user_version an.
  * - Migration 1 ist die Baseline: idempotentes CREATE TABLE IF NOT EXISTS.
  *   Dadurch landen frische DBs UND Bestands-DBs (user_version=0, Tabellen
  *   existieren bereits) identisch bei Version 1.
@@ -13,7 +13,7 @@ import { copyFileSync } from 'fs'
  *
  * Das SqliteDb-Interface ist eine strukturelle Teilmenge von better-sqlite3
  * (Produktion) und node:sqlite DatabaseSync (Tests) - so brauchen Unit-Tests
- * kein fuer die Electron-ABI kompiliertes Native-Modul.
+ * kein für die Electron-ABI kompiliertes Native-Modul.
  */
 
 export interface SqliteDb {
@@ -81,7 +81,7 @@ export const MIGRATIONS: Migration[] = [
       db.exec(BASELINE_SQL)
     }
   }
-  // Zukuenftige Migrationen hier anhaengen, z.B.:
+  // Zukünftige Migrationen hier anhängen, z.B.:
   // { version: 2, up: (db) => { db.exec('ALTER TABLE documents ADD COLUMN ...') } }
 ]
 
@@ -101,10 +101,10 @@ function backupBeforeMigration(db: SqliteDb, dbPath: string, targetVersion: numb
 }
 
 /**
- * Fuehrt alle ausstehenden Migrationen aus. Wirft bei Fehlern - der Aufrufer
+ * Führt alle ausstehenden Migrationen aus. Wirft bei Fehlern - der Aufrufer
  * entscheidet, wie er den Nutzer informiert. Nach einem Fehler ist die DB
- * unveraendert (Rollback pro Migration, Backup ab v2).
- * dbPath: Pfad der DB-Datei fuer Backups; weglassen bei In-Memory-DBs (Tests).
+ * unverändert (Rollback pro Migration, Backup ab v2).
+ * dbPath: Pfad der DB-Datei für Backups; weglassen bei In-Memory-DBs (Tests).
  */
 export function runMigrations(db: SqliteDb, opts?: { dbPath?: string }): MigrationResult {
   const from = getUserVersion(db)

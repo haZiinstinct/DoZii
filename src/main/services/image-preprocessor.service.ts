@@ -1,7 +1,7 @@
 import sharp from 'sharp'
 
-// Schutz vor OOM bei Riesen-Scans: Bilder oberhalb dieser Kantenlaenge werden
-// vor dem OCR proportional verkleinert. 4000px reicht fuer 300-dpi-A4-Scans.
+// Schutz vor OOM bei Riesen-Scans: Bilder oberhalb dieser Kantenlänge werden
+// vor dem OCR proportional verkleinert. 4000px reicht für 300-dpi-A4-Scans.
 const MAX_DIMENSION_PX = 4000
 
 /**
@@ -31,13 +31,13 @@ export async function preprocessImage(filePath: string): Promise<Buffer> {
     const raw = err instanceof Error ? err.message : String(err)
     if (/pixel limit|limitInputPixels/i.test(raw)) {
       throw new Error(
-        'Das Bild ist zu gross fuer die Verarbeitung (max. 100 Megapixel). Bitte verkleinert exportieren.',
+        'Das Bild ist zu gross für die Verarbeitung (max. 100 Megapixel). Bitte verkleinert exportieren.',
         { cause: err }
       )
     }
     if (/unsupported image format|input file contains|corrupt/i.test(raw)) {
       throw new Error(
-        'Das Bild konnte nicht gelesen werden - Format nicht unterstuetzt oder Datei beschaedigt.',
+        'Das Bild konnte nicht gelesen werden - Format nicht unterstützt oder Datei beschädigt.',
         { cause: err }
       )
     }

@@ -11,9 +11,9 @@ import { logger } from './logger.service'
 import type { Analysis, AnalysisRunResult } from '@shared/types'
 
 const TRUNCATION_NOTICE =
-  '\n\n---\n*Hinweis: Das Dokument ueberschreitet das Kontextfenster des Modells. ' +
-  'Es wurde fuer diese Analyse am Ende gekuerzt - das Ergebnis deckt nicht das gesamte Dokument ab. ' +
-  'Fuer eine vollstaendige Analyse ein Modell mit groesserem Kontextfenster waehlen oder das Dokument teilen.*'
+  '\n\n---\n*Hinweis: Das Dokument überschreitet das Kontextfenster des Modells. ' +
+  'Es wurde für diese Analyse am Ende gekürzt - das Ergebnis deckt nicht das gesamte Dokument ab. ' +
+  'Für eine vollständige Analyse ein Modell mit größerem Kontextfenster wählen oder das Dokument teilen.*'
 
 /**
  * Send an analysis:phase event to the renderer so the UI can show
@@ -77,7 +77,7 @@ export async function runAnalysis(
     logger.warn('analysis.service', 'Heavy mode on small model - may fail or hallucinate', {
       mode,
       model: modelName,
-      recommendation: 'Fuer beste Ergebnisse: llama3.1:8b oder mistral-small:24b'
+      recommendation: 'Für beste Ergebnisse: llama3.1:8b oder mistral-small:24b'
     })
   }
 
@@ -112,9 +112,9 @@ export async function runAnalysis(
       modelName
     })
     throw new Error(
-      `Modell "${modelName}" hat keine Antwort geliefert. Moegliche Ursachen:\n` +
-        '• Modell ist nicht geladen oder abgestuerzt\n' +
-        '• Nicht genug RAM/VRAM fuer dieses Modell\n' +
+      `Modell "${modelName}" hat keine Antwort geliefert. Mögliche Ursachen:\n` +
+        '• Modell ist nicht geladen oder abgestürzt\n' +
+        '• Nicht genug RAM/VRAM für dieses Modell\n' +
         '• Ollama-Server Problem'
     )
   }
@@ -143,7 +143,7 @@ export async function runAnalysis(
 
       verifyAborted = verifyResult.aborted
 
-      // Nur uebernehmen, wenn Pass 2 wirklich parsebare JSON liefert -
+      // Nur übernehmen, wenn Pass 2 wirklich parsebare JSON liefert -
       // sonst landet Prosa ("Here is the cleaned JSON: ...") in der DB und
       // der Renderer kann das Ergebnis nicht mehr strukturiert anzeigen.
       const verifyJson = verifyAborted ? null : extractJsonObject(verifyResult.text)
@@ -176,9 +176,9 @@ export async function runAnalysis(
     }
   }
 
-  // Truncation-Hinweis sichtbar ans Ergebnis haengen - ausser bei
+  // Truncation-Hinweis sichtbar ans Ergebnis hängen - ausser bei
   // Arbeitszeugnis, dessen Ergebnis als JSON geparst wird (Hinweis dort
-  // wuerde den Parser gefaehrden; der Marker steckt bereits im Dokumenttext).
+  // würde den Parser gefährden; der Marker steckt bereits im Dokumenttext).
   if (truncated && mode !== 'arbeitszeugnis') {
     finalResponse += TRUNCATION_NOTICE
   }

@@ -42,7 +42,7 @@ export function SummaryView({ result }: Props) {
           </div>
           <p className="text-sm text-brand-text">{result.phishingWarning}</p>
           <p className="mt-2 text-xs text-brand-text-dim">
-            Klicke auf keine Links und gib keine Daten ein. Ueberpruefe den Absender direkt ueber
+            Klicke auf keine Links und gib keine Daten ein. Überprüfe den Absender direkt über
             die offizielle Website.
           </p>
         </div>
@@ -156,7 +156,7 @@ export function SummaryView({ result }: Props) {
         <div className="rounded-2xl border border-brand-border bg-brand-card/40 p-6">
           <h3 className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-brand-text-dim">
             <Info size={12} />
-            Auffaelligkeiten
+            Auffälligkeiten
           </h3>
           <ul className="space-y-2">
             {result.observations.map((obs, idx) => (

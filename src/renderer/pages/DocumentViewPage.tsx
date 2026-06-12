@@ -141,7 +141,7 @@ export function DocumentViewPage() {
       <div className="flex h-full flex-col items-center justify-center text-brand-text-dim">
         <p>Dokument nicht gefunden</p>
         <button onClick={() => navigate('/')} className="mt-4 text-brand-cyan hover:underline">
-          Zurueck
+          Zurück
         </button>
       </div>
     )
@@ -189,7 +189,7 @@ export function DocumentViewPage() {
           <div className="flex-1 text-sm">
             <p className="font-semibold text-brand-amber">Text-Extraktion problematisch</p>
             <p className="mt-1 text-brand-text-dim">
-              Der extrahierte Text enthaelt ungewoehnlich viele nicht-druckbare Zeichen. Die KI kann
+              Der extrahierte Text enthält ungewöhnlich viele nicht-druckbare Zeichen. Die KI kann
               damit keine sinnvolle Analyse machen. Klick auf das{' '}
               <RefreshCw size={12} className="inline" /> Symbol oben um das Dokument neu einzulesen.
             </p>
@@ -291,7 +291,7 @@ export function DocumentViewPage() {
         {doc.wordCount && (
           <span className="inline-flex items-center gap-1.5 rounded-lg border border-brand-border bg-brand-card/50 px-3 py-1 text-xs text-brand-text-dim">
             <Hash size={12} />
-            {doc.wordCount.toLocaleString()} Woerter
+            {doc.wordCount.toLocaleString()} Wörter
           </span>
         )}
         <span className="inline-flex items-center gap-1.5 rounded-lg border border-brand-border bg-brand-card/50 px-3 py-1 text-xs text-brand-text-dim">

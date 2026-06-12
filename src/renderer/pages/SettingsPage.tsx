@@ -45,7 +45,7 @@ const cpuModels: SuggestedModel[] = [
     size: '~0.8 GB',
     minRamGb: 4,
     runtime: 'cpu',
-    strengths: 'Ultraleicht - laeuft auf jedem alten Laptop'
+    strengths: 'Ultraleicht - läuft auf jedem alten Laptop'
   },
   {
     name: 'gemma2:2b',
@@ -61,7 +61,7 @@ const cpuModels: SuggestedModel[] = [
     size: '~2 GB',
     minRamGb: 8,
     runtime: 'cpu',
-    strengths: 'Bewaehrt, zuverlaessig, Meta-Qualitaet',
+    strengths: 'Bewährt, zuverlässig, Meta-Qualität',
     budgetLaptopFriendly: true
   },
   {
@@ -92,7 +92,7 @@ const gpuModels: SuggestedModel[] = [
     minRamGb: 12,
     minVramGb: 8,
     runtime: 'gpu',
-    strengths: 'Meta-Klassiker, bewaehrt'
+    strengths: 'Meta-Klassiker, bewährt'
   },
   {
     name: 'mistral-small:24b',
@@ -101,7 +101,7 @@ const gpuModels: SuggestedModel[] = [
     minRamGb: 24,
     minVramGb: 16,
     runtime: 'gpu',
-    strengths: 'Primaer fuer Arbeitszeugnisse (Empfehlung Stark)'
+    strengths: 'Primär für Arbeitszeugnisse (Empfehlung Stark)'
   },
   {
     name: 'llama3.1:70b',
@@ -185,7 +185,7 @@ export function SettingsPage() {
       if (selectedModel === name) setSelectedModel('')
     } catch (err) {
       setDeleteError(
-        `Fehler beim Loeschen von ${name}: ${err instanceof Error ? err.message : 'Unbekannt'}`
+        `Fehler beim Löschen von ${name}: ${err instanceof Error ? err.message : 'Unbekannt'}`
       )
     } finally {
       setDeleting(null)
@@ -397,8 +397,8 @@ export function SettingsPage() {
                       pulling
                         ? 'Warte bis der Download abgeschlossen ist'
                         : isConfirmingDelete
-                          ? 'Nochmal klicken zum bestaetigen'
-                          : 'Modell loeschen'
+                          ? 'Nochmal klicken zum bestätigen'
+                          : 'Modell löschen'
                     }
                     className={`flex items-center justify-center gap-1.5 rounded-xl border px-3 py-3 text-xs font-semibold transition-all disabled:cursor-not-allowed disabled:opacity-40 ${
                       isConfirmingDelete
@@ -411,7 +411,7 @@ export function SettingsPage() {
                     ) : isConfirmingDelete ? (
                       <>
                         <Trash2 size={12} />
-                        Wirklich loeschen?
+                        Wirklich löschen?
                       </>
                     ) : (
                       <Trash2 size={14} />
@@ -460,7 +460,7 @@ export function SettingsPage() {
           {modelTab === 'cpu' && (
             <div className="space-y-2">
               <p className="text-xs text-brand-text-dim">
-                Laeuft ohne dedizierte Grafikkarte - nur RAM wird gebraucht.
+                Läuft ohne dedizierte Grafikkarte - nur RAM wird gebraucht.
               </p>
               <div className="flex items-start gap-2 rounded-xl border border-brand-amber/20 bg-brand-amber/5 p-3">
                 <Flag size={12} className="mt-0.5 flex-shrink-0 text-brand-amber" />
@@ -469,7 +469,7 @@ export function SettingsPage() {
                   <span className="inline-flex items-center gap-1 rounded bg-brand-amber/20 px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase text-brand-amber">
                     BUDGET-TAUGLICH
                   </span>{' '}
-                  Badge laufen auch auf schwacher Hardware (ab 8 GB RAM, kein GPU noetig) und
+                  Badge laufen auch auf schwacher Hardware (ab 8 GB RAM, kein GPU nötig) und
                   schaffen trotzdem Arbeitszeugnis-Dekodierung - nur mit ~30-90 Sekunden pro Analyse
                   statt &lt;10s.
                 </p>
@@ -478,7 +478,7 @@ export function SettingsPage() {
           )}
           {modelTab === 'gpu' && (
             <p className="text-xs text-brand-text-dim">
-              Braucht eine GPU mit genug VRAM fuer beste Geschwindigkeit. Laeuft sonst auf
+              Braucht eine GPU mit genug VRAM für beste Geschwindigkeit. Läuft sonst auf
               CPU-Fallback langsamer.
             </p>
           )}
@@ -519,7 +519,7 @@ export function SettingsPage() {
                     {m.budgetLaptopFriendly && (
                       <span
                         className="inline-flex items-center gap-1 rounded bg-brand-amber/20 px-1.5 py-0.5 text-[10px] font-semibold text-brand-amber"
-                        title="Laeuft auch auf schwacher Hardware und schafft Arbeitszeugnis-Dekodierung"
+                        title="Läuft auch auf schwacher Hardware und schafft Arbeitszeugnis-Dekodierung"
                       >
                         <Flag size={8} />
                         BUDGET-TAUGLICH
@@ -609,8 +609,8 @@ export function SettingsPage() {
           Entwickler & Logs
         </h2>
         <p className="mb-4 text-sm text-brand-text-dim">
-          Alle App-Events, Fehler und Stack-Traces werden lokal in taeglich rotierten Log-Dateien
-          gespeichert. Nuetzlich fuer Fehlersuche und Entwicklung.
+          Alle App-Events, Fehler und Stack-Traces werden lokal in täglich rotierten Log-Dateien
+          gespeichert. Nützlich für Fehlersuche und Entwicklung.
         </p>
         <div className="flex flex-wrap gap-2">
           <button
@@ -618,7 +618,7 @@ export function SettingsPage() {
             className="flex items-center gap-2 rounded-xl border border-brand-border px-4 py-2 text-sm text-brand-text-dim transition-all hover:border-brand-cyan/30 hover:text-brand-cyan"
           >
             <FolderOpen size={14} />
-            Logs-Ordner oeffnen
+            Logs-Ordner öffnen
           </button>
           <button
             onClick={async () => {

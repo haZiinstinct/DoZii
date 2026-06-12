@@ -53,7 +53,7 @@ export function GrammarResults({ result }: Props) {
           </div>
           <div className="flex-1">
             <p className="text-xs font-semibold uppercase tracking-wider text-brand-text-dim">
-              Qualitaet
+              Qualität
             </p>
             <h2 className="text-xl font-bold text-brand-text-bright">{overall.quality}</h2>
           </div>

@@ -9,7 +9,7 @@ import {
 const GRAMMAR_MD = `
 ## Gesamtbewertung
 **Anzahl Fehler:** 2
-**Qualitaet:** Gut
+**Qualität:** Gut
 **Kurzfassung:** Wenige Fehler.
 
 ## Fehler-Liste
@@ -157,13 +157,13 @@ describe('stripTrailingJsonBlock', () => {
     expect(stripTrailingJsonBlock(md)).toBe('## Analyse\nInhalt.')
   })
 
-  it('laesst Markdown ohne JSON-Sektion unveraendert', () => {
+  it('lässt Markdown ohne JSON-Sektion unverändert', () => {
     expect(stripTrailingJsonBlock('## Nur Text')).toBe('## Nur Text')
   })
 })
 
 describe('isInDocument', () => {
-  it('findet Zitate unabhaengig von Whitespace und Gross-/Kleinschreibung', () => {
+  it('findet Zitate unabhängig von Whitespace und Gross-/Kleinschreibung', () => {
     const doc = 'Er hat   STETS zu unserer\nvollen Zufriedenheit gearbeitet.'
     expect(isInDocument('stets zu unserer vollen Zufriedenheit', doc)).toBe(true)
   })
@@ -171,6 +171,6 @@ describe('isInDocument', () => {
   it('lehnt zu kurze oder fehlende Kandidaten ab', () => {
     expect(isInDocument('ab', 'ab cd ef')).toBe(false)
     expect(isInDocument(undefined, 'text')).toBe(false)
-    expect(isInDocument('nicht enthalten', 'voellig anderer text')).toBe(false)
+    expect(isInDocument('nicht enthalten', 'völlig anderer text')).toBe(false)
   })
 })

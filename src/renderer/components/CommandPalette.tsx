@@ -99,7 +99,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
       .map((d) => ({
         id: `doc-${d.id}`,
         label: d.filename,
-        hint: `${d.wordCount ?? 0} Woerter · ${
+        hint: `${d.wordCount ?? 0} Wörter · ${
           d.detectedLanguage === 'de' ? 'DE' : d.detectedLanguage === 'en' ? 'EN' : ''
         }`,
         icon: <FileText size={16} />,
@@ -223,7 +223,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
             <kbd className="rounded border border-brand-border bg-brand-darker px-1.5 py-0.5 font-mono">
               ↵
             </kbd>
-            Oeffnen
+            Öffnen
           </span>
           <span className="flex items-center gap-1">
             <kbd className="rounded border border-brand-border bg-brand-darker px-1.5 py-0.5 font-mono">

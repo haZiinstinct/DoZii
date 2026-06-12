@@ -35,7 +35,7 @@ const gradeLabels: Record<number, string> = {
   3: 'Befriedigend',
   4: 'Ausreichend',
   5: 'Mangelhaft',
-  6: 'Ungenuegend'
+  6: 'Ungenügend'
 }
 
 function gradeColor(grade: number): {
@@ -102,7 +102,7 @@ const severityConfig: Record<
     border: 'border-brand-amber/30',
     text: 'text-brand-amber',
     icon: <AlertTriangle size={14} />,
-    label: 'Auffaellig'
+    label: 'Auffällig'
   },
   red: {
     bg: 'bg-brand-red/5',
@@ -253,7 +253,7 @@ export function ArbeitszeugnisDecoder({ result }: Props): React.ReactElement {
         </div>
         <p className="text-sm text-brand-text">
           Dieser Text scheint kein Arbeitszeugnis zu sein. Der Arbeitszeugnis-Decoder funktioniert
-          nur mit echten Arbeitszeugnissen (mit Taetigkeitsbeschreibung, Leistungsbewertung und
+          nur mit echten Arbeitszeugnissen (mit Tätigkeitsbeschreibung, Leistungsbewertung und
           Schlussformel).
         </p>
         {result.summary && <p className="mt-3 text-xs text-brand-text-dim">{result.summary}</p>}
@@ -272,11 +272,11 @@ export function ArbeitszeugnisDecoder({ result }: Props): React.ReactElement {
             <div className="flex-1 text-xs text-brand-text-dim leading-relaxed">
               <p className="mb-1 font-semibold text-brand-cyan">Zwei Noten - zwei Perspektiven</p>
               <p>
-                <strong className="text-brand-text">Inhalt</strong> = was das Zeugnis ueber dich
+                <strong className="text-brand-text">Inhalt</strong> = was das Zeugnis über dich
                 AUSSAGT (Leistungsbewertung, versteckte Codes, rote Flaggen).{' '}
                 <strong className="text-brand-text">Struktur</strong> = wie geschickt/professionell
-                es VERFASST ist (Vollstaendigkeit, HR-Konformitaet, sprachliche Qualitaet). Beide
-                sind unabhaengig.
+                es VERFASST ist (Vollständigkeit, HR-Konformität, sprachliche Qualität). Beide
+                sind unabhängig.
               </p>
             </div>
             <button
@@ -394,8 +394,8 @@ export function ArbeitszeugnisDecoder({ result }: Props): React.ReactElement {
                       >
                         {isExpanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
                         {isExpanded
-                          ? 'Verbesserungsvorschlaege verbergen'
-                          : 'Verbesserungsvorschlaege anzeigen'}
+                          ? 'Verbesserungsvorschläge verbergen'
+                          : 'Verbesserungsvorschläge anzeigen'}
                       </button>
 
                       {isExpanded && (
@@ -480,7 +480,7 @@ export function ArbeitszeugnisDecoder({ result }: Props): React.ReactElement {
                 data: result.closingFormula.regret
               },
               {
-                label: 'Zukunftswuensche',
+                label: 'Zukunftswünsche',
                 icon: <TrendingUp size={14} />,
                 data: result.closingFormula.wishes
               },

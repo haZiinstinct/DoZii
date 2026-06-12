@@ -251,7 +251,7 @@ export function AnalysisPage() {
       <div className="flex h-full flex-col items-center justify-center text-center">
         <FileSearch size={28} className="mb-4 text-brand-cyan" />
         <p className="text-brand-text-dim">
-          Kein Dokument ausgewaehlt. Bitte zuerst ein Dokument hochladen und oeffnen.
+          Kein Dokument ausgewählt. Bitte zuerst ein Dokument hochladen und öffnen.
         </p>
       </div>
     )
@@ -425,7 +425,7 @@ export function AnalysisPage() {
               <div className="flex items-center gap-2">
                 <Sparkles size={14} className="text-brand-cyan" />
                 <span className="text-xs font-semibold uppercase tracking-wider text-brand-text-dim">
-                  Weiteres Gespraech
+                  Weiteres Gespräch
                 </span>
               </div>
               <button
@@ -433,7 +433,7 @@ export function AnalysisPage() {
                 className="flex items-center gap-1 rounded-lg px-2 py-1 text-xs text-brand-text-dim hover:bg-brand-red/10 hover:text-brand-red"
               >
                 <Trash2 size={12} />
-                Chat loeschen
+                Chat löschen
               </button>
             </div>
 

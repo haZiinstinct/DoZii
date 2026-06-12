@@ -90,7 +90,7 @@ export async function startOllamaServer(): Promise<{
         started: false,
         error:
           'Ollama wurde gestartet, antwortet aber nicht auf Port 11434 (15s Timeout). ' +
-          'Moeglicherweise blockiert eine Firewall den Port oder der Start ist fehlgeschlagen.'
+          'Möglicherweise blockiert eine Firewall den Port oder der Start ist fehlgeschlagen.'
       }
     }
 
@@ -136,7 +136,7 @@ export async function stopOllamaServer(): Promise<{
     await new Promise((r) => setTimeout(r, 500))
     const isDown = await waitForOllamaDown(3_000)
     if (!isDown) {
-      return { stopped: false, error: 'Ollama laeuft weiterhin auf Port 11434' }
+      return { stopped: false, error: 'Ollama läuft weiterhin auf Port 11434' }
     }
 
     return { stopped: true }

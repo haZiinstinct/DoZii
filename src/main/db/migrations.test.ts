@@ -14,7 +14,7 @@ function userVersion(db: DatabaseSync): number {
   return Number(row.user_version)
 }
 
-// Simuliert eine Bestands-DB aus der unveroeffentlichten 3.0.0-Aera:
+// Simuliert eine Bestands-DB aus der unveröffentlichten 3.0.0-Ära:
 // Tabellen existieren bereits, user_version steht auf 0.
 function createLegacyDb(): DatabaseSync {
   const db = new DatabaseSync(':memory:')
@@ -88,7 +88,7 @@ describe('runMigrations', () => {
     db.close()
   })
 
-  it('MIGRATIONS sind aufsteigend und lueckenlos versioniert', () => {
+  it('MIGRATIONS sind aufsteigend und lückenlos versioniert', () => {
     MIGRATIONS.forEach((m, i) => {
       expect(m.version).toBe(i + 1)
     })

@@ -15,8 +15,8 @@ function getDocumentsDir(): string {
   return join(app.getPath('userData'), 'documents')
 }
 
-// .doc/.xls (Legacy-Formate) fehlen bewusst: mammoth/xlsx koennen sie nicht
-// lesen. importDocument gibt dafuer einen Konvertier-Hinweis.
+// .doc/.xls (Legacy-Formate) fehlen bewusst: mammoth/xlsx können sie nicht
+// lesen. importDocument gibt dafür einen Konvertier-Hinweis.
 const SUPPORTED_EXTENSIONS = new Set([
   '.pdf',
   '.docx',
@@ -54,7 +54,7 @@ function detectLanguage(text: string): string {
     'sich',
     'von',
     'zu',
-    'fuer',
+    'fuer', // ASCII-Schreibweise absichtlich: erkennt umlaut-frei extrahierte Dokumente
     'für',
     'haben',
     'werden',
@@ -133,7 +133,7 @@ export function checkPrintability(text: string): PrintabilityCheck {
       printableRatio,
       controlRatio,
       ok: false,
-      reason: `Zu viele Steuerzeichen (${Math.round(controlRatio * 100)}%) - Text ist wahrscheinlich binaer/beschaedigt`
+      reason: `Zu viele Steuerzeichen (${Math.round(controlRatio * 100)}%) - Text ist wahrscheinlich binär/beschädigt`
     }
   }
   if (printableRatio < 0.8) {
@@ -141,7 +141,7 @@ export function checkPrintability(text: string): PrintabilityCheck {
       printableRatio,
       controlRatio,
       ok: false,
-      reason: `Nur ${Math.round(printableRatio * 100)}% druckbare Zeichen - PDF ist moeglicherweise ein gescanntes Bild, beschaedigt oder in einem unbekannten Encoding`
+      reason: `Nur ${Math.round(printableRatio * 100)}% druckbare Zeichen - PDF ist möglicherweise ein gescanntes Bild, beschädigt oder in einem unbekannten Encoding`
     }
   }
 
@@ -184,7 +184,7 @@ async function extractTextByType(
     const result = await recognizeImage(destPath)
     return { text: result.text, pageCount: 1 }
   }
-  throw new Error(`Nicht unterstuetzter Dateityp: ${ext}`)
+  throw new Error(`Nicht unterstützter Dateityp: ${ext}`)
 }
 
 export async function importDocument(filePath: string): Promise<DoziiDocument> {
@@ -195,10 +195,10 @@ export async function importDocument(filePath: string): Promise<DoziiDocument> {
   if (!SUPPORTED_EXTENSIONS.has(ext)) {
     const legacyHint = LEGACY_OFFICE_HINTS[ext]
     if (legacyHint) {
-      throw new Error(`Das alte Office-Format "${ext}" wird nicht unterstuetzt. ${legacyHint}`)
+      throw new Error(`Das alte Office-Format "${ext}" wird nicht unterstützt. ${legacyHint}`)
     }
     throw new Error(
-      `Dateityp "${ext}" wird nicht unterstuetzt. Erlaubt: ${[...SUPPORTED_EXTENSIONS].join(', ')}`
+      `Dateityp "${ext}" wird nicht unterstützt. Erlaubt: ${[...SUPPORTED_EXTENSIONS].join(', ')}`
     )
   }
 
@@ -261,11 +261,11 @@ export async function importDocument(filePath: string): Promise<DoziiDocument> {
       /* best effort */
     })
     throw new Error(
-      `Keine Textinhalte in "${filename}" gefunden. Moegliche Ursachen:\n` +
-        '• PDF ist passwortgeschuetzt\n' +
+      `Keine Textinhalte in "${filename}" gefunden. Mögliche Ursachen:\n` +
+        '• PDF ist passwortgeschützt\n' +
         '• PDF ist ein Scan ohne OCR - bitte als Bild importieren\n' +
-        '• Dokument ist beschaedigt\n' +
-        '• Datei enthaelt nur Bilder'
+        '• Dokument ist beschädigt\n' +
+        '• Datei enthält nur Bilder'
     )
   }
 
@@ -284,9 +284,9 @@ export async function importDocument(filePath: string): Promise<DoziiDocument> {
     })
     throw new Error(
       `Text-Extraktion fehlgeschlagen in "${filename}":\n${printCheck.reason}\n\n` +
-        'Moegliche Loesungen:\n' +
+        'Mögliche Lösungen:\n' +
         '• PDF ist ein gescannter Scan - als JPG/PNG exportieren und importieren (OCR)\n' +
-        '• PDF ist beschaedigt - bitte neu erstellen\n' +
+        '• PDF ist beschädigt - bitte neu erstellen\n' +
         '• Dokument verwendet ein unbekanntes Encoding'
     )
   }
@@ -393,7 +393,7 @@ export async function reImportDocument(id: string): Promise<DoziiDocument> {
   if (extractedText.length === 0) {
     throw new Error(
       `Keine Textinhalte in "${doc.filename}" gefunden.\n` +
-        'Das PDF ist vermutlich ein Scan oder beschaedigt.'
+        'Das PDF ist vermutlich ein Scan oder beschädigt.'
     )
   }
 
@@ -407,7 +407,7 @@ export async function reImportDocument(id: string): Promise<DoziiDocument> {
     })
     throw new Error(
       `Neu-Extraktion fehlgeschlagen: ${printCheck.reason}\n` +
-        'Das PDF laesst sich mit unpdf nicht sauber lesen.'
+        'Das PDF lässt sich mit unpdf nicht sauber lesen.'
     )
   }
 

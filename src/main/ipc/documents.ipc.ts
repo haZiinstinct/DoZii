@@ -12,8 +12,8 @@ import { generateFirstImpression, getFirstImpression } from '../services/first-i
 import { getSelectedModel } from './analysis.ipc'
 import { logger } from '../services/logger.service'
 
-// .doc/.xls (Legacy-Formate) fehlen bewusst: mammoth/xlsx koennen sie nicht
-// lesen - Import wuerde crashen. Nutzer bekommen einen Konvertier-Hinweis.
+// .doc/.xls (Legacy-Formate) fehlen bewusst: mammoth/xlsx können sie nicht
+// lesen - Import würde crashen. Nutzer bekommen einen Konvertier-Hinweis.
 const SUPPORTED_EXTS = new Set([
   '.pdf',
   '.docx',
@@ -76,14 +76,14 @@ export function registerDocumentsIpc(): void {
 
   ipcMain.handle('documents:import', async (_event, filePath: string) => {
     if (typeof filePath !== 'string' || filePath.length === 0) {
-      throw new Error('Ungueltiger Dateipfad')
+      throw new Error('Ungültiger Dateipfad')
     }
     // Defensiv normalisieren und sicherstellen, dass es eine echte Datei ist -
     // der Pfad kommt aus dem Renderer (Dialog oder Drag&Drop).
     const normalizedPath = resolve(filePath)
     const fileInfo = await stat(normalizedPath).catch(() => null)
     if (!fileInfo || !fileInfo.isFile()) {
-      throw new Error('Datei nicht gefunden oder kein regulaerer Dateityp')
+      throw new Error('Datei nicht gefunden oder kein regulärer Dateityp')
     }
 
     logger.info('documents.ipc', 'Importing document', { filePath: normalizedPath })

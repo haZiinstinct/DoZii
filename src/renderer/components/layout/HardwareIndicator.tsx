@@ -107,10 +107,10 @@ export function HardwareIndicator() {
               }`}
               title={
                 primaryModel.runningOn === 'gpu'
-                  ? 'Laeuft komplett auf der GPU'
+                  ? 'Läuft komplett auf der GPU'
                   : primaryModel.runningOn === 'hybrid'
                     ? 'Teilt sich GPU + CPU'
-                    : 'Laeuft nur auf der CPU'
+                    : 'Läuft nur auf der CPU'
               }
             >
               {primaryModel.runningOn}

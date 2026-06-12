@@ -5,7 +5,7 @@ import { resolveActiveModel } from '../services/model-resolver.service'
 import { logger } from '../services/logger.service'
 import { friendlyError } from './_error-mapping'
 
-// Chat-Nachrichten sind UI-Eingaben - Limit schuetzt Prompt-Budget und Speicher.
+// Chat-Nachrichten sind UI-Eingaben - Limit schützt Prompt-Budget und Speicher.
 const MAX_CHAT_MESSAGE_CHARS = 10_000
 
 export function registerChatIpc(): void {
@@ -15,7 +15,7 @@ export function registerChatIpc(): void {
 
     if (typeof documentId !== 'string' || typeof userMessage !== 'string') {
       logger.warn('chat.ipc', 'Invalid chat request rejected', { documentId })
-      win.webContents.send('chat:error', 'Ungueltige Chat-Anfrage')
+      win.webContents.send('chat:error', 'Ungültige Chat-Anfrage')
       return null
     }
     if (userMessage.length > MAX_CHAT_MESSAGE_CHARS) {

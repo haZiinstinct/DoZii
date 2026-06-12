@@ -6,7 +6,7 @@ import { getSettings } from './settings.service'
  * Resolution result for the currently active model. This lets callers
  * distinguish "Ollama is unreachable" from "no model installed" from
  * "no model selected" — all three were previously conflated and reported
- * as "Kein Modell ausgewaehlt" to the user.
+ * as "Kein Modell ausgewählt" to the user.
  */
 export type ModelResolution =
   | { kind: 'ok'; model: string }
@@ -60,7 +60,7 @@ export async function resolveActiveModel(): Promise<ModelResolution> {
     return {
       kind: 'no-ollama',
       message:
-        'Ollama ist nicht erreichbar. Bitte pruefen, ob Ollama laeuft (Einstellungen > Ollama starten).'
+        'Ollama ist nicht erreichbar. Bitte prüfen, ob Ollama läuft (Einstellungen > Ollama starten).'
     }
   }
 

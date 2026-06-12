@@ -1,4 +1,4 @@
-// Minimale Typen fuer Nodes eingebautes sqlite-Modul (Node >= 24).
+// Minimale Typen für Nodes eingebautes sqlite-Modul (Node >= 24).
 // Nur in Unit-Tests genutzt; @types/node 20 (via Electron) kennt es noch nicht.
 declare module 'node:sqlite' {
   export class DatabaseSync {
