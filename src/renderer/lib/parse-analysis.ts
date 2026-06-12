@@ -261,7 +261,9 @@ export function parseFormulation(
       extractBilingualField(
         docTypeText,
         'Tonalitaets-Empfehlung',
+        'Tonalitäts-Empfehlung',
         'Tonalitaet',
+        'Tonalität',
         'Ton',
         'Tone Recommendation',
         'Tone'
@@ -279,8 +281,10 @@ export function parseFormulation(
       extractSection(
         markdown,
         'Verbesserungsvorschlaege',
+        'Verbesserungsvorschläge',
         'Verbesserungen',
         'Vorschlaege',
+        'Vorschläge',
         'Suggestions'
       ) ?? ''
 
@@ -291,7 +295,7 @@ export function parseFormulation(
       const category = extractBilingualField(body, 'Kategorie', 'Category')
       const before = extractBilingualField(body, 'Vorher', 'Before', 'Original')
       const after = extractBilingualField(body, 'Nachher', 'After', 'Verbessert')
-      const why = extractBilingualField(body, 'Warum', 'Why', 'Begruendung', 'Reason')
+      const why = extractBilingualField(body, 'Warum', 'Why', 'Begruendung', 'Begründung', 'Reason')
       if (before && after) {
         suggestions.push({ index, title, category, before, after, why })
       }
@@ -305,8 +309,8 @@ export function parseFormulation(
     }
 
     const revisedMatch =
-      markdown.match(/##\s*Ueberarbeitete\s*Gesamtversion\s*([\s\S]*?)$/i) ||
-      markdown.match(/##\s*Komplette\s*Ueberarbeitete\s*Version\s*([\s\S]*?)$/i) ||
+      markdown.match(/##\s*(?:Ue|Ü)berarbeitete\s*Gesamtversion\s*([\s\S]*?)$/i) ||
+      markdown.match(/##\s*Komplette\s*(?:Ue|Ü)berarbeitete\s*Version\s*([\s\S]*?)$/i) ||
       markdown.match(/##\s*Endversion\s*([\s\S]*?)$/i) ||
       markdown.match(/##\s*Revised\s*Full\s*Version\s*([\s\S]*?)$/i)
     const revisedFullText = revisedMatch?.[1]?.trim()
@@ -395,7 +399,8 @@ export function parseSummary(markdown: string): SummaryResult | null {
     }
 
     const observationsText =
-      extractSection(markdown, 'Auffaelligkeiten', 'Observations', 'Hinweise') ?? ''
+      extractSection(markdown, 'Auffaelligkeiten', 'Auffälligkeiten', 'Observations', 'Hinweise') ??
+      ''
     const observations = extractBulletLines(observationsText).filter(
       (l) => !l.toLowerCase().includes('keine besonderen')
     )

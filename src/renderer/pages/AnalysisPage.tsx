@@ -123,6 +123,7 @@ export function AnalysisPage() {
     async (question?: string) => {
       if (!docId) return
       setAskedQuestion(question ?? null)
+      setExportError(null)
       setAnalysis({ kind: 'streaming', text: '', phase: 'analyzing' })
 
       await analysisStream.run(() => window.api.analysis.run(docId, mode, question), {

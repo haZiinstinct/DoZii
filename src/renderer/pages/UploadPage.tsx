@@ -204,7 +204,10 @@ export function UploadPage() {
           <AlertCircle size={16} className="mt-0.5 flex-shrink-0 text-brand-red" />
           <ul className="min-w-0 flex-1 space-y-1">
             {errorList.map((msg, i) => (
-              <li key={i} className="whitespace-pre-line break-words text-sm text-brand-red">
+              <li
+                key={`${i}-${msg}`}
+                className="whitespace-pre-line break-words text-sm text-brand-red"
+              >
                 {msg}
               </li>
             ))}
