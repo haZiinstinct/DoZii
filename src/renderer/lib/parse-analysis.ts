@@ -44,7 +44,10 @@ function extractSection(markdown: string, ...titles: string[]): string | null {
     // Allow the title to contain optional hyphens and whitespace variations
     // e.g. "Gesamt-Bewertung" should match "Gesamtbewertung"
     const flexible = title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s+/g, '[\\s-]+')
-    const re = new RegExp(`##\\s*${flexible}([\\s\\S]*?)(?=^##\\s|\\Z)`, 'im')
+    // Bis zur naechsten ##-Ueberschrift oder zum absoluten String-Ende.
+    // Achtung: \Z existiert in JS-Regex nicht (waere ein literales "Z" und
+    // wuerde mit dem i-Flag die Sektion am ersten "z" abschneiden).
+    const re = new RegExp(`##\\s*${flexible}([\\s\\S]*?)(?=^##\\s|(?![\\s\\S]))`, 'im')
     const match = markdown.match(re)
     if (match) return match[1]
   }
