@@ -32,8 +32,10 @@ function buildCsp(): string {
   )
 }
 
+let mainWindow: BrowserWindow | null = null
+
 function createWindow(): void {
-  const mainWindow = new BrowserWindow({
+  const win = new BrowserWindow({
     width: 1280,
     height: 800,
     minWidth: 900,
@@ -45,11 +47,12 @@ function createWindow(): void {
     icon: join(__dirname, '../../resources/icon.png'),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
-      sandbox: false,
+      sandbox: true,
       contextIsolation: true,
       nodeIntegration: false
     }
   })
+  mainWindow = win
 
   // CSP: blocks ALL external requests - only localhost:11434 (Ollama) allowed.
   session.defaultSession.webRequest.onHeadersReceived((_details, callback) => {
@@ -61,34 +64,48 @@ function createWindow(): void {
     })
   })
 
-  mainWindow.on('ready-to-show', () => {
-    mainWindow.show()
+  win.on('ready-to-show', () => {
+    win.show()
     logger.info('main', 'Main window ready')
   })
 
-  mainWindow.webContents.on('render-process-gone', (_event, details) => {
+  win.webContents.on('render-process-gone', (_event, details) => {
     logger.error('main', 'Renderer process gone', { reason: details.reason })
     // Cancel any in-flight Ollama streams - otherwise they keep running and
     // throw on every chunk trying to send to the dead webContents.
     abortAllStreams()
   })
 
-  mainWindow.on('closed', () => {
+  win.on('closed', () => {
     // Abort any in-flight streams targeting this window
     abortAllStreams()
+    if (mainWindow === win) mainWindow = null
   })
 
-  mainWindow.webContents.setWindowOpenHandler((details) => {
+  win.webContents.setWindowOpenHandler((details) => {
     shell.openExternal(details.url)
     return { action: 'deny' }
   })
 
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
-    mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL'])
+    win.loadURL(process.env['ELECTRON_RENDERER_URL'])
   } else {
-    mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
+    win.loadFile(join(__dirname, '../renderer/index.html'))
   }
 }
+
+// Nur eine Instanz: zweite Starts fokussieren das bestehende Fenster.
+// Verhindert konkurrierende Zugriffe auf dozii.db und Settings.
+if (!app.requestSingleInstanceLock()) {
+  app.quit()
+}
+
+app.on('second-instance', () => {
+  if (mainWindow) {
+    if (mainWindow.isMinimized()) mainWindow.restore()
+    mainWindow.focus()
+  }
+})
 
 // Global error handlers BEFORE app.whenReady
 process.on('uncaughtException', (err) => {

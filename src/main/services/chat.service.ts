@@ -5,10 +5,16 @@ import type { Message } from 'ollama'
 import { getDb, schema } from '../db'
 import { getDocumentById } from './document-store.service'
 import { streamConversation, warmupModel } from './ollama-client.service'
+import { fitTextToTokenBudget } from '../prompts/token-budget'
 import { logger } from './logger.service'
 import type { ChatMessage, ChatRole } from '@shared/types'
 
-const MAX_HISTORY_CHARS = 20_000
+// Budget-Aufteilung fuer num_ctx=8192: Dokument ~3500 Tokens, Historie
+// ~8000 Zeichen (~2300 Tokens), Rest fuer Antwort + Overhead. Ohne diese
+// Grenzen verwirft Ollama bei Ueberlauf still die AELTESTEN Tokens - also
+// ausgerechnet den System-Prompt mit dem Dokument.
+const MAX_HISTORY_CHARS = 8_000
+const DOC_TOKEN_BUDGET = 3_500
 
 function buildSystemPrompt(documentText: string, language: string): string {
   const isGerman = language === 'de'
@@ -91,9 +97,17 @@ export async function sendChatMessage(
   // Build message array: system prompt + full persisted history + NEW user message.
   // The new message is NOT persisted yet - we only save it after the stream
   // succeeds so that errors don't leave orphan user messages.
+  const fittedDoc = fitTextToTokenBudget(doc.extractedText, DOC_TOKEN_BUDGET)
+  if (fittedDoc.truncated) {
+    logger.warn('chat.service', 'Document truncated for chat context', {
+      documentId,
+      textLength: doc.extractedText.length
+    })
+  }
+
   const history = getChatHistory(documentId)
   const messages: Message[] = [
-    { role: 'system', content: buildSystemPrompt(doc.extractedText, language) },
+    { role: 'system', content: buildSystemPrompt(fittedDoc.text, language) },
     ...history
       .filter((m) => m.role !== 'system')
       .map((m) => ({

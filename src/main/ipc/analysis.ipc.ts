@@ -10,6 +10,22 @@ import { logger } from '../services/logger.service'
 import { friendlyError } from './_error-mapping'
 import type { AnalysisMode } from '@shared/types'
 
+const VALID_MODES: ReadonlySet<AnalysisMode> = new Set<AnalysisMode>([
+  'grammar',
+  'formulation',
+  'arbeitszeugnis',
+  'summary',
+  'freeform'
+])
+
+// Freitext-Fragen sind UI-Eingaben, keine Dokumente - 5000 Zeichen reichen
+// und schuetzen vor versehentlich eingefuegten Riesen-Payloads.
+const MAX_USER_QUESTION_CHARS = 5000
+
+function isValidMode(mode: unknown): mode is AnalysisMode {
+  return typeof mode === 'string' && VALID_MODES.has(mode as AnalysisMode)
+}
+
 // Re-export for backwards compatibility (other IPC modules import these)
 export function setSelectedModel(model: string): void {
   setSelectedModelInResolver(model)
@@ -26,6 +42,21 @@ export function registerAnalysisIpc(): void {
       const win = BrowserWindow.fromWebContents(event.sender)
       if (!win) throw new Error('No window found')
 
+      if (typeof docId !== 'string' || !isValidMode(mode)) {
+        logger.warn('analysis.ipc', 'Invalid analysis request rejected', { docId, mode })
+        win.webContents.send('analysis:error', 'Ungueltige Analyse-Anfrage')
+        return null
+      }
+      if (userQuestion !== undefined) {
+        if (typeof userQuestion !== 'string' || userQuestion.length > MAX_USER_QUESTION_CHARS) {
+          win.webContents.send(
+            'analysis:error',
+            `Die Frage ist zu lang (max. ${MAX_USER_QUESTION_CHARS} Zeichen)`
+          )
+          return null
+        }
+      }
+
       // Resolve active model with precise error messages
       const resolution = await resolveActiveModel()
       if (resolution.kind !== 'ok') {
@@ -41,7 +72,7 @@ export function registerAnalysisIpc(): void {
       logger.info('analysis.ipc', 'Running analysis', { docId, mode, model })
 
       try {
-        const result = await runAnalysis(docId, mode as AnalysisMode, win, model, userQuestion)
+        const result = await runAnalysis(docId, mode, win, model, userQuestion)
         logger.info('analysis.ipc', 'Analysis completed', {
           docId,
           mode,

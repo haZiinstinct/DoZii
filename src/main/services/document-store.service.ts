@@ -15,12 +15,12 @@ function getDocumentsDir(): string {
   return join(app.getPath('userData'), 'documents')
 }
 
+// .doc/.xls (Legacy-Formate) fehlen bewusst: mammoth/xlsx koennen sie nicht
+// lesen. importDocument gibt dafuer einen Konvertier-Hinweis.
 const SUPPORTED_EXTENSIONS = new Set([
   '.pdf',
   '.docx',
-  '.doc',
   '.xlsx',
-  '.xls',
   '.jpg',
   '.jpeg',
   '.png',
@@ -29,6 +29,11 @@ const SUPPORTED_EXTENSIONS = new Set([
   '.bmp',
   '.webp'
 ])
+
+const LEGACY_OFFICE_HINTS: Record<string, string> = {
+  '.doc': 'Bitte die Datei in Word als .docx speichern und erneut importieren.',
+  '.xls': 'Bitte die Datei in Excel als .xlsx speichern und erneut importieren.'
+}
 
 const MAX_FILE_SIZE_BYTES = 200 * 1024 * 1024 // 200 MB
 
@@ -147,9 +152,7 @@ function getMimeType(ext: string): string {
   const map: Record<string, string> = {
     '.pdf': 'application/pdf',
     '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    '.doc': 'application/msword',
     '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    '.xls': 'application/vnd.ms-excel',
     '.jpg': 'image/jpeg',
     '.jpeg': 'image/jpeg',
     '.png': 'image/png',
@@ -169,11 +172,11 @@ async function extractTextByType(
     const result = await extractPdf(destPath)
     return { text: result.text, pageCount: result.pageCount }
   }
-  if (ext === '.docx' || ext === '.doc') {
+  if (ext === '.docx') {
     const result = await extractDocx(destPath)
     return { text: result.text, pageCount: null }
   }
-  if (ext === '.xlsx' || ext === '.xls') {
+  if (ext === '.xlsx') {
     const result = extractXlsx(destPath)
     return { text: result.text, pageCount: result.sheetCount }
   }
@@ -190,6 +193,10 @@ export async function importDocument(filePath: string): Promise<DoziiDocument> {
 
   // Validate extension against allow-list
   if (!SUPPORTED_EXTENSIONS.has(ext)) {
+    const legacyHint = LEGACY_OFFICE_HINTS[ext]
+    if (legacyHint) {
+      throw new Error(`Das alte Office-Format "${ext}" wird nicht unterstuetzt. ${legacyHint}`)
+    }
     throw new Error(
       `Dateityp "${ext}" wird nicht unterstuetzt. Erlaubt: ${[...SUPPORTED_EXTENSIONS].join(', ')}`
     )
@@ -268,12 +275,12 @@ export async function importDocument(filePath: string): Promise<DoziiDocument> {
     await unlink(destPath).catch(() => {
       /* best effort */
     })
+    // Privacy: niemals Dokumentinhalt loggen, nur Metriken
     logger.warn('document-store', 'Rejected document due to low printability', {
       filename,
       printableRatio: printCheck.printableRatio,
       controlRatio: printCheck.controlRatio,
-      reason: printCheck.reason,
-      sample: extractedText.slice(0, 200)
+      reason: printCheck.reason
     })
     throw new Error(
       `Text-Extraktion fehlgeschlagen in "${filename}":\n${printCheck.reason}\n\n` +
@@ -287,7 +294,7 @@ export async function importDocument(filePath: string): Promise<DoziiDocument> {
   logger.info('document-store', 'Extraction quality OK', {
     filename,
     printableRatio: Math.round(printCheck.printableRatio * 100) / 100,
-    sample: extractedText.slice(0, 200)
+    textLength: extractedText.length
   })
 
   const wordCount = extractedText.split(/\s+/).filter(Boolean).length
@@ -396,7 +403,7 @@ export async function reImportDocument(id: string): Promise<DoziiDocument> {
     logger.warn('document-store', 'Re-import produced low-quality text', {
       id,
       printableRatio: printCheck.printableRatio,
-      sample: extractedText.slice(0, 200)
+      reason: printCheck.reason
     })
     throw new Error(
       `Neu-Extraktion fehlgeschlagen: ${printCheck.reason}\n` +

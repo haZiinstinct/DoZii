@@ -83,8 +83,16 @@ export async function startOllamaServer(): Promise<{
     // Let the child run independently of the parent
     child.unref()
 
-    // Give Ollama a moment to bind to the port
-    await waitForOllama(15_000)
+    // Watchdog: erst "gestartet" melden, wenn der Server wirklich antwortet.
+    const reachable = await waitForOllama(15_000)
+    if (!reachable) {
+      return {
+        started: false,
+        error:
+          'Ollama wurde gestartet, antwortet aber nicht auf Port 11434 (15s Timeout). ' +
+          'Moeglicherweise blockiert eine Firewall den Port oder der Start ist fehlgeschlagen.'
+      }
+    }
 
     return { started: true }
   } catch (err) {

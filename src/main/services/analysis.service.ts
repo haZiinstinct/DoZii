@@ -6,8 +6,14 @@ import { getDocumentById } from './document-store.service'
 import { streamChat, warmupModel } from './ollama-client.service'
 import { buildPrompt, type AnalysisMode } from '../prompts/prompt-builder'
 import { buildArbeitszeugnisVerifyPrompt } from '../prompts/arbeitszeugnis-verify.prompt'
+import { extractJsonObject } from '../lib/extract-json'
 import { logger } from './logger.service'
 import type { Analysis, AnalysisRunResult } from '@shared/types'
+
+const TRUNCATION_NOTICE =
+  '\n\n---\n*Hinweis: Das Dokument ueberschreitet das Kontextfenster des Modells. ' +
+  'Es wurde fuer diese Analyse am Ende gekuerzt - das Ergebnis deckt nicht das gesamte Dokument ab. ' +
+  'Fuer eine vollstaendige Analyse ein Modell mit groesserem Kontextfenster waehlen oder das Dokument teilen.*'
 
 /**
  * Send an analysis:phase event to the renderer so the UI can show
@@ -50,12 +56,21 @@ export async function runAnalysis(
   if (!doc.extractedText) throw new Error('Dokument hat keinen extrahierten Text')
 
   const language = doc.detectedLanguage || 'de'
-  const { system, user, temperature, numCtx } = buildPrompt(
+  const { system, user, temperature, numCtx, truncated } = buildPrompt(
     mode,
     doc.extractedText,
     language,
     userQuestion
   )
+
+  if (truncated) {
+    logger.warn('analysis.service', 'Document truncated to fit context window', {
+      docId,
+      mode,
+      textLength: doc.extractedText.length,
+      numCtx
+    })
+  }
 
   // Small model on heavy mode: warn but don't block. User may have chosen it intentionally.
   if (isHeavyMode(mode) && SMALL_MODELS_FOR_HEAVY_MODE.has(modelName)) {
@@ -128,14 +143,21 @@ export async function runAnalysis(
 
       verifyAborted = verifyResult.aborted
 
-      // If verification produced a non-empty cleaned output, use it.
-      // Otherwise fall back to pass 1 (don't lose the work).
-      if (!verifyAborted && verifyResult.text.trim().length > 100) {
+      // Nur uebernehmen, wenn Pass 2 wirklich parsebare JSON liefert -
+      // sonst landet Prosa ("Here is the cleaned JSON: ...") in der DB und
+      // der Renderer kann das Ergebnis nicht mehr strukturiert anzeigen.
+      const verifyJson = verifyAborted ? null : extractJsonObject(verifyResult.text)
+      if (!verifyAborted && verifyJson !== null && verifyResult.text.trim().length > 100) {
         finalResponse = verifyResult.text
         logger.info('analysis.service', 'Verification pass completed', {
           docId,
           pass1Length: pass1Response.length,
           finalLength: finalResponse.length
+        })
+      } else if (!verifyAborted && verifyJson === null) {
+        logger.warn('analysis.service', 'Verification pass returned non-JSON, using pass 1', {
+          docId,
+          verifyLength: verifyResult.text.length
         })
       } else if (verifyAborted) {
         logger.info('analysis.service', 'Verification pass aborted, using pass 1', { docId })
@@ -152,6 +174,13 @@ export async function runAnalysis(
       })
       // Non-fatal: we still have pass 1 result
     }
+  }
+
+  // Truncation-Hinweis sichtbar ans Ergebnis haengen - ausser bei
+  // Arbeitszeugnis, dessen Ergebnis als JSON geparst wird (Hinweis dort
+  // wuerde den Parser gefaehrden; der Marker steckt bereits im Dokumenttext).
+  if (truncated && mode !== 'arbeitszeugnis') {
+    finalResponse += TRUNCATION_NOTICE
   }
 
   return persistAnalysis(docId, mode, user, finalResponse, modelName, startTime, verifyAborted)

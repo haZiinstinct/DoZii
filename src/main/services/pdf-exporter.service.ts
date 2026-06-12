@@ -231,6 +231,7 @@ function buildAnalysisHtml(params: BuildParams): string {
 <html lang="de">
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'">
 <title>DoZii Analyse</title>
 <style>
   @page { size: A4; margin: 1.5cm 1.8cm; }

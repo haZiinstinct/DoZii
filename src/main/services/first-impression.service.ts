@@ -2,6 +2,7 @@ import { Ollama } from 'ollama'
 import { eq } from 'drizzle-orm'
 import { getDb, schema } from '../db'
 import { buildFirstImpressionPrompt } from '../prompts/first-impression.prompt'
+import { extractJsonObject } from '../lib/extract-json'
 import { logger } from './logger.service'
 import type { FirstImpression, AnalysisMode } from '@shared/types'
 
@@ -38,32 +39,6 @@ export function getFirstImpression(documentId: string): FirstImpression | null {
     modelUsed: row.modelUsed,
     createdAt: row.createdAt
   }
-}
-
-/**
- * Extract a JSON object from a model response. Handles plain JSON, JSON inside
- * markdown fences, or JSON with leading/trailing prose.
- */
-function extractJsonObject(raw: string): Record<string, unknown> | null {
-  // Try direct parse first
-  const trimmed = raw.trim()
-  try {
-    const parsed = JSON.parse(trimmed)
-    if (parsed && typeof parsed === 'object') return parsed as Record<string, unknown>
-  } catch {
-    /* fall through */
-  }
-  // Try to find a JSON object in the text
-  const match = trimmed.match(/\{[\s\S]*\}/)
-  if (match) {
-    try {
-      const parsed = JSON.parse(match[0])
-      if (parsed && typeof parsed === 'object') return parsed as Record<string, unknown>
-    } catch {
-      /* give up */
-    }
-  }
-  return null
 }
 
 /**
@@ -120,9 +95,10 @@ export async function generateFirstImpression(
     const content = response.message?.content ?? ''
     const parsed = extractJsonObject(content)
     if (!parsed) {
+      // Privacy: Modell-Antwort enthaelt Dokumentinhalt - nur Laenge loggen
       logger.warn('first-impression', 'Could not parse JSON from model response', {
         documentId,
-        sample: content.slice(0, 200)
+        contentLength: content.length
       })
       return null
     }

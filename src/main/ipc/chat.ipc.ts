@@ -5,10 +5,26 @@ import { resolveActiveModel } from '../services/model-resolver.service'
 import { logger } from '../services/logger.service'
 import { friendlyError } from './_error-mapping'
 
+// Chat-Nachrichten sind UI-Eingaben - Limit schuetzt Prompt-Budget und Speicher.
+const MAX_CHAT_MESSAGE_CHARS = 10_000
+
 export function registerChatIpc(): void {
   ipcMain.handle('chat:send', async (event, documentId: string, userMessage: string) => {
     const win = BrowserWindow.fromWebContents(event.sender)
     if (!win) throw new Error('No window found')
+
+    if (typeof documentId !== 'string' || typeof userMessage !== 'string') {
+      logger.warn('chat.ipc', 'Invalid chat request rejected', { documentId })
+      win.webContents.send('chat:error', 'Ungueltige Chat-Anfrage')
+      return null
+    }
+    if (userMessage.length > MAX_CHAT_MESSAGE_CHARS) {
+      win.webContents.send(
+        'chat:error',
+        `Die Nachricht ist zu lang (max. ${MAX_CHAT_MESSAGE_CHARS} Zeichen)`
+      )
+      return null
+    }
 
     const resolution = await resolveActiveModel()
     if (resolution.kind !== 'ok') {

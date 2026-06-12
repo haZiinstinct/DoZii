@@ -1,6 +1,6 @@
 import { ipcMain, dialog, BrowserWindow } from 'electron'
-import { readdir } from 'fs/promises'
-import { join, extname } from 'path'
+import { readdir, stat } from 'fs/promises'
+import { join, extname, resolve } from 'path'
 import {
   importDocument,
   getAllDocuments,
@@ -12,12 +12,12 @@ import { generateFirstImpression, getFirstImpression } from '../services/first-i
 import { getSelectedModel } from './analysis.ipc'
 import { logger } from '../services/logger.service'
 
+// .doc/.xls (Legacy-Formate) fehlen bewusst: mammoth/xlsx koennen sie nicht
+// lesen - Import wuerde crashen. Nutzer bekommen einen Konvertier-Hinweis.
 const SUPPORTED_EXTS = new Set([
   '.pdf',
   '.docx',
-  '.doc',
   '.xlsx',
-  '.xls',
   '.jpg',
   '.jpeg',
   '.png',
@@ -36,20 +36,7 @@ export function registerDocumentsIpc(): void {
       filters: [
         {
           name: 'Dokumente',
-          extensions: [
-            'pdf',
-            'docx',
-            'doc',
-            'xlsx',
-            'xls',
-            'jpg',
-            'jpeg',
-            'png',
-            'tiff',
-            'tif',
-            'bmp',
-            'webp'
-          ]
+          extensions: ['pdf', 'docx', 'xlsx', 'jpg', 'jpeg', 'png', 'tiff', 'tif', 'bmp', 'webp']
         }
       ]
     })
@@ -88,9 +75,20 @@ export function registerDocumentsIpc(): void {
   })
 
   ipcMain.handle('documents:import', async (_event, filePath: string) => {
-    logger.info('documents.ipc', 'Importing document', { filePath })
+    if (typeof filePath !== 'string' || filePath.length === 0) {
+      throw new Error('Ungueltiger Dateipfad')
+    }
+    // Defensiv normalisieren und sicherstellen, dass es eine echte Datei ist -
+    // der Pfad kommt aus dem Renderer (Dialog oder Drag&Drop).
+    const normalizedPath = resolve(filePath)
+    const fileInfo = await stat(normalizedPath).catch(() => null)
+    if (!fileInfo || !fileInfo.isFile()) {
+      throw new Error('Datei nicht gefunden oder kein regulaerer Dateityp')
+    }
+
+    logger.info('documents.ipc', 'Importing document', { filePath: normalizedPath })
     try {
-      const doc = await importDocument(filePath)
+      const doc = await importDocument(normalizedPath)
 
       logger.info('documents.ipc', 'Document imported', {
         id: doc.id,

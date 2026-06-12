@@ -13,6 +13,10 @@ interface LogEntry {
 }
 
 const MAX_LOG_FILES = 14 // Keep last 14 days
+// Schutz vor Error-Loops: ab dieser Groesse pro Tagesdatei nicht mehr auf Disk
+// schreiben (Konsole laeuft weiter). Check alle 200 Eintraege, um statSync zu sparen.
+const MAX_LOG_FILE_BYTES = 5 * 1024 * 1024
+const SIZE_CHECK_INTERVAL = 200
 const LEVEL_COLORS: Record<LogLevel, string> = {
   debug: '\x1b[90m', // gray
   info: '\x1b[36m', // cyan
@@ -26,6 +30,8 @@ class Logger {
   private currentFile: string | null = null
   private buffer: LogEntry[] = []
   private initialized = false
+  private writesSinceSizeCheck = 0
+  private fileSizeExceeded = false
 
   private init(): void {
     if (this.initialized) return
@@ -50,6 +56,8 @@ class Logger {
     if (!this.logsDir) return
     const today = new Date().toISOString().slice(0, 10) // YYYY-MM-DD
     this.currentFile = join(this.logsDir, `dozii-${today}.log`)
+    this.fileSizeExceeded = false
+    this.writesSinceSizeCheck = 0
   }
 
   private cleanupOldLogs(): void {
@@ -85,8 +93,26 @@ class Logger {
     console.log(`${prefix} ${entry.timestamp} [${entry.source}] ${entry.message}`, entry.meta ?? '')
 
     // Write to file
-    if (!this.currentFile) return
+    if (!this.currentFile || this.fileSizeExceeded) return
     try {
+      if (++this.writesSinceSizeCheck >= SIZE_CHECK_INTERVAL) {
+        this.writesSinceSizeCheck = 0
+        const size = statSync(this.currentFile).size
+        if (size > MAX_LOG_FILE_BYTES) {
+          this.fileSizeExceeded = true
+          appendFileSync(
+            this.currentFile,
+            JSON.stringify({
+              ts: new Date().toISOString(),
+              lvl: 'warn',
+              src: 'logger',
+              msg: `Log-Limit (${MAX_LOG_FILE_BYTES} Bytes) erreicht - Datei-Logging bis zur naechsten Rotation pausiert`
+            }) + '\n',
+            'utf8'
+          )
+          return
+        }
+      }
       const line = JSON.stringify({
         ts: entry.timestamp,
         lvl: entry.level,

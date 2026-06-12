@@ -36,9 +36,42 @@ export function friendlyError(raw: string): string {
     )
   }
 
+  // Ollama laeuft nicht (Verbindung von vornherein abgelehnt)
+  if (/econnrefused|connection refused/i.test(raw)) {
+    return (
+      'Ollama ist nicht erreichbar. Bitte Ollama starten ' +
+      '(Einstellungen -> Ollama starten) und erneut versuchen.'
+    )
+  }
+
+  // Timeout beim Laden/Antworten
+  if (/timed? ?out|deadline exceeded|etimedout/i.test(raw)) {
+    return (
+      'Zeitueberschreitung bei der Anfrage an Ollama. Das Modell laedt moeglicherweise noch ' +
+      'oder das System ist ausgelastet. Bitte erneut versuchen oder ein kleineres Modell waehlen.'
+    )
+  }
+
   // Model missing
   if (/model.+not found|no such model/i.test(raw)) {
     return 'Das ausgewaehlte Modell ist nicht installiert. Bitte in den Einstellungen herunterladen.'
+  }
+
+  // Beschaedigte / inkompatible Modell-Dateien
+  if (
+    /invalid model|unsupported model|quantization|tensor.+mismatch|checkpoint.+failed|unable to load model|error loading model/i.test(
+      raw
+    )
+  ) {
+    return (
+      'Die Modell-Dateien sind beschaedigt oder inkompatibel mit dieser Ollama-Version.\n' +
+      'Loesung: Modell in den Einstellungen loeschen und neu herunterladen, ggf. Ollama aktualisieren.'
+    )
+  }
+
+  // Platte voll (z.B. beim Modell-Download oder KV-Cache)
+  if (/no space left|enospc|disk.+full/i.test(raw)) {
+    return 'Nicht genug freier Speicherplatz auf der Festplatte. Bitte Platz schaffen und erneut versuchen.'
   }
 
   // Out-of-memory hints from Ollama
