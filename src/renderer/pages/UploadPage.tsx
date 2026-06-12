@@ -27,7 +27,7 @@ export function UploadPage() {
   const [dragging, setDragging] = useState(false)
   const [importing, setImporting] = useState(false)
   const [imported, setImported] = useState<ImportedDoc[]>([])
-  const [error, setError] = useState<string | null>(null)
+  const [errorList, setErrorList] = useState<string[]>([])
 
   // Global drop protection: prevent browser from navigating to dropped files
   // when the user misses the drop zone.
@@ -44,11 +44,11 @@ export function UploadPage() {
   const handleImport = useCallback(
     async (filePaths: string[]) => {
       if (filePaths.length === 0) {
-        setError('Keine Datei gefunden. Bitte versuche es erneut.')
+        setErrorList(['Keine Datei gefunden. Bitte versuche es erneut.'])
         return
       }
       setImporting(true)
-      setError(null)
+      setErrorList([])
       const results: ImportedDoc[] = []
       const errors: string[] = []
 
@@ -70,7 +70,7 @@ export function UploadPage() {
       setImporting(false)
 
       if (errors.length > 0) {
-        setError(errors.join(' | '))
+        setErrorList(errors)
       }
 
       // Navigate to doc if exactly one file was successfully imported
@@ -82,7 +82,7 @@ export function UploadPage() {
   )
 
   const handleClick = async () => {
-    setError(null)
+    setErrorList([])
     const paths = await window.api.documents.openDialog()
     if (paths.length > 0) {
       await handleImport(paths)
@@ -91,10 +91,10 @@ export function UploadPage() {
 
   const handleBulkFolderImport = async (e: React.MouseEvent) => {
     e.stopPropagation()
-    setError(null)
+    setErrorList([])
     const paths = await window.api.documents.openDirectoryDialog()
     if (paths.length === 0) {
-      setError('Keine unterstützten Dateien in diesem Ordner gefunden.')
+      setErrorList(['Keine unterstützten Dateien in diesem Ordner gefunden.'])
       return
     }
     await handleImport(paths)
@@ -104,11 +104,11 @@ export function UploadPage() {
     e.preventDefault()
     e.stopPropagation()
     setDragging(false)
-    setError(null)
+    setErrorList([])
 
     const files = Array.from(e.dataTransfer.files)
     if (files.length === 0) {
-      setError('Keine Dateien im Drop erkannt.')
+      setErrorList(['Keine Dateien im Drop erkannt.'])
       return
     }
 
@@ -118,7 +118,9 @@ export function UploadPage() {
       .filter((p): p is string => Boolean(p))
 
     if (paths.length === 0) {
-      setError('Dateipfade konnten nicht ausgelesen werden. Bitte "Klick zum Auswählen" benutzen.')
+      setErrorList([
+        'Dateipfade konnten nicht ausgelesen werden. Bitte "Klick zum Auswählen" benutzen.'
+      ])
       return
     }
 
@@ -196,11 +198,17 @@ export function UploadPage() {
         für globale Suche öffnen
       </p>
 
-      {/* Error display */}
-      {error && (
+      {/* Error display: eine Zeile pro fehlgeschlagener Datei */}
+      {errorList.length > 0 && (
         <div className="flex w-full max-w-2xl items-start gap-3 rounded-xl border border-brand-red/30 bg-brand-red/5 p-4">
           <AlertCircle size={16} className="mt-0.5 flex-shrink-0 text-brand-red" />
-          <p className="text-sm text-brand-red">{error}</p>
+          <ul className="min-w-0 flex-1 space-y-1">
+            {errorList.map((msg, i) => (
+              <li key={i} className="whitespace-pre-line break-words text-sm text-brand-red">
+                {msg}
+              </li>
+            ))}
+          </ul>
         </div>
       )}
 

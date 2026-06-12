@@ -275,8 +275,8 @@ export function ArbeitszeugnisDecoder({ result }: Props): React.ReactElement {
                 <strong className="text-brand-text">Inhalt</strong> = was das Zeugnis über dich
                 AUSSAGT (Leistungsbewertung, versteckte Codes, rote Flaggen).{' '}
                 <strong className="text-brand-text">Struktur</strong> = wie geschickt/professionell
-                es VERFASST ist (Vollständigkeit, HR-Konformität, sprachliche Qualität). Beide
-                sind unabhängig.
+                es VERFASST ist (Vollständigkeit, HR-Konformität, sprachliche Qualität). Beide sind
+                unabhängig.
               </p>
             </div>
             <button

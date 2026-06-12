@@ -66,6 +66,8 @@ export function AnalysisPage() {
   const [chat, setChat] = useState<ChatState>({ kind: 'idle' })
   const [chatInput, setChatInput] = useState('')
   const [freeQuestion, setFreeQuestion] = useState('')
+  const [askedQuestion, setAskedQuestion] = useState<string | null>(null)
+  const [exportError, setExportError] = useState<string | null>(null)
   const [doc, setDoc] = useState<DoziiDocument | null>(null)
 
   const responseRef = useRef<HTMLDivElement>(null)
@@ -120,6 +122,7 @@ export function AnalysisPage() {
   const startAnalysis = useCallback(
     async (question?: string) => {
       if (!docId) return
+      setAskedQuestion(question ?? null)
       setAnalysis({ kind: 'streaming', text: '', phase: 'analyzing' })
 
       await analysisStream.run(() => window.api.analysis.run(docId, mode, question), {
@@ -210,9 +213,12 @@ export function AnalysisPage() {
 
   const handleExportPdf = useCallback(async () => {
     if (analysis.kind !== 'done' || !analysis.result) return
+    setExportError(null)
     const res = await window.api.exporter.analysisAsPdf(analysis.result.analysis.id)
-    if (!res.ok && res.error) {
+    if (!res.ok && res.error && res.error !== 'Abgebrochen') {
       window.api.logs.write('error', 'AnalysisPage', 'PDF export failed', { error: res.error })
+      setExportError(`PDF-Export fehlgeschlagen: ${res.error}`)
+      setTimeout(() => setExportError(null), 8000)
     }
   }, [analysis])
 
@@ -368,9 +374,24 @@ export function AnalysisPage() {
           <p className="text-sm text-brand-red">{analysis.message}</p>
         </div>
       )}
+      {exportError && (
+        <div className="rounded-xl border border-brand-red/30 bg-brand-red/5 p-4">
+          <p className="text-sm text-brand-red">{exportError}</p>
+        </div>
+      )}
       {chat.kind === 'error' && (
         <div className="rounded-xl border border-brand-red/30 bg-brand-red/5 p-4">
           <p className="text-sm text-brand-red">{chat.message}</p>
+        </div>
+      )}
+
+      {/* Gestellte Freitext-Frage ueber dem Ergebnis anzeigen */}
+      {mode === 'freeform' && askedQuestion && analysis.kind !== 'idle' && (
+        <div className="rounded-xl border border-brand-cyan/20 bg-brand-cyan/5 px-4 py-3">
+          <p className="text-xs font-semibold uppercase tracking-wider text-brand-text-dim">
+            Deine Frage
+          </p>
+          <p className="mt-1 text-sm text-brand-text">{askedQuestion}</p>
         </div>
       )}
 

@@ -70,6 +70,9 @@ export function DocumentViewPage() {
   const [firstImpression, setFirstImpression] = useState<FirstImpression | null>(null)
   const [firstImpressionDismissed, setFirstImpressionDismissed] = useState(false)
   const [firstImpressionLoading, setFirstImpressionLoading] = useState(false)
+  // Heuristik kann falsch-positiv sein (z.B. exotische Encodings) - Nutzer
+  // kann die Warnung wegklicken und normal weiterarbeiten.
+  const [garbledDismissed, setGarbledDismissed] = useState(false)
 
   useEffect(() => {
     if (!id) return
@@ -80,6 +83,7 @@ export function DocumentViewPage() {
       setLoading(false)
     })
     setFirstImpressionDismissed(false)
+    setGarbledDismissed(false)
     setFirstImpression(null)
     window.api.documents.getFirstImpression(id).then((fi) => {
       if (cancelled) return
@@ -98,7 +102,10 @@ export function DocumentViewPage() {
     setFirstImpressionLoading(false)
   }
 
-  const isGarbled = useMemo(() => (doc ? isLikelyGarbled(doc.extractedText) : false), [doc])
+  const isGarbled = useMemo(
+    () => (doc ? isLikelyGarbled(doc.extractedText) : false) && !garbledDismissed,
+    [doc, garbledDismissed]
+  )
 
   const handleDelete = async () => {
     if (!id) return
@@ -194,6 +201,12 @@ export function DocumentViewPage() {
               <RefreshCw size={12} className="inline" /> Symbol oben um das Dokument neu einzulesen.
             </p>
             {reImportError && <p className="mt-2 text-xs text-brand-red">{reImportError}</p>}
+            <button
+              onClick={() => setGarbledDismissed(true)}
+              className="mt-3 rounded-lg border border-brand-amber/30 px-3 py-1.5 text-xs text-brand-amber transition-colors hover:bg-brand-amber/10"
+            >
+              Trotzdem fortfahren - der Text sieht für mich in Ordnung aus
+            </button>
           </div>
         </div>
       )}

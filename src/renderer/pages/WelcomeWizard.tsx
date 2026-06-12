@@ -54,14 +54,24 @@ export function WelcomeWizard() {
   const handleStartOllama = async () => {
     setStarting(true)
     setStartError(null)
-    const result = await window.api.ollama.start()
-    if (result.started) {
-      const state = await refreshOllama()
-      setOllamaState(state)
-    } else {
-      setStartError(result.error ?? 'Ollama konnte nicht gestartet werden')
+    try {
+      const result = await window.api.ollama.start()
+      if (result.started) {
+        const state = await refreshOllama()
+        setOllamaState(state)
+        if (state !== 'connected') {
+          setStartError(
+            'Ollama wurde gestartet, antwortet aber noch nicht. Einen Moment warten und erneut versuchen.'
+          )
+        }
+      } else {
+        setStartError(result.error ?? 'Ollama konnte nicht gestartet werden')
+      }
+    } catch (err) {
+      setStartError(err instanceof Error ? err.message : 'Ollama konnte nicht gestartet werden')
+    } finally {
+      setStarting(false)
     }
-    setStarting(false)
   }
 
   const handleContinue = async () => {

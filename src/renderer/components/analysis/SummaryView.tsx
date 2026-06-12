@@ -42,8 +42,8 @@ export function SummaryView({ result }: Props) {
           </div>
           <p className="text-sm text-brand-text">{result.phishingWarning}</p>
           <p className="mt-2 text-xs text-brand-text-dim">
-            Klicke auf keine Links und gib keine Daten ein. Überprüfe den Absender direkt über
-            die offizielle Website.
+            Klicke auf keine Links und gib keine Daten ein. Überprüfe den Absender direkt über die
+            offizielle Website.
           </p>
         </div>
       )}
