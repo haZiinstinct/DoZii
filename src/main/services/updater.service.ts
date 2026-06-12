@@ -5,7 +5,7 @@ import { getSettings } from './settings.service'
 import type { UpdateStatus } from '@shared/types'
 
 /**
- * Auto-Update ueber GitHub Releases (oeffentliches Repo DoZii-releases).
+ * Auto-Update über GitHub Releases (Feed laut publish-Block in electron-builder.yml).
  *
  * Bewusst konservativ: kein Auto-Download. Der Check meldet nur die
  * Versionsnummer; Download und Installation stoesst der Nutzer an.

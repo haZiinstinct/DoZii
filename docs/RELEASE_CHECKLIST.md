@@ -68,8 +68,8 @@ Vor jedem öffentlichen Release komplett durchgehen. Empfohlen: frisches Windows
 
 ## Veröffentlichen
 
-- [ ] `git tag vX.Y.Z && git push origin vX.Y.Z` (privates Code-Repo)
-- [ ] Release im öffentlichen Repo:
-      `gh release create vX.Y.Z dist/DoZii-Setup-X.Y.Z.exe dist/DoZii-Setup-X.Y.Z.exe.blockmap dist/latest.yml -R haZiinstinct/DoZii-releases --title "DoZii X.Y.Z" --notes-file <notes.md>`
+- [ ] `git tag vX.Y.Z && git push origin vX.Y.Z`
+- [ ] Release anlegen:
+      `gh release create vX.Y.Z dist/DoZii-Setup-X.Y.Z.exe dist/DoZii-Setup-X.Y.Z.exe.blockmap dist/latest.yml --title "DoZii X.Y.Z" --notes-file <notes.md>`
 - [ ] Download von github.com auf Zweitgerät testen
 - [ ] Update-Probe: Dummy-Folgeversion als Draft → installierte Version findet sie → Draft löschen

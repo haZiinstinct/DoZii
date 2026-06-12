@@ -6,7 +6,7 @@ DoZii ist eine Electron-Desktop-App, die sensible Dokumente (Arbeitszeugnisse, V
 
 ## Download
 
-➡️ **[Neueste Version](https://github.com/haZiinstinct/DoZii-releases/releases/latest)** (Windows-Installer)
+➡️ **[Neueste Version](https://github.com/haZiinstinct/DoZii/releases/latest)** (Windows-Installer)
 
 > **SmartScreen-Hinweis:** Der Installer ist derzeit nicht code-signiert. Windows zeigt beim ersten Start „Unbekannter Herausgeber" – über **„Weitere Informationen" → „Trotzdem ausführen"** geht es weiter.
 
@@ -54,8 +54,8 @@ Voraussetzungen: Node.js >= 24, laufendes Ollama mit mindestens einem Modell.
 
 1. Version in `package.json` erhöhen, `CHANGELOG.md` ergänzen, committen + taggen (`vX.Y.Z`)
 2. `npm run build:win -- --publish never`
-3. Smoke-Test laut Checkliste (frisches Windows-Profil/VM)
-4. Release im öffentlichen Repo [DoZii-releases](https://github.com/haZiinstinct/DoZii-releases) anlegen: `gh release create vX.Y.Z dist/DoZii-Setup-X.Y.Z.exe dist/DoZii-Setup-X.Y.Z.exe.blockmap dist/latest.yml -R haZiinstinct/DoZii-releases --notes-file <notes>`
+3. Smoke-Test laut [Checkliste](docs/RELEASE_CHECKLIST.md) (frisches Windows-Profil/VM)
+4. Release anlegen: `gh release create vX.Y.Z dist/DoZii-Setup-X.Y.Z.exe dist/DoZii-Setup-X.Y.Z.exe.blockmap dist/latest.yml --notes-file <notes>`
 5. Update-Flow gegen das Release prüfen (installierte Vorversion findet das Update)
 
 ## Tech-Stack
@@ -64,8 +64,12 @@ Voraussetzungen: Node.js >= 24, laufendes Ollama mit mindestens einem Modell.
 - Ollama (lokal, localhost:11434) für die LLM-Inferenz
 - better-sqlite3 + Drizzle ORM, Migrationen über `PRAGMA user_version`
 - unpdf, mammoth, xlsx, tesseract.js für Textextraktion
-- electron-updater (GitHub-Provider, öffentliches Releases-Repo)
+- electron-updater (GitHub-Provider)
+
+## Mitmachen
+
+Issues und Pull Requests sind willkommen – Details in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Lizenz
 
-Proprietär – © haZii. Details in [LICENSE](LICENSE), gebündelte Open-Source-Komponenten in [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md).
+[MIT](LICENSE) – © haZii. Gebündelte Open-Source-Komponenten in [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md).

@@ -1,43 +1,21 @@
-DoZii – Proprietäre Freeware-Lizenz
+MIT License
 
-Copyright (c) 2026 haZii (h.boerekci@gmail.com). Alle Rechte vorbehalten.
+Copyright (c) 2026 haZii
 
-1. NUTZUNG
-   Die Nutzung der DoZii-Anwendung (in kompilierter Form, wie über das
-   offizielle Releases-Repo https://github.com/haZiinstinct/DoZii-releases
-   verteilt) ist für private und geschäftliche Zwecke kostenlos gestattet.
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-2. EINSCHRÄNKUNGEN
-   Ohne vorherige schriftliche Zustimmung des Rechteinhabers ist es nicht
-   gestattet:
-   a) die Software oder Teile davon weiterzuverbreiten, zu verkaufen,
-      zu vermieten oder zu verleasen;
-   b) die Software zu dekompilieren, zurückzuentwickeln (Reverse
-      Engineering) oder zu disassemblieren, außer soweit zwingendes Recht
-      dies ausdrücklich erlaubt;
-   c) abgeleitete Werke der Software zu erstellen;
-   d) Copyright-, Marken- oder sonstige Schutzrechtshinweise zu entfernen.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
-3. DRITTANBIETER-KOMPONENTEN
-   Die Software bündelt Open-Source-Komponenten, die unter ihren jeweiligen
-   Lizenzen stehen. Eine Übersicht enthält die Datei
-   THIRD_PARTY_LICENSES.md. Diese Lizenz gilt nicht für die gebündelten
-   Drittanbieter-Komponenten.
-
-4. KEINE GEWÄHRLEISTUNG
-   DIE SOFTWARE WIRD "WIE BESEHEN" OHNE JEDE AUSDRÜCKLICHE ODER
-   STILLSCHWEIGENDE GEWÄHRLEISTUNG BEREITGESTELLT, EINSCHLIESSLICH, ABER
-   NICHT BESCHRÄNKT AUF DIE GEWÄHRLEISTUNG DER MARKTGÄNGIGKEIT ODER DER
-   EIGNUNG FÜR EINEN BESTIMMTEN ZWECK. DIE ANALYSEERGEBNISSE WERDEN VON
-   LOKALEN KI-MODELLEN ERZEUGT UND KÖNNEN FEHLER ENTHALTEN; SIE STELLEN
-   INSBESONDERE KEINE RECHTSBERATUNG DAR.
-
-5. HAFTUNGSBESCHRÄNKUNG
-   IN KEINEM FALL HAFTET DER RECHTEINHABER FÜR SCHÄDEN, DIE AUS DER NUTZUNG
-   ODER DER UNMÖGLICHKEIT DER NUTZUNG DER SOFTWARE ENTSTEHEN, SOWEIT
-   GESETZLICH ZULÄSSIG. DIE HAFTUNG FÜR VORSATZ UND GROBE FAHRLÄSSIGKEIT
-   SOWIE NACH ZWINGENDEN GESETZLICHEN VORSCHRIFTEN BLEIBT UNBERÜHRT.
-
-6. BEENDIGUNG
-   Diese Lizenz endet automatisch bei Verstoß gegen ihre Bedingungen.
-   In diesem Fall sind alle Kopien der Software zu löschen.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

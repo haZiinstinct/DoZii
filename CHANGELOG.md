@@ -22,5 +22,6 @@ Erstes öffentliches Release. Die Versionen davor (intern 1.x–3.x) waren nie v
 
 ### Hinweise
 
+- Open Source unter MIT-Lizenz
 - Windows 10/11 (64-bit); Installer ist vorerst nicht code-signiert (SmartScreen-Hinweis siehe README)
 - Legacy-Formate `.doc`/`.xls` werden nicht unterstützt – bitte als `.docx`/`.xlsx` speichern

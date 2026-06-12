@@ -28,9 +28,9 @@ nsis:
 extraResources:
   - from: resources/
     to: resources/
-# Update-Feed fuer electron-updater: oeffentliches Releases-Repo (Code-Repo bleibt privat).
+# Update-Feed fuer electron-updater: GitHub Releases dieses Repos.
 # Gebaut wird mit --publish never; Upload erfolgt manuell via gh release create.
 publish:
   provider: github
   owner: haZiinstinct
-  repo: DoZii-releases
+  repo: DoZii
