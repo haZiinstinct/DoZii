@@ -13,7 +13,7 @@ import { registerExporterIpc } from './ipc/exporter.ipc'
 import { registerSystemIpc } from './ipc/system.ipc'
 import { registerUpdateIpc } from './ipc/update.ipc'
 import { initUpdater } from './services/updater.service'
-import { closeDb } from './db'
+import { closeDb, getDb } from './db'
 import { logger, initLogger } from './services/logger.service'
 import { abortAllStreams } from './services/ollama-client.service'
 
@@ -146,6 +146,10 @@ app.whenReady().then(() => {
   registerSystemIpc()
   registerUpdateIpc()
   initUpdater()
+
+  // DB eager initialisieren: Migrationen sollen beim Start laufen (und bei
+  // Fehlern sofort sichtbar scheitern), nicht erst beim ersten DB-Zugriff.
+  getDb()
 
   app.on('browser-window-created', (_, window) => {
     optimizer.watchWindowShortcuts(window)
