@@ -113,7 +113,7 @@ const severityConfig: Record<
   }
 }
 
-function assessmentIcon(assessment: ZeugnisAssessment): React.ReactNode {
+function assessmentIcon(assessment: ZeugnisAssessment | null): React.ReactNode {
   switch (assessment) {
     case 'positive':
       return <Plus size={14} className="text-brand-green" />
@@ -127,7 +127,7 @@ function assessmentIcon(assessment: ZeugnisAssessment): React.ReactNode {
   }
 }
 
-function assessmentColor(assessment: ZeugnisAssessment): string {
+function assessmentColor(assessment: ZeugnisAssessment | null): string {
   switch (assessment) {
     case 'positive':
       return 'border-brand-green/30 bg-brand-green/5'

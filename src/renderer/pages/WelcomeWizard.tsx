@@ -11,14 +11,7 @@ import {
   Loader2,
   Download
 } from 'lucide-react'
-
-interface HardwareInfo {
-  cpu: { model: string; cores: number; threads: number }
-  ram: { totalGb: number; freeGb: number }
-  gpu: { name: string; vramMb: number; vendor: string } | null
-  profile: string
-  recommendedModel: string
-}
+import type { HardwareInfo } from '@shared/types'
 
 const profileLabels: Record<string, string> = {
   minimal: 'Minimal',

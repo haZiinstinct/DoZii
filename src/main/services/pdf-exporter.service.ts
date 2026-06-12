@@ -1,6 +1,5 @@
 import { BrowserWindow, dialog, shell } from 'electron'
 import { writeFile } from 'fs/promises'
-import { join } from 'path'
 import { eq } from 'drizzle-orm'
 import { getDb, schema } from '../db'
 import { getDocumentById } from './document-store.service'

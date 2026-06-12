@@ -1,6 +1,6 @@
 import { app } from 'electron'
 import { join } from 'path'
-import { mkdirSync, appendFileSync, existsSync, readdirSync, statSync, unlinkSync } from 'fs'
+import { mkdirSync, appendFileSync, readdirSync, statSync, unlinkSync } from 'fs'
 
 export type LogLevel = 'debug' | 'info' | 'warn' | 'error'
 
