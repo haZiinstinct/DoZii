@@ -21,6 +21,7 @@
     "better-sqlite3": "^12.8.0",
     "drizzle-orm": "^0.45.2",
     "electron-store": "^10.0.0",
+    "electron-updater": "^6.8.9",
     "i18next": "^24.0.0",
     "lucide-react": "^0.460.0",
     "mammoth": "^1.12.0",

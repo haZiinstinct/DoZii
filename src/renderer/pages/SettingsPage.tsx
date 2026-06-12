@@ -17,14 +17,16 @@ import {
   Moon,
   Laptop,
   Square,
-  Flag
+  Flag,
+  RefreshCw
 } from 'lucide-react'
 import type {
   AppSettings,
   HardwareInfo,
   OllamaModel,
   SuggestedModel,
-  ThemeMode
+  ThemeMode,
+  UpdateStatus
 } from '@shared/types'
 import { useOllamaStatus } from '@/hooks/useOllamaStatus'
 import { useTheme } from '@/hooks/useTheme'
@@ -125,6 +127,8 @@ export function SettingsPage() {
   const [deleting, setDeleting] = useState<string | null>(null)
   const [deleteError, setDeleteError] = useState<string | null>(null)
   const [modelTab, setModelTab] = useState<'cpu' | 'gpu'>('cpu')
+  const [appVersion, setAppVersion] = useState('')
+  const [updateStatus, setUpdateStatus] = useState<UpdateStatus>({ state: 'idle' })
   const {
     connected,
     installed,
@@ -156,7 +160,19 @@ export function SettingsPage() {
       setSelectedModel(s.selectedModel)
     })
     loadModels()
+    window.api.update.getState().then(({ appVersion: v, status }) => {
+      setAppVersion(v)
+      setUpdateStatus(status)
+    })
+    const unsubscribe = window.api.update.onStatus(setUpdateStatus)
+    return unsubscribe
   }, [])
+
+  const handleToggleAutoUpdate = async () => {
+    if (!settings) return
+    const next = await window.api.settings.update({ autoUpdateCheck: !settings.autoUpdateCheck })
+    setSettings(next)
+  }
 
   const handleSelectModel = async (name: string) => {
     setSelectedModel(name)
@@ -225,6 +241,99 @@ export function SettingsPage() {
         </div>
         <h1 className="text-2xl font-bold text-brand-text-bright">Einstellungen</h1>
       </div>
+
+      {/* Updates */}
+      <section className="rounded-2xl border border-brand-border bg-brand-card/60 p-6">
+        <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-brand-text-dim">
+          <RefreshCw size={12} />
+          Updates
+        </h2>
+        <div className="flex flex-wrap items-center gap-3">
+          <span className="font-mono text-sm text-brand-text">DoZii {appVersion || '–'}</span>
+
+          {updateStatus.state === 'checking' ? (
+            <span className="flex items-center gap-1.5 text-xs text-brand-text-dim">
+              <Loader2 size={12} className="animate-spin" /> Suche nach Updates...
+            </span>
+          ) : updateStatus.state === 'available' ? (
+            <span className="text-xs text-brand-cyan">
+              Version {updateStatus.version} verfügbar
+            </span>
+          ) : updateStatus.state === 'downloading' ? (
+            <span className="flex items-center gap-1.5 text-xs text-brand-cyan">
+              <Loader2 size={12} className="animate-spin" /> Lädt herunter... {updateStatus.percent}
+              %
+            </span>
+          ) : updateStatus.state === 'downloaded' ? (
+            <span className="text-xs text-brand-green">
+              Version {updateStatus.version} bereit zur Installation
+            </span>
+          ) : updateStatus.state === 'up-to-date' ? (
+            <span className="flex items-center gap-1.5 text-xs text-brand-green">
+              <Check size={12} /> Aktuell
+            </span>
+          ) : updateStatus.state === 'error' ? (
+            <span className="text-xs text-brand-red" title={updateStatus.message}>
+              Update-Check fehlgeschlagen
+            </span>
+          ) : null}
+
+          <div className="ml-auto flex items-center gap-2">
+            {updateStatus.state === 'available' && (
+              <button
+                onClick={() => window.api.update.download()}
+                className="flex items-center gap-1.5 rounded-lg bg-brand-cyan px-3 py-1.5 text-xs font-semibold text-brand-dark transition-colors hover:bg-brand-cyan-dim"
+              >
+                <Download size={12} />
+                Herunterladen
+              </button>
+            )}
+            {updateStatus.state === 'downloaded' && (
+              <button
+                onClick={() => window.api.update.install()}
+                className="flex items-center gap-1.5 rounded-lg bg-brand-green px-3 py-1.5 text-xs font-semibold text-brand-dark transition-colors hover:opacity-90"
+              >
+                Neustarten & installieren
+              </button>
+            )}
+            {(updateStatus.state === 'idle' ||
+              updateStatus.state === 'up-to-date' ||
+              updateStatus.state === 'error') && (
+              <button
+                onClick={() => window.api.update.check()}
+                className="rounded-lg border border-brand-border px-3 py-1.5 text-xs text-brand-text-dim transition-colors hover:border-brand-cyan/30 hover:text-brand-cyan"
+              >
+                Jetzt prüfen
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div className="mt-4 flex items-start justify-between gap-4 border-t border-brand-border pt-4">
+          <div>
+            <p className="text-sm text-brand-text">Beim Start automatisch nach Updates suchen</p>
+            <p className="mt-1 text-xs text-brand-text-dim">
+              Fragt nur die Versionsnummer bei GitHub ab - es werden keine Dokumente oder
+              Nutzungsdaten übertragen. Ausgeschaltet bleibt DoZii vollständig offline (außer
+              Ollama).
+            </p>
+          </div>
+          <button
+            onClick={handleToggleAutoUpdate}
+            role="switch"
+            aria-checked={settings?.autoUpdateCheck ?? true}
+            className={`relative h-6 w-11 flex-shrink-0 rounded-full transition-colors ${
+              (settings?.autoUpdateCheck ?? true) ? 'bg-brand-cyan' : 'bg-brand-border'
+            }`}
+          >
+            <span
+              className={`absolute top-0.5 h-5 w-5 rounded-full bg-brand-dark transition-all ${
+                (settings?.autoUpdateCheck ?? true) ? 'left-[22px]' : 'left-0.5'
+              }`}
+            />
+          </button>
+        </div>
+      </section>
 
       {/* Theme */}
       <section className="rounded-2xl border border-brand-border bg-brand-card/60 p-6">

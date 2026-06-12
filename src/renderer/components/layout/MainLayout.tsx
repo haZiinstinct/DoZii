@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom'
 import { CustomTitlebar } from './CustomTitlebar'
 import { Sidebar } from './Sidebar'
 import { CommandPalette } from '../CommandPalette'
+import { UpdateToast } from '../UpdateToast'
 import { useTheme } from '@/hooks/useTheme'
 
 export function MainLayout() {
@@ -34,6 +35,7 @@ export function MainLayout() {
         </main>
       </div>
       <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
+      <UpdateToast />
     </div>
   )
 }

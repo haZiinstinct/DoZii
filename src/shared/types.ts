@@ -179,6 +179,11 @@ export interface AppSettings {
   ocrLanguages: string[]
   ocrQuality: 'fast' | 'balanced' | 'best'
   firstLaunchDone: boolean
+  /**
+   * Automatischer Update-Check beim Start (GitHub Releases). Der einzige
+   * Netzwerk-Call der App ausser Ollama - deshalb abschaltbar.
+   */
+  autoUpdateCheck: boolean
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -188,8 +193,22 @@ export const DEFAULT_SETTINGS: AppSettings = {
   theme: 'dark',
   ocrLanguages: ['deu', 'eng'],
   ocrQuality: 'balanced',
-  firstLaunchDone: false
+  firstLaunchDone: false,
+  autoUpdateCheck: true
 }
+
+// ============================================================================
+// Updates
+// ============================================================================
+
+export type UpdateStatus =
+  | { state: 'idle' }
+  | { state: 'checking' }
+  | { state: 'up-to-date'; version: string }
+  | { state: 'available'; version: string }
+  | { state: 'downloading'; percent: number }
+  | { state: 'downloaded'; version: string }
+  | { state: 'error'; message: string }
 
 // ============================================================================
 // Logs

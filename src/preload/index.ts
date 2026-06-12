@@ -13,7 +13,8 @@ import type {
   OllamaModel,
   OllamaStartResult,
   PullProgress,
-  SystemMetrics
+  SystemMetrics,
+  UpdateStatus
 } from '@shared/types'
 
 /**
@@ -136,6 +137,16 @@ export const api = {
   // System metrics (live hardware + runtime info for the Sidebar indicator)
   system: {
     getMetrics: (): Promise<SystemMetrics> => ipcRenderer.invoke('system:getMetrics')
+  },
+
+  // Auto-Update (GitHub Releases)
+  update: {
+    getState: (): Promise<{ appVersion: string; status: UpdateStatus }> =>
+      ipcRenderer.invoke('update:getState'),
+    check: (): Promise<UpdateStatus> => ipcRenderer.invoke('update:check'),
+    download: (): Promise<{ ok: boolean; error?: string }> => ipcRenderer.invoke('update:download'),
+    install: (): Promise<void> => ipcRenderer.invoke('update:install'),
+    onStatus: subscribe<UpdateStatus>('update:status')
   }
 }
 

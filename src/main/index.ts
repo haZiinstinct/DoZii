@@ -11,6 +11,8 @@ import { registerChatIpc } from './ipc/chat.ipc'
 import { registerLogsIpc } from './ipc/logs.ipc'
 import { registerExporterIpc } from './ipc/exporter.ipc'
 import { registerSystemIpc } from './ipc/system.ipc'
+import { registerUpdateIpc } from './ipc/update.ipc'
+import { initUpdater } from './services/updater.service'
 import { closeDb } from './db'
 import { logger, initLogger } from './services/logger.service'
 import { abortAllStreams } from './services/ollama-client.service'
@@ -142,6 +144,8 @@ app.whenReady().then(() => {
   registerLogsIpc()
   registerExporterIpc()
   registerSystemIpc()
+  registerUpdateIpc()
+  initUpdater()
 
   app.on('browser-window-created', (_, window) => {
     optimizer.watchWindowShortcuts(window)
