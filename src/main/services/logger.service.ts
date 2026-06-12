@@ -42,7 +42,6 @@ class Logger {
       }
       this.buffer = []
     } catch (err) {
-      // eslint-disable-next-line no-console
       console.error('Logger init failed:', err)
     }
   }

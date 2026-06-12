@@ -165,6 +165,11 @@ export function SettingsPage() {
   } = useOllamaStatus()
   const { mode: themeMode, setMode: setThemeMode } = useTheme()
 
+  const loadModels = async () => {
+    const m = await window.api.ollama.listModels()
+    setModels(m)
+  }
+
   useEffect(() => {
     window.api.hardware.detect().then((hw) => {
       setHardware(hw)
@@ -180,11 +185,6 @@ export function SettingsPage() {
     window.api.license.get().then(setLicense)
     loadModels()
   }, [])
-
-  const loadModels = async () => {
-    const m = await window.api.ollama.listModels()
-    setModels(m)
-  }
 
   const handleSelectModel = async (name: string) => {
     setSelectedModel(name)

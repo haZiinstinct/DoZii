@@ -199,8 +199,8 @@ export async function importDocument(filePath: string): Promise<DoziiDocument> {
   logger.debug('document-store', 'File copied to managed storage', { id, destPath })
 
   // Extract text - if this fails, we must clean up the copied file
-  let extractedText = ''
-  let pageCount: number | null = null
+  let extractedText: string
+  let pageCount: number | null
 
   try {
     const extracted = await extractTextByType(destPath, ext)
@@ -220,7 +220,8 @@ export async function importDocument(filePath: string): Promise<DoziiDocument> {
       error: err instanceof Error ? err.message : String(err)
     })
     throw new Error(
-      `Text konnte nicht aus "${filename}" extrahiert werden: ${err instanceof Error ? err.message : 'Unbekannter Fehler'}`
+      `Text konnte nicht aus "${filename}" extrahiert werden: ${err instanceof Error ? err.message : 'Unbekannter Fehler'}`,
+      { cause: err }
     )
   }
 
@@ -343,8 +344,8 @@ export async function reImportDocument(id: string): Promise<DoziiDocument> {
   }
 
   // Re-run extraction (same pipeline as fresh import)
-  let extractedText = ''
-  let pageCount: number | null = null
+  let extractedText: string
+  let pageCount: number | null
   try {
     const extracted = await extractTextByType(doc.originalPath, ext)
     extractedText = extracted.text.trim()
@@ -356,7 +357,8 @@ export async function reImportDocument(id: string): Promise<DoziiDocument> {
       error: err instanceof Error ? err.message : String(err)
     })
     throw new Error(
-      `Text konnte nicht erneut aus "${doc.filename}" extrahiert werden: ${err instanceof Error ? err.message : 'Unbekannter Fehler'}`
+      `Text konnte nicht erneut aus "${doc.filename}" extrahiert werden: ${err instanceof Error ? err.message : 'Unbekannter Fehler'}`,
+      { cause: err }
     )
   }
 

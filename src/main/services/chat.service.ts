@@ -113,7 +113,7 @@ export async function sendChatMessage(
 
   const startTime = Date.now()
   let fullResponse: string
-  let aborted = false
+  let aborted: boolean
 
   // Warmup: force model load before the stream request to avoid cold-start races
   await warmupModel(model)
