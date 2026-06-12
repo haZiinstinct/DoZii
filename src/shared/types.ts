@@ -192,28 +192,6 @@ export const DEFAULT_SETTINGS: AppSettings = {
 }
 
 // ============================================================================
-// License (Phase 4)
-// ============================================================================
-
-export type LicenseTier = 'free' | 'pro' | 'business'
-
-export interface LicenseInfo {
-  tier: LicenseTier
-  key: string | null
-  email: string | null
-  activatedAt: string | null
-  expiresAt: string | null
-}
-
-export const DEFAULT_LICENSE: LicenseInfo = {
-  tier: 'free',
-  key: null,
-  email: null,
-  activatedAt: null,
-  expiresAt: null
-}
-
-// ============================================================================
 // Logs
 // ============================================================================
 

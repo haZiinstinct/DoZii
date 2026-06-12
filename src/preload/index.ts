@@ -7,7 +7,6 @@ import type {
   DoziiDocument,
   FirstImpression,
   HardwareInfo,
-  LicenseInfo,
   LogLevel,
   OllamaConnectionStatus,
   OllamaInstallation,
@@ -126,17 +125,6 @@ export const api = {
       ipcRenderer.invoke('logs:write', level, source, message, meta),
     openDirectory: (): Promise<string | null> => ipcRenderer.invoke('logs:openDirectory'),
     getCurrentFile: (): Promise<string | null> => ipcRenderer.invoke('logs:getCurrentFile')
-  },
-
-  // License
-  license: {
-    get: (): Promise<LicenseInfo> => ipcRenderer.invoke('license:get'),
-    activate: (
-      key: string,
-      email?: string
-    ): Promise<{ ok: boolean; error?: string; info: LicenseInfo }> =>
-      ipcRenderer.invoke('license:activate', key, email),
-    deactivate: (): Promise<LicenseInfo> => ipcRenderer.invoke('license:deactivate')
   },
 
   // Export

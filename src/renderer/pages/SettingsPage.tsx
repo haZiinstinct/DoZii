@@ -16,16 +16,12 @@ import {
   Sun,
   Moon,
   Laptop,
-  Key,
-  Award,
   Square,
   Flag
 } from 'lucide-react'
 import type {
   AppSettings,
   HardwareInfo,
-  LicenseInfo,
-  LicenseTier,
   OllamaModel,
   SuggestedModel,
   ThemeMode
@@ -118,39 +114,16 @@ const gpuModels: SuggestedModel[] = [
   }
 ]
 
-const tierInfo: Record<LicenseTier, { label: string; color: string; desc: string }> = {
-  free: {
-    label: 'Free',
-    color: 'text-brand-text-dim',
-    desc: 'Kostenlos mit Basis-Modi. Upgrade fuer Arbeitszeugnis-Decoder und mehr.'
-  },
-  pro: {
-    label: 'Pro',
-    color: 'text-brand-cyan',
-    desc: 'Alle Analyse-Modi + PDF-Export + Bulk-Import freigeschaltet.'
-  },
-  business: {
-    label: 'Business',
-    color: 'text-brand-amber',
-    desc: 'Pro + Multi-User + Prompt-Library + Priority Support.'
-  }
-}
-
 export function SettingsPage() {
   const [hardware, setHardware] = useState<HardwareInfo | null>(null)
   const [models, setModels] = useState<OllamaModel[]>([])
   const [selectedModel, setSelectedModel] = useState('')
   const [settings, setSettings] = useState<AppSettings | null>(null)
-  const [license, setLicense] = useState<LicenseInfo | null>(null)
   const [pulling, setPulling] = useState<string | null>(null)
   const [pullProgress, setPullProgress] = useState('')
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
   const [deleting, setDeleting] = useState<string | null>(null)
   const [deleteError, setDeleteError] = useState<string | null>(null)
-  const [licenseKeyInput, setLicenseKeyInput] = useState('')
-  const [licenseEmailInput, setLicenseEmailInput] = useState('')
-  const [licenseError, setLicenseError] = useState<string | null>(null)
-  const [licenseActivating, setLicenseActivating] = useState(false)
   const [modelTab, setModelTab] = useState<'cpu' | 'gpu'>('cpu')
   const {
     connected,
@@ -182,7 +155,6 @@ export function SettingsPage() {
       setSettings(s)
       setSelectedModel(s.selectedModel)
     })
-    window.api.license.get().then(setLicense)
     loadModels()
   }, [])
 
@@ -243,29 +215,6 @@ export function SettingsPage() {
     }
   }
 
-  const handleActivateLicense = async () => {
-    if (!licenseKeyInput.trim()) return
-    setLicenseActivating(true)
-    setLicenseError(null)
-    const result = await window.api.license.activate(
-      licenseKeyInput.trim(),
-      licenseEmailInput.trim() || undefined
-    )
-    setLicenseActivating(false)
-    if (result.ok) {
-      setLicense(result.info)
-      setLicenseKeyInput('')
-      setLicenseEmailInput('')
-    } else {
-      setLicenseError(result.error ?? 'Aktivierung fehlgeschlagen')
-    }
-  }
-
-  const handleDeactivateLicense = async () => {
-    const info = await window.api.license.deactivate()
-    setLicense(info)
-  }
-
   const installedNames = new Set(models.map((m) => m.name))
 
   return (
@@ -276,80 +225,6 @@ export function SettingsPage() {
         </div>
         <h1 className="text-2xl font-bold text-brand-text-bright">Einstellungen</h1>
       </div>
-
-      {/* License */}
-      <section className="rounded-2xl border border-brand-border bg-brand-card/60 p-6">
-        <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-brand-text-dim">
-          <Award size={12} />
-          Lizenz
-        </h2>
-
-        {license && (
-          <div className="flex items-start gap-4">
-            <div
-              className={`flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl border border-brand-border bg-brand-darker font-mono text-lg font-bold ${tierInfo[license.tier].color}`}
-            >
-              {tierInfo[license.tier].label.charAt(0)}
-            </div>
-            <div className="flex-1">
-              <p className={`text-lg font-bold ${tierInfo[license.tier].color}`}>
-                DoZii {tierInfo[license.tier].label}
-              </p>
-              <p className="mt-1 text-xs text-brand-text-dim">{tierInfo[license.tier].desc}</p>
-              {license.activatedAt && (
-                <p className="mt-2 font-mono text-[10px] text-brand-text-dim">
-                  Aktiviert: {new Date(license.activatedAt).toLocaleDateString('de-DE')}
-                </p>
-              )}
-            </div>
-            {license.tier !== 'free' && (
-              <button
-                onClick={handleDeactivateLicense}
-                className="rounded-lg border border-brand-border px-3 py-1.5 text-xs text-brand-text-dim transition-colors hover:border-brand-red/30 hover:text-brand-red"
-              >
-                Deaktivieren
-              </button>
-            )}
-          </div>
-        )}
-
-        {license?.tier === 'free' && (
-          <div className="mt-4 space-y-3 border-t border-brand-border pt-4">
-            <p className="text-xs text-brand-text-dim">
-              Lizenz-Key eingeben (Format: DOZII-PRO-XXXX-XXXX-XXXX)
-            </p>
-            <div className="flex flex-col gap-2 sm:flex-row">
-              <input
-                type="text"
-                value={licenseKeyInput}
-                onChange={(e) => setLicenseKeyInput(e.target.value)}
-                placeholder="DOZII-PRO-XXXX-XXXX-XXXX"
-                className="flex-1 rounded-xl border border-brand-border bg-brand-dark/80 px-4 py-2.5 font-mono text-sm text-brand-text placeholder:text-brand-text-dim/70 focus:border-brand-cyan/50 focus:outline-none focus:ring-1 focus:ring-brand-cyan/20"
-              />
-              <input
-                type="email"
-                value={licenseEmailInput}
-                onChange={(e) => setLicenseEmailInput(e.target.value)}
-                placeholder="E-Mail (optional)"
-                className="w-full rounded-xl border border-brand-border bg-brand-dark/80 px-4 py-2.5 text-sm text-brand-text placeholder:text-brand-text-dim/70 focus:border-brand-cyan/50 focus:outline-none focus:ring-1 focus:ring-brand-cyan/20 sm:w-52"
-              />
-              <button
-                onClick={handleActivateLicense}
-                disabled={!licenseKeyInput.trim() || licenseActivating}
-                className="flex items-center justify-center gap-1.5 rounded-xl bg-brand-cyan px-4 py-2.5 text-sm font-semibold text-brand-dark transition-colors hover:bg-brand-cyan-dim disabled:opacity-40"
-              >
-                {licenseActivating ? (
-                  <Loader2 size={14} className="animate-spin" />
-                ) : (
-                  <Key size={14} />
-                )}
-                Aktivieren
-              </button>
-            </div>
-            {licenseError && <p className="text-xs text-brand-red">{licenseError}</p>}
-          </div>
-        )}
-      </section>
 
       {/* Theme */}
       <section className="rounded-2xl border border-brand-border bg-brand-card/60 p-6">

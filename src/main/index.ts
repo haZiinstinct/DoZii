@@ -9,7 +9,6 @@ import { registerDocumentsIpc } from './ipc/documents.ipc'
 import { registerAnalysisIpc } from './ipc/analysis.ipc'
 import { registerChatIpc } from './ipc/chat.ipc'
 import { registerLogsIpc } from './ipc/logs.ipc'
-import { registerLicenseIpc } from './ipc/license.ipc'
 import { registerExporterIpc } from './ipc/exporter.ipc'
 import { registerSystemIpc } from './ipc/system.ipc'
 import { closeDb } from './db'
@@ -124,7 +123,6 @@ app.whenReady().then(() => {
   registerAnalysisIpc()
   registerChatIpc()
   registerLogsIpc()
-  registerLicenseIpc()
   registerExporterIpc()
   registerSystemIpc()
 
