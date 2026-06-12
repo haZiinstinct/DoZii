@@ -8,8 +8,10 @@ interface Props {
 function priorityColor(priority?: ActionItem['priority']): string {
   if (!priority) return 'border-brand-border text-brand-text-dim bg-brand-card/40'
   const lower = priority.toLowerCase()
-  if (lower === 'hoch' || lower === 'high') return 'border-brand-red/30 text-brand-red bg-brand-red/5'
-  if (lower === 'mittel' || lower === 'medium') return 'border-brand-amber/30 text-brand-amber bg-brand-amber/5'
+  if (lower === 'hoch' || lower === 'high')
+    return 'border-brand-red/30 text-brand-red bg-brand-red/5'
+  if (lower === 'mittel' || lower === 'medium')
+    return 'border-brand-amber/30 text-brand-amber bg-brand-amber/5'
   return 'border-brand-text-dim/30 text-brand-text-dim bg-brand-card/40'
 }
 
@@ -40,8 +42,8 @@ export function SummaryView({ result }: Props) {
           </div>
           <p className="text-sm text-brand-text">{result.phishingWarning}</p>
           <p className="mt-2 text-xs text-brand-text-dim">
-            Klicke auf keine Links und gib keine Daten ein. Ueberpruefe den Absender
-            direkt ueber die offizielle Website.
+            Klicke auf keine Links und gib keine Daten ein. Ueberpruefe den Absender direkt ueber
+            die offizielle Website.
           </p>
         </div>
       )}
@@ -57,9 +59,7 @@ export function SummaryView({ result }: Props) {
               Dokumenttyp
             </p>
             <h2 className="text-xl font-bold text-brand-text-bright">{result.documentType}</h2>
-            {result.title && (
-              <p className="mt-1 text-sm text-brand-text-dim">{result.title}</p>
-            )}
+            {result.title && <p className="mt-1 text-sm text-brand-text-dim">{result.title}</p>}
           </div>
         </div>
       </div>

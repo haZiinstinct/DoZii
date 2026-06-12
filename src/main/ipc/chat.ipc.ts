@@ -1,9 +1,5 @@
 import { ipcMain, BrowserWindow } from 'electron'
-import {
-  sendChatMessage,
-  getChatHistory,
-  clearChatHistory
-} from '../services/chat.service'
+import { sendChatMessage, getChatHistory, clearChatHistory } from '../services/chat.service'
 import { abortAllStreams } from '../services/ollama-client.service'
 import { resolveActiveModel } from '../services/model-resolver.service'
 import { logger } from '../services/logger.service'

@@ -338,13 +338,15 @@ export function SettingsPage() {
                 disabled={!licenseKeyInput.trim() || licenseActivating}
                 className="flex items-center justify-center gap-1.5 rounded-xl bg-brand-cyan px-4 py-2.5 text-sm font-semibold text-brand-dark transition-colors hover:bg-brand-cyan-dim disabled:opacity-40"
               >
-                {licenseActivating ? <Loader2 size={14} className="animate-spin" /> : <Key size={14} />}
+                {licenseActivating ? (
+                  <Loader2 size={14} className="animate-spin" />
+                ) : (
+                  <Key size={14} />
+                )}
                 Aktivieren
               </button>
             </div>
-            {licenseError && (
-              <p className="text-xs text-brand-red">{licenseError}</p>
-            )}
+            {licenseError && <p className="text-xs text-brand-red">{licenseError}</p>}
           </div>
         )}
       </section>
@@ -355,13 +357,11 @@ export function SettingsPage() {
           Theme
         </h2>
         <div className="flex gap-2">
-          {(
-            [
-              { value: 'dark' as ThemeMode, label: 'Dunkel', icon: Moon },
-              { value: 'light' as ThemeMode, label: 'Hell', icon: Sun },
-              { value: 'system' as ThemeMode, label: 'System', icon: Laptop }
-            ]
-          ).map(({ value, label, icon: Icon }) => (
+          {[
+            { value: 'dark' as ThemeMode, label: 'Dunkel', icon: Moon },
+            { value: 'light' as ThemeMode, label: 'Hell', icon: Sun },
+            { value: 'system' as ThemeMode, label: 'System', icon: Laptop }
+          ].map(({ value, label, icon: Icon }) => (
             <button
               key={value}
               onClick={() => setThemeMode(value)}
@@ -593,16 +593,18 @@ export function SettingsPage() {
                   Modelle mit dem{' '}
                   <span className="inline-flex items-center gap-1 rounded bg-brand-amber/20 px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase text-brand-amber">
                     BUDGET-TAUGLICH
-                  </span>
-                  {' '}Badge laufen auch auf schwacher Hardware (ab 8 GB RAM, kein GPU noetig) und
-                  schaffen trotzdem Arbeitszeugnis-Dekodierung - nur mit ~30-90 Sekunden pro Analyse statt &lt;10s.
+                  </span>{' '}
+                  Badge laufen auch auf schwacher Hardware (ab 8 GB RAM, kein GPU noetig) und
+                  schaffen trotzdem Arbeitszeugnis-Dekodierung - nur mit ~30-90 Sekunden pro Analyse
+                  statt &lt;10s.
                 </p>
               </div>
             </div>
           )}
           {modelTab === 'gpu' && (
             <p className="text-xs text-brand-text-dim">
-              Braucht eine GPU mit genug VRAM fuer beste Geschwindigkeit. Laeuft sonst auf CPU-Fallback langsamer.
+              Braucht eine GPU mit genug VRAM fuer beste Geschwindigkeit. Laeuft sonst auf
+              CPU-Fallback langsamer.
             </p>
           )}
 
@@ -667,7 +669,7 @@ export function SettingsPage() {
                   <button
                     onClick={() => handlePull(m.name)}
                     disabled={!!pulling || !connected || !canRun}
-                    title={!canRun ? insufficientReason ?? '' : undefined}
+                    title={!canRun ? (insufficientReason ?? '') : undefined}
                     className="flex items-center gap-1 rounded-lg bg-brand-cyan/10 px-3 py-1.5 text-xs text-brand-cyan transition-all hover:bg-brand-cyan/20 disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     <Download size={12} />

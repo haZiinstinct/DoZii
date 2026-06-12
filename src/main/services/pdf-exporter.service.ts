@@ -21,11 +21,7 @@ export async function exportAnalysisAsPdf(
   parent: BrowserWindow
 ): Promise<PdfExportResult> {
   const db = getDb()
-  const analysis = db
-    .select()
-    .from(schema.analyses)
-    .where(eq(schema.analyses.id, analysisId))
-    .get()
+  const analysis = db.select().from(schema.analyses).where(eq(schema.analyses.id, analysisId)).get()
 
   if (!analysis) {
     return { ok: false, error: 'Analyse nicht gefunden' }

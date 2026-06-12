@@ -8,11 +8,7 @@ import sharp from 'sharp'
  * Returns a buffer ready for Tesseract
  */
 export async function preprocessImage(filePath: string): Promise<Buffer> {
-  const processed = await sharp(filePath)
-    .grayscale()
-    .normalize()
-    .sharpen()
-    .toBuffer()
+  const processed = await sharp(filePath).grayscale().normalize().sharpen().toBuffer()
 
   return processed
 }

@@ -34,7 +34,8 @@ export function FormulationSuggestions({ result }: Props) {
         </div>
         {result.toneRecommendation && (
           <p className="mt-2 text-sm text-brand-text-dim">
-            <span className="font-semibold text-brand-text">Tonalitaet:</span> {result.toneRecommendation}
+            <span className="font-semibold text-brand-text">Tonalitaet:</span>{' '}
+            {result.toneRecommendation}
           </p>
         )}
         {result.overallImpression && (

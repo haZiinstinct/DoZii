@@ -154,15 +154,7 @@ export async function runAnalysis(
     }
   }
 
-  return persistAnalysis(
-    docId,
-    mode,
-    user,
-    finalResponse,
-    modelName,
-    startTime,
-    verifyAborted
-  )
+  return persistAnalysis(docId, mode, user, finalResponse, modelName, startTime, verifyAborted)
 }
 
 function persistAnalysis(
@@ -179,9 +171,7 @@ function persistAnalysis(
   const id = uuid()
   const now = new Date().toISOString()
 
-  const finalResult = aborted
-    ? `${response}\n\n[Analyse vom Nutzer abgebrochen]`
-    : response
+  const finalResult = aborted ? `${response}\n\n[Analyse vom Nutzer abgebrochen]` : response
 
   const analysisRow: typeof schema.analyses.$inferInsert = {
     id,

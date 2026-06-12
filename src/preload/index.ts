@@ -104,8 +104,7 @@ export const api = {
     detectInstallation: (): Promise<OllamaInstallation> =>
       ipcRenderer.invoke('ollama:detectInstallation'),
     start: (): Promise<OllamaStartResult> => ipcRenderer.invoke('ollama:start'),
-    stop: (): Promise<{ stopped: boolean; error?: string }> =>
-      ipcRenderer.invoke('ollama:stop'),
+    stop: (): Promise<{ stopped: boolean; error?: string }> => ipcRenderer.invoke('ollama:stop'),
     listModels: (): Promise<OllamaModel[]> => ipcRenderer.invoke('ollama:listModels'),
     pullModel: (name: string): Promise<void> => ipcRenderer.invoke('ollama:pullModel', name),
     deleteModel: (name: string): Promise<void> => ipcRenderer.invoke('ollama:deleteModel', name),
@@ -123,12 +122,8 @@ export const api = {
 
   // Logs
   logs: {
-    write: (
-      level: LogLevel,
-      source: string,
-      message: string,
-      meta?: unknown
-    ): Promise<void> => ipcRenderer.invoke('logs:write', level, source, message, meta),
+    write: (level: LogLevel, source: string, message: string, meta?: unknown): Promise<void> =>
+      ipcRenderer.invoke('logs:write', level, source, message, meta),
     openDirectory: (): Promise<string | null> => ipcRenderer.invoke('logs:openDirectory'),
     getCurrentFile: (): Promise<string | null> => ipcRenderer.invoke('logs:getCurrentFile')
   },
@@ -136,7 +131,10 @@ export const api = {
   // License
   license: {
     get: (): Promise<LicenseInfo> => ipcRenderer.invoke('license:get'),
-    activate: (key: string, email?: string): Promise<{ ok: boolean; error?: string; info: LicenseInfo }> =>
+    activate: (
+      key: string,
+      email?: string
+    ): Promise<{ ok: boolean; error?: string; info: LicenseInfo }> =>
       ipcRenderer.invoke('license:activate', key, email),
     deactivate: (): Promise<LicenseInfo> => ipcRenderer.invoke('license:deactivate')
   },

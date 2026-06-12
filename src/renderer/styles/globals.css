@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 /* Self-hosted fonts - KEIN CDN, 100% offline */
 @font-face {
@@ -83,7 +83,8 @@
 }
 
 @keyframes glow-pulse {
-  0%, 100% {
+  0%,
+  100% {
     box-shadow: 0 0 20px rgba(0, 212, 255, 0.08);
   }
   50% {

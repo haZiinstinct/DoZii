@@ -98,10 +98,7 @@ export function DocumentViewPage() {
     setFirstImpressionLoading(false)
   }
 
-  const isGarbled = useMemo(
-    () => (doc ? isLikelyGarbled(doc.extractedText) : false),
-    [doc]
-  )
+  const isGarbled = useMemo(() => (doc ? isLikelyGarbled(doc.extractedText) : false), [doc])
 
   const handleDelete = async () => {
     if (!id) return
@@ -175,11 +172,7 @@ export function DocumentViewPage() {
           title="Text neu einlesen (bei defekter Extraktion)"
           className="flex h-9 w-9 items-center justify-center rounded-lg text-brand-text-dim transition-colors hover:bg-brand-card hover:text-brand-text disabled:opacity-50"
         >
-          {reImporting ? (
-            <Loader2 size={16} className="animate-spin" />
-          ) : (
-            <RefreshCw size={16} />
-          )}
+          {reImporting ? <Loader2 size={16} className="animate-spin" /> : <RefreshCw size={16} />}
         </button>
         <button
           onClick={handleDelete}
@@ -196,13 +189,11 @@ export function DocumentViewPage() {
           <div className="flex-1 text-sm">
             <p className="font-semibold text-brand-amber">Text-Extraktion problematisch</p>
             <p className="mt-1 text-brand-text-dim">
-              Der extrahierte Text enthaelt ungewoehnlich viele nicht-druckbare Zeichen.
-              Die KI kann damit keine sinnvolle Analyse machen. Klick auf das{' '}
+              Der extrahierte Text enthaelt ungewoehnlich viele nicht-druckbare Zeichen. Die KI kann
+              damit keine sinnvolle Analyse machen. Klick auf das{' '}
               <RefreshCw size={12} className="inline" /> Symbol oben um das Dokument neu einzulesen.
             </p>
-            {reImportError && (
-              <p className="mt-2 text-xs text-brand-red">{reImportError}</p>
-            )}
+            {reImportError && <p className="mt-2 text-xs text-brand-red">{reImportError}</p>}
           </div>
         </div>
       )}
@@ -236,7 +227,8 @@ export function DocumentViewPage() {
                     onClick={() => handleAnalyze(firstImpression.recommendedMode)}
                     className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-brand-cyan px-3 py-1.5 text-xs font-semibold text-brand-dark transition-all hover:bg-brand-cyan-dim"
                   >
-                    {MODE_LABELS[firstImpression.recommendedMode] ?? firstImpression.recommendedMode}{' '}
+                    {MODE_LABELS[firstImpression.recommendedMode] ??
+                      firstImpression.recommendedMode}{' '}
                     starten
                     <ArrowRight size={12} />
                   </button>

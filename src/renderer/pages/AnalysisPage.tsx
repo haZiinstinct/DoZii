@@ -14,12 +14,7 @@ import {
   CircleSlash,
   FileDown
 } from 'lucide-react'
-import type {
-  AnalysisMode,
-  AnalysisRunResult,
-  ChatMessage,
-  DoziiDocument
-} from '@shared/types'
+import type { AnalysisMode, AnalysisRunResult, ChatMessage, DoziiDocument } from '@shared/types'
 import { MarkdownView } from '@/components/analysis/MarkdownView'
 import { GrammarResults } from '@/components/analysis/GrammarResults'
 import { FormulationSuggestions } from '@/components/analysis/FormulationSuggestions'
@@ -96,9 +91,12 @@ export function AnalysisPage() {
   // Load chat history when docId changes
   useEffect(() => {
     if (!docId) return
-    window.api.chat.getHistory(docId).then(setChatMessages).catch(() => {
-      // silent - chat history load error is non-critical
-    })
+    window.api.chat
+      .getHistory(docId)
+      .then(setChatMessages)
+      .catch(() => {
+        // silent - chat history load error is non-critical
+      })
     // Also load the document so parsers can validate evidence quotes against it
     window.api.documents.getById(docId).then((d) => {
       if (d) setDoc(d)
@@ -124,36 +122,31 @@ export function AnalysisPage() {
       if (!docId) return
       setAnalysis({ kind: 'streaming', text: '', phase: 'analyzing' })
 
-      await analysisStream.run(
-        () => window.api.analysis.run(docId, mode, question),
-        {
-          onChunk: (chunk) => {
-            setAnalysis((s) =>
-              s.kind === 'streaming' ? { ...s, text: s.text + chunk } : s
-            )
-          },
-          onComplete: (result) => {
-            setAnalysis((s) => {
-              const text = s.kind === 'streaming' ? s.text : ''
-              if (result?.aborted) {
-                // Freeform re-opens the input after abort so user can ask again
-                if (mode === 'freeform') {
-                  return { kind: 'idle' }
-                }
-                return { kind: 'aborted', text }
+      await analysisStream.run(() => window.api.analysis.run(docId, mode, question), {
+        onChunk: (chunk) => {
+          setAnalysis((s) => (s.kind === 'streaming' ? { ...s, text: s.text + chunk } : s))
+        },
+        onComplete: (result) => {
+          setAnalysis((s) => {
+            const text = s.kind === 'streaming' ? s.text : ''
+            if (result?.aborted) {
+              // Freeform re-opens the input after abort so user can ask again
+              if (mode === 'freeform') {
+                return { kind: 'idle' }
               }
-              return { kind: 'done', text, result }
-            })
-          },
-          onError: (err) => {
-            setAnalysis((s) => ({
-              kind: 'error',
-              message: err,
-              partial: s.kind === 'streaming' ? s.text : ''
-            }))
-          }
+              return { kind: 'aborted', text }
+            }
+            return { kind: 'done', text, result }
+          })
+        },
+        onError: (err) => {
+          setAnalysis((s) => ({
+            kind: 'error',
+            message: err,
+            partial: s.kind === 'streaming' ? s.text : ''
+          }))
         }
-      )
+      })
     },
     [docId, mode, analysisStream]
   )
@@ -192,24 +185,21 @@ export function AnalysisPage() {
     }
     setChatMessages((prev) => [...prev, tempUserMsg])
 
-    await chatStream.run(
-      () => window.api.chat.send(docId, userText),
-      {
-        onChunk: (chunk) => {
-          setChat((s) => (s.kind === 'streaming' ? { ...s, buffer: s.buffer + chunk } : s))
-        },
-        onComplete: async () => {
-          setChat({ kind: 'idle' })
-          const history = await window.api.chat.getHistory(docId)
-          setChatMessages(history)
-        },
-        onError: (err) => {
-          setChat({ kind: 'error', message: err })
-          // Remove the optimistic user message since sending failed
-          setChatMessages((prev) => prev.filter((m) => m.id !== tempUserMsg.id))
-        }
+    await chatStream.run(() => window.api.chat.send(docId, userText), {
+      onChunk: (chunk) => {
+        setChat((s) => (s.kind === 'streaming' ? { ...s, buffer: s.buffer + chunk } : s))
+      },
+      onComplete: async () => {
+        setChat({ kind: 'idle' })
+        const history = await window.api.chat.getHistory(docId)
+        setChatMessages(history)
+      },
+      onError: (err) => {
+        setChat({ kind: 'error', message: err })
+        // Remove the optimistic user message since sending failed
+        setChatMessages((prev) => prev.filter((m) => m.id !== tempUserMsg.id))
       }
-    )
+    })
   }, [docId, chatInput, chat, chatStream])
 
   const handleClearChat = useCallback(async () => {
@@ -324,9 +314,7 @@ export function AnalysisPage() {
         )}
 
         {/* Restart button - after abort/done/error for non-freeform */}
-        {(analysis.kind === 'done' ||
-          analysis.kind === 'aborted' ||
-          analysis.kind === 'error') &&
+        {(analysis.kind === 'done' || analysis.kind === 'aborted' || analysis.kind === 'error') &&
           mode !== 'freeform' && (
             <button
               onClick={() => startAnalysis()}

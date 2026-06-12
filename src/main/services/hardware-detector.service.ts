@@ -69,11 +69,7 @@ function classifyGpuVendor(name: string): GpuInfo['vendor'] {
   ) {
     return 'nvidia'
   }
-  if (
-    nameLower.includes('amd') ||
-    nameLower.includes('radeon') ||
-    nameLower.includes('firepro')
-  ) {
+  if (nameLower.includes('amd') || nameLower.includes('radeon') || nameLower.includes('firepro')) {
     return 'amd'
   }
   if (nameLower.includes('intel') || nameLower.includes('arc')) {

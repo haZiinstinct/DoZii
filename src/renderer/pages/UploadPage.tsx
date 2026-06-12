@@ -118,9 +118,7 @@ export function UploadPage() {
       .filter((p): p is string => Boolean(p))
 
     if (paths.length === 0) {
-      setError(
-        'Dateipfade konnten nicht ausgelesen werden. Bitte "Klick zum Auswaehlen" benutzen.'
-      )
+      setError('Dateipfade konnten nicht ausgelesen werden. Bitte "Klick zum Auswaehlen" benutzen.')
       return
     }
 

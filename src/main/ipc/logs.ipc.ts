@@ -2,12 +2,7 @@ import { ipcMain, shell } from 'electron'
 import { logger } from '../services/logger.service'
 import type { LogLevel } from '@shared/types'
 
-const ALLOWED_LEVELS: ReadonlySet<LogLevel> = new Set<LogLevel>([
-  'debug',
-  'info',
-  'warn',
-  'error'
-])
+const ALLOWED_LEVELS: ReadonlySet<LogLevel> = new Set<LogLevel>(['debug', 'info', 'warn', 'error'])
 
 function isValidLevel(level: unknown): level is LogLevel {
   return typeof level === 'string' && ALLOWED_LEVELS.has(level as LogLevel)

@@ -80,11 +80,7 @@ export async function generateFirstImpression(
   if (existing) return existing
 
   const db = getDb()
-  const doc = db
-    .select()
-    .from(schema.documents)
-    .where(eq(schema.documents.id, documentId))
-    .get()
+  const doc = db.select().from(schema.documents).where(eq(schema.documents.id, documentId)).get()
 
   if (!doc || !doc.extractedText) {
     logger.debug('first-impression', 'No document or empty text - skipping', { documentId })
@@ -131,17 +127,14 @@ export async function generateFirstImpression(
       return null
     }
 
-    const documentType =
-      typeof parsed.documentType === 'string' ? parsed.documentType : 'sonstiges'
+    const documentType = typeof parsed.documentType === 'string' ? parsed.documentType : 'sonstiges'
     const recommendedModeRaw =
       typeof parsed.recommendedMode === 'string' ? parsed.recommendedMode : 'freeform'
     const recommendedMode = ALLOWED_MODES.has(recommendedModeRaw as AnalysisMode)
       ? (recommendedModeRaw as AnalysisMode)
       : 'freeform'
     const firstImpression =
-      typeof parsed.firstImpression === 'string'
-        ? parsed.firstImpression.slice(0, 200)
-        : ''
+      typeof parsed.firstImpression === 'string' ? parsed.firstImpression.slice(0, 200) : ''
 
     if (!firstImpression) {
       logger.warn('first-impression', 'Empty firstImpression in model response', {

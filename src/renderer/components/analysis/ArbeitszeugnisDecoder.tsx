@@ -162,13 +162,7 @@ function GradeScale({
   )
 }
 
-function GradeHero({
-  title,
-  data
-}: {
-  title: string
-  data: ZeugnisGrade
-}): React.ReactElement {
+function GradeHero({ title, data }: { title: string; data: ZeugnisGrade }): React.ReactElement {
   const colors = gradeColor(data.grade)
   const label = data.label ?? gradeLabels[data.grade] ?? ''
   return (
@@ -255,18 +249,14 @@ export function ArbeitszeugnisDecoder({ result }: Props): React.ReactElement {
       <div className="rounded-2xl border border-brand-amber/30 bg-brand-amber/5 p-6">
         <div className="mb-3 flex items-center gap-3">
           <AlertTriangle size={24} className="text-brand-amber" />
-          <h2 className="text-lg font-bold text-brand-amber">
-            Kein Arbeitszeugnis erkannt
-          </h2>
+          <h2 className="text-lg font-bold text-brand-amber">Kein Arbeitszeugnis erkannt</h2>
         </div>
         <p className="text-sm text-brand-text">
-          Dieser Text scheint kein Arbeitszeugnis zu sein. Der Arbeitszeugnis-Decoder
-          funktioniert nur mit echten Arbeitszeugnissen (mit Taetigkeitsbeschreibung,
-          Leistungsbewertung und Schlussformel).
+          Dieser Text scheint kein Arbeitszeugnis zu sein. Der Arbeitszeugnis-Decoder funktioniert
+          nur mit echten Arbeitszeugnissen (mit Taetigkeitsbeschreibung, Leistungsbewertung und
+          Schlussformel).
         </p>
-        {result.summary && (
-          <p className="mt-3 text-xs text-brand-text-dim">{result.summary}</p>
-        )}
+        {result.summary && <p className="mt-3 text-xs text-brand-text-dim">{result.summary}</p>}
       </div>
     )
   }
@@ -282,11 +272,11 @@ export function ArbeitszeugnisDecoder({ result }: Props): React.ReactElement {
             <div className="flex-1 text-xs text-brand-text-dim leading-relaxed">
               <p className="mb-1 font-semibold text-brand-cyan">Zwei Noten - zwei Perspektiven</p>
               <p>
-                <strong className="text-brand-text">Inhalt</strong> = was das Zeugnis ueber
-                dich AUSSAGT (Leistungsbewertung, versteckte Codes, rote Flaggen).{' '}
+                <strong className="text-brand-text">Inhalt</strong> = was das Zeugnis ueber dich
+                AUSSAGT (Leistungsbewertung, versteckte Codes, rote Flaggen).{' '}
                 <strong className="text-brand-text">Struktur</strong> = wie geschickt/professionell
-                es VERFASST ist (Vollstaendigkeit, HR-Konformitaet, sprachliche Qualitaet).
-                Beide sind unabhaengig.
+                es VERFASST ist (Vollstaendigkeit, HR-Konformitaet, sprachliche Qualitaet). Beide
+                sind unabhaengig.
               </p>
             </div>
             <button
@@ -374,10 +364,7 @@ export function ArbeitszeugnisDecoder({ result }: Props): React.ReactElement {
                 (cp.suggestion.note2 || cp.suggestion.note3 || cp.suggestion.howToNegotiate)
               const isExpanded = expanded.has(idx)
               return (
-                <div
-                  key={idx}
-                  className={`rounded-2xl border p-4 ${sev.bg} ${sev.border}`}
-                >
+                <div key={idx} className={`rounded-2xl border p-4 ${sev.bg} ${sev.border}`}>
                   <div className="mb-2 flex items-center gap-2">
                     <span
                       className={`inline-flex items-center gap-1 rounded-lg px-2 py-0.5 text-xs font-semibold ${sev.text}`}

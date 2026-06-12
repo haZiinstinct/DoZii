@@ -199,9 +199,7 @@ export function WelcomeWizard() {
               </button>
             )}
 
-            {startError && (
-              <p className="text-xs text-brand-red">{startError}</p>
-            )}
+            {startError && <p className="text-xs text-brand-red">{startError}</p>}
           </div>
 
           {/* Continue button */}

@@ -35,9 +35,7 @@ export function Sidebar() {
       <nav className="flex flex-1 flex-col gap-1 p-3 pt-4">
         {navItems.map((item) => {
           const isActive =
-            item.path === '/'
-              ? location.pathname === '/'
-              : location.pathname.startsWith(item.path)
+            item.path === '/' ? location.pathname === '/' : location.pathname.startsWith(item.path)
           return (
             <button
               key={item.path}
@@ -126,9 +124,7 @@ export function Sidebar() {
           </a>
         )}
 
-        {startError && (
-          <p className="mt-2 text-xs text-brand-red">{startError}</p>
-        )}
+        {startError && <p className="mt-2 text-xs text-brand-red">{startError}</p>}
       </div>
     </aside>
   )

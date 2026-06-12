@@ -41,13 +41,7 @@ export function registerAnalysisIpc(): void {
       logger.info('analysis.ipc', 'Running analysis', { docId, mode, model })
 
       try {
-        const result = await runAnalysis(
-          docId,
-          mode as AnalysisMode,
-          win,
-          model,
-          userQuestion
-        )
+        const result = await runAnalysis(docId, mode as AnalysisMode, win, model, userQuestion)
         logger.info('analysis.ipc', 'Analysis completed', {
           docId,
           mode,

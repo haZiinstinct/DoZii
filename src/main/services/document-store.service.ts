@@ -34,9 +34,32 @@ const MAX_FILE_SIZE_BYTES = 200 * 1024 * 1024 // 200 MB
 
 function detectLanguage(text: string): string {
   const germanWords = [
-    'und', 'der', 'die', 'das', 'ist', 'ein', 'eine', 'nicht', 'mit', 'auf',
-    'den', 'dem', 'sich', 'von', 'zu', 'fuer', 'für', 'haben', 'werden',
-    'hat', 'war', 'bei', 'Herr', 'Frau', 'sehr', 'geehrte'
+    'und',
+    'der',
+    'die',
+    'das',
+    'ist',
+    'ein',
+    'eine',
+    'nicht',
+    'mit',
+    'auf',
+    'den',
+    'dem',
+    'sich',
+    'von',
+    'zu',
+    'fuer',
+    'für',
+    'haben',
+    'werden',
+    'hat',
+    'war',
+    'bei',
+    'Herr',
+    'Frau',
+    'sehr',
+    'geehrte'
   ]
   const words = text.toLowerCase().split(/\s+/)
   const germanCount = words.filter((w) => germanWords.includes(w)).length
@@ -308,11 +331,9 @@ export function getAllDocuments(): DoziiDocument[] {
 
 export function getDocumentById(id: string): DoziiDocument | undefined {
   const db = getDb()
-  return db
-    .select()
-    .from(schema.documents)
-    .where(eq(schema.documents.id, id))
-    .get() as DoziiDocument | undefined
+  return db.select().from(schema.documents).where(eq(schema.documents.id, id)).get() as
+    | DoziiDocument
+    | undefined
 }
 
 /**

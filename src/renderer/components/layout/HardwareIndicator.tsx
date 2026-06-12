@@ -43,9 +43,7 @@ function BarRow({ label, icon, percent, detail }: BarRowProps) {
       <div className="flex items-center gap-1.5 text-[10px] text-brand-text-dim">
         <span className="flex h-3 w-3 items-center justify-center">{icon}</span>
         <span className="font-mono uppercase tracking-wider">{label}</span>
-        <span className="ml-auto font-mono tabular-nums text-brand-text">
-          {clamped}%
-        </span>
+        <span className="ml-auto font-mono tabular-nums text-brand-text">{clamped}%</span>
       </div>
       <div className="h-1 overflow-hidden rounded-full bg-brand-card">
         <div
@@ -64,9 +62,12 @@ export function HardwareIndicator() {
 
   // Fetch static hardware once for the profile label
   useEffect(() => {
-    window.api.hardware.detect().then(setHardware).catch(() => {
-      /* ignore - indicator still works without profile label */
-    })
+    window.api.hardware
+      .detect()
+      .then(setHardware)
+      .catch(() => {
+        /* ignore - indicator still works without profile label */
+      })
   }, [])
 
   const primaryModel = metrics ? pickPrimaryModel(metrics.loadedModels) : null
@@ -123,11 +124,7 @@ export function HardwareIndicator() {
       </div>
 
       <div className="space-y-2">
-        <BarRow
-          label="CPU"
-          icon={<Cpu size={10} />}
-          percent={metrics?.cpuLoadPercent ?? 0}
-        />
+        <BarRow label="CPU" icon={<Cpu size={10} />} percent={metrics?.cpuLoadPercent ?? 0} />
         <BarRow
           label="RAM"
           icon={<MemoryStick size={10} />}

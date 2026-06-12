@@ -154,15 +154,15 @@ export interface FirstImpression {
 export type ModelRuntime = 'cpu' | 'gpu'
 
 export interface SuggestedModel {
-  name: string             // Ollama tag, e.g. 'qwen2.5:7b'
-  displayName: string      // Human-friendly name
-  size: string             // '~4.7 GB'
-  minRamGb: number         // For graying out on insufficient hardware
-  minVramGb?: number       // Optional, for GPU models
-  runtime: ModelRuntime    // Which tab
-  strengths: string        // 'Stark in Deutsch + JSON'
-  recommended?: boolean    // Show EMPFOHLEN badge
-  budgetLaptopFriendly?: boolean  // Runs on weak hardware + can still decode Arbeitszeugnisse
+  name: string // Ollama tag, e.g. 'qwen2.5:7b'
+  displayName: string // Human-friendly name
+  size: string // '~4.7 GB'
+  minRamGb: number // For graying out on insufficient hardware
+  minVramGb?: number // Optional, for GPU models
+  runtime: ModelRuntime // Which tab
+  strengths: string // 'Stark in Deutsch + JSON'
+  recommended?: boolean // Show EMPFOHLEN badge
+  budgetLaptopFriendly?: boolean // Runs on weak hardware + can still decode Arbeitszeugnisse
 }
 
 // ============================================================================

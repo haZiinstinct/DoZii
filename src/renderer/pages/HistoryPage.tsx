@@ -1,13 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import {
-  History,
-  FileText,
-  Image,
-  FileSpreadsheet,
-  Search,
-  Trash2
-} from 'lucide-react'
+import { History, FileText, Image, FileSpreadsheet, Search, Trash2 } from 'lucide-react'
 import type { DoziiDocument } from '@shared/types'
 
 function getFileIcon(mimeType: string) {
@@ -111,7 +104,9 @@ export function HistoryPage() {
                     <p className="text-xs text-brand-text-dim">
                       {formatDate(doc.createdAt)}
                       {doc.wordCount ? ` · ${doc.wordCount.toLocaleString()} Woerter` : ''}
-                      {doc.detectedLanguage ? ` · ${doc.detectedLanguage === 'de' ? 'DE' : 'EN'}` : ''}
+                      {doc.detectedLanguage
+                        ? ` · ${doc.detectedLanguage === 'de' ? 'DE' : 'EN'}`
+                        : ''}
                     </p>
                   </div>
                 </button>

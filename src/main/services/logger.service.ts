@@ -82,10 +82,7 @@ class Logger {
     const color = LEVEL_COLORS[entry.level]
     const prefix = `${color}[${entry.level.toUpperCase()}]${COLOR_RESET}`
     // eslint-disable-next-line no-console
-    console.log(
-      `${prefix} ${entry.timestamp} [${entry.source}] ${entry.message}`,
-      entry.meta ?? ''
-    )
+    console.log(`${prefix} ${entry.timestamp} [${entry.source}] ${entry.message}`, entry.meta ?? '')
 
     // Write to file
     if (!this.currentFile) return

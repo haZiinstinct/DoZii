@@ -12,9 +12,7 @@ interface MarkdownViewProps {
  */
 export function MarkdownView({ content, className = '' }: MarkdownViewProps) {
   return (
-    <div
-      className={`markdown-view text-sm leading-relaxed text-brand-text ${className}`}
-    >
+    <div className={`markdown-view text-sm leading-relaxed text-brand-text ${className}`}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
@@ -34,13 +32,9 @@ export function MarkdownView({ content, className = '' }: MarkdownViewProps) {
             </h3>
           ),
           h4: ({ children }) => (
-            <h4 className="mb-2 mt-4 text-sm font-semibold text-brand-text-bright">
-              {children}
-            </h4>
+            <h4 className="mb-2 mt-4 text-sm font-semibold text-brand-text-bright">{children}</h4>
           ),
-          p: ({ children }) => (
-            <p className="mb-3 leading-relaxed text-brand-text">{children}</p>
-          ),
+          p: ({ children }) => <p className="mb-3 leading-relaxed text-brand-text">{children}</p>,
           strong: ({ children }) => (
             <strong className="font-semibold text-brand-text-bright">{children}</strong>
           ),

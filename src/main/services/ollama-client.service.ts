@@ -249,10 +249,7 @@ export interface StreamOptions {
  * The stream function receives a callback that should be invoked BEFORE any
  * partial text is emitted - this lets the retry reset any accumulated state.
  */
-async function withTransientRetry<T>(
-  label: string,
-  run: () => Promise<T>
-): Promise<T> {
+async function withTransientRetry<T>(label: string, run: () => Promise<T>): Promise<T> {
   try {
     return await run()
   } catch (err) {

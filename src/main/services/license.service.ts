@@ -98,15 +98,12 @@ function signLicense(
  * A real license generator would use a longer cryptographically-derived
  * key; this is enough for the scaffolding phase.
  */
-function parseLicenseKey(
-  key: string
-): { tier: LicenseTier; valid: boolean } | null {
+function parseLicenseKey(key: string): { tier: LicenseTier; valid: boolean } | null {
   const normalized = key.trim().toUpperCase()
   const match = normalized.match(/^DOZII-(FREE|PRO|BIZZ)-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/)
   if (!match) return null
   const tierCode = match[1]
-  const tier: LicenseTier =
-    tierCode === 'PRO' ? 'pro' : tierCode === 'BIZZ' ? 'business' : 'free'
+  const tier: LicenseTier = tierCode === 'PRO' ? 'pro' : tierCode === 'BIZZ' ? 'business' : 'free'
   return { tier, valid: true }
 }
 

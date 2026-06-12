@@ -43,9 +43,7 @@ function extractSection(markdown: string, ...titles: string[]): string | null {
   for (const title of titles) {
     // Allow the title to contain optional hyphens and whitespace variations
     // e.g. "Gesamt-Bewertung" should match "Gesamtbewertung"
-    const flexible = title
-      .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-      .replace(/\s+/g, '[\\s-]+')
+    const flexible = title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s+/g, '[\\s-]+')
     const re = new RegExp(`##\\s*${flexible}([\\s\\S]*?)(?=^##\\s|\\Z)`, 'im')
     const match = markdown.match(re)
     if (match) return match[1]
@@ -175,14 +173,8 @@ export function parseGrammar(markdown: string, documentText?: string): GrammarRe
       extractBilingualField(overallText, 'Anzahl Fehler', 'Fehleranzahl', 'Error Count') ?? '0'
     const errorCount = parseInt(errorCountStr.replace(/\D/g, ''), 10) || 0
     const quality =
-      extractBilingualField(
-        overallText,
-        'Qualitaet',
-        'Qualität',
-        'Quality',
-        'Bewertung',
-        'Note'
-      ) ?? 'Unbekannt'
+      extractBilingualField(overallText, 'Qualitaet', 'Qualität', 'Quality', 'Bewertung', 'Note') ??
+      'Unbekannt'
     const summary =
       extractBilingualField(overallText, 'Kurzfassung', 'Zusammenfassung', 'Summary') ?? ''
 
@@ -216,8 +208,8 @@ export function parseGrammar(markdown: string, documentText?: string): GrammarRe
     if (documentText) {
       errors = errors
         .map((e) => {
-          const verified = isInDocument(e.original, documentText) ||
-            isInDocument(e.context, documentText)
+          const verified =
+            isInDocument(e.original, documentText) || isInDocument(e.context, documentText)
           return { ...e, verified }
         })
         .filter((e) => e.verified)
@@ -365,22 +357,20 @@ export function parseSummary(markdown: string): SummaryResult | null {
       if (m) keyFacts.push({ label: m[1].trim(), value: m[2].trim() })
     }
 
-    const keyPointsText = extractSection(markdown, 'Kernaussagen', 'Key Points', 'Hauptpunkte') ?? ''
+    const keyPointsText =
+      extractSection(markdown, 'Kernaussagen', 'Key Points', 'Hauptpunkte') ?? ''
     const keyPoints: string[] = extractBulletLines(keyPointsText).map((l) => {
       const labelMatch = l.match(/^\*\*([^:*]+):?\*\*\s*(.+)$/)
       return labelMatch ? labelMatch[2].trim() : l
     })
 
-    const summary =
-      extractSection(markdown, 'Zusammenfassung', 'Summary')?.trim() ?? ''
+    const summary = extractSection(markdown, 'Zusammenfassung', 'Summary')?.trim() ?? ''
 
-    const actionText =
-      extractSection(markdown, 'Handlungsbedarf', 'Action Items', 'Aktionen') ?? ''
+    const actionText = extractSection(markdown, 'Handlungsbedarf', 'Action Items', 'Aktionen') ?? ''
     const actionItems: ActionItem[] = []
     // Accept both `- [ ] Text` and plain `- Text` in the action section
     const checkboxLines = actionText.match(/-\s*\[\s*\]\s*([^\n]+)/g) ?? []
-    const bulletOnlyLines =
-      actionText.match(/^\s*-\s+(?!\[)([^\n]+)/gm) ?? []
+    const bulletOnlyLines = actionText.match(/^\s*-\s+(?!\[)([^\n]+)/gm) ?? []
     const combined: string[] = []
     for (const line of checkboxLines) {
       combined.push(line.replace(/^\s*-\s*\[\s*\]\s*/, '').trim())
@@ -587,19 +577,16 @@ export function parseArbeitszeugnis(
     if (!parsed) return null
 
     // Dual-grade schema: prefer contentGrade + craftGrade, fall back to overallGrade
-    const contentGrade =
-      extractGrade(parsed.contentGrade) ?? extractGrade(parsed.overallGrade)
+    const contentGrade = extractGrade(parsed.contentGrade) ?? extractGrade(parsed.overallGrade)
     if (!contentGrade) return null
 
     // craftGrade is optional in legacy analyses - we synthesize a fallback
-    const craftGrade: ZeugnisGrade =
-      extractGrade(parsed.craftGrade) ?? {
-        grade: 3,
-        label: 'Nicht separat bewertet',
-        confidence: 'low',
-        reasoning:
-          'Diese Analyse stammt aus einer aelteren Version ohne separate Struktur-Bewertung.'
-      }
+    const craftGrade: ZeugnisGrade = extractGrade(parsed.craftGrade) ?? {
+      grade: 3,
+      label: 'Nicht separat bewertet',
+      confidence: 'low',
+      reasoning: 'Diese Analyse stammt aus einer aelteren Version ohne separate Struktur-Bewertung.'
+    }
 
     // Legacy overallGrade is the same as contentGrade for backwards-compat UI
     const overallGrade: ZeugnisGrade = extractGrade(parsed.overallGrade) ?? contentGrade
@@ -626,10 +613,8 @@ export function parseArbeitszeugnis(
             const suggestionRaw = p.suggestion as Record<string, unknown> | undefined
             const suggestion = suggestionRaw
               ? {
-                  note2:
-                    typeof suggestionRaw.note2 === 'string' ? suggestionRaw.note2 : undefined,
-                  note3:
-                    typeof suggestionRaw.note3 === 'string' ? suggestionRaw.note3 : undefined,
+                  note2: typeof suggestionRaw.note2 === 'string' ? suggestionRaw.note2 : undefined,
+                  note3: typeof suggestionRaw.note3 === 'string' ? suggestionRaw.note3 : undefined,
                   howToNegotiate:
                     typeof suggestionRaw.howToNegotiate === 'string'
                       ? suggestionRaw.howToNegotiate
@@ -672,7 +657,9 @@ export function parseArbeitszeugnis(
     if (documentText) {
       sections = sections.map((s) => ({
         ...s,
-        verified: s.evidence ? isInDocument(s.evidence, documentText) : isInDocument(s.excerpt, documentText)
+        verified: s.evidence
+          ? isInDocument(s.evidence, documentText)
+          : isInDocument(s.excerpt, documentText)
       }))
       codedPhrases = codedPhrases
         .map((p) => ({

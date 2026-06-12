@@ -82,8 +82,7 @@ function classifyLoadedModel(raw: LoadedModelRaw): LoadedModelInfo {
     runningOn = 'hybrid'
   }
 
-  const vramPercent =
-    totalVramMb > 0 ? Math.round((vramMb / totalVramMb) * 100) : 0
+  const vramPercent = totalVramMb > 0 ? Math.round((vramMb / totalVramMb) * 100) : 0
 
   return {
     name: raw.name,

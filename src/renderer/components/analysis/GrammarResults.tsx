@@ -5,7 +5,10 @@ interface Props {
   result: GrammarResult
 }
 
-const severityConfig: Record<Severity, { color: string; bg: string; border: string; icon: React.ReactNode; label: string }> = {
+const severityConfig: Record<
+  Severity,
+  { color: string; bg: string; border: string; icon: React.ReactNode; label: string }
+> = {
   high: {
     color: 'text-brand-red',
     bg: 'bg-brand-red/10',
@@ -45,9 +48,7 @@ export function GrammarResults({ result }: Props) {
             {verifiedCount === 0 ? (
               <CheckCircle2 size={28} className="text-brand-green" />
             ) : (
-              <span className="font-mono text-2xl font-bold text-brand-cyan">
-                {verifiedCount}
-              </span>
+              <span className="font-mono text-2xl font-bold text-brand-cyan">{verifiedCount}</span>
             )}
           </div>
           <div className="flex-1">
@@ -83,17 +84,12 @@ export function GrammarResults({ result }: Props) {
           {errors.map((err) => {
             const sev = severityConfig[err.severity]
             return (
-              <div
-                key={err.index}
-                className={`rounded-2xl border p-5 ${sev.border} ${sev.bg}`}
-              >
+              <div key={err.index} className={`rounded-2xl border p-5 ${sev.border} ${sev.bg}`}>
                 <div className="mb-3 flex flex-wrap items-center gap-2">
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-darker font-mono text-xs text-brand-text-dim">
                     {err.index}
                   </span>
-                  <span className="text-sm font-semibold text-brand-text-bright">
-                    {err.type}
-                  </span>
+                  <span className="text-sm font-semibold text-brand-text-bright">{err.type}</span>
                   <span
                     className={`inline-flex items-center gap-1 rounded-lg px-2 py-0.5 text-xs font-semibold ${sev.color}`}
                   >

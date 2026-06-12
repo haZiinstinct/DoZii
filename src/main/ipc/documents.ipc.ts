@@ -8,10 +8,7 @@ import {
   deleteDocument,
   reImportDocument
 } from '../services/document-store.service'
-import {
-  generateFirstImpression,
-  getFirstImpression
-} from '../services/first-impression.service'
+import { generateFirstImpression, getFirstImpression } from '../services/first-impression.service'
 import { getSelectedModel } from './analysis.ipc'
 import { logger } from '../services/logger.service'
 

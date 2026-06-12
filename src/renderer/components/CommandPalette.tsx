@@ -38,9 +38,12 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
   // Load documents when palette opens
   useEffect(() => {
     if (!open) return
-    window.api.documents.getAll().then(setDocs).catch(() => {
-      /* silent */
-    })
+    window.api.documents
+      .getAll()
+      .then(setDocs)
+      .catch(() => {
+        /* silent */
+      })
     setQuery('')
     setSelectedIndex(0)
     // Focus input after render
@@ -90,9 +93,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
     if (!q) return []
     return docs
       .filter(
-        (d) =>
-          d.filename.toLowerCase().includes(q) ||
-          d.extractedText.toLowerCase().includes(q)
+        (d) => d.filename.toLowerCase().includes(q) || d.extractedText.toLowerCase().includes(q)
       )
       .slice(0, 15)
       .map((d) => ({
@@ -110,9 +111,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
     const q = query.toLowerCase().trim()
     const filteredNav = q
       ? navigationItems.filter(
-          (n) =>
-            n.label.toLowerCase().includes(q) ||
-            n.keywords?.some((k) => k.includes(q))
+          (n) => n.label.toLowerCase().includes(q) || n.keywords?.some((k) => k.includes(q))
         )
       : navigationItems
     return [...filteredNav, ...documentItems]
@@ -153,14 +152,8 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
   if (!open) return null
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-start justify-center pt-[12vh]"
-      onClick={onClose}
-    >
-      <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-        aria-hidden="true"
-      />
+    <div className="fixed inset-0 z-50 flex items-start justify-center pt-[12vh]" onClick={onClose}>
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" aria-hidden="true" />
       <div
         className="relative w-full max-w-xl rounded-2xl border border-brand-border bg-brand-card shadow-[0_0_80px_rgba(0,212,255,0.15)]"
         onClick={(e) => e.stopPropagation()}
@@ -212,9 +205,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium">{item.label}</p>
-                  {item.hint && (
-                    <p className="truncate text-xs text-brand-text-dim">{item.hint}</p>
-                  )}
+                  {item.hint && <p className="truncate text-xs text-brand-text-dim">{item.hint}</p>}
                 </div>
               </button>
             ))
@@ -223,15 +214,21 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
 
         <div className="flex items-center gap-4 border-t border-brand-border px-4 py-2 text-[10px] text-brand-text-dim">
           <span className="flex items-center gap-1">
-            <kbd className="rounded border border-brand-border bg-brand-darker px-1.5 py-0.5 font-mono">↑↓</kbd>
+            <kbd className="rounded border border-brand-border bg-brand-darker px-1.5 py-0.5 font-mono">
+              ↑↓
+            </kbd>
             Navigieren
           </span>
           <span className="flex items-center gap-1">
-            <kbd className="rounded border border-brand-border bg-brand-darker px-1.5 py-0.5 font-mono">↵</kbd>
+            <kbd className="rounded border border-brand-border bg-brand-darker px-1.5 py-0.5 font-mono">
+              ↵
+            </kbd>
             Oeffnen
           </span>
           <span className="flex items-center gap-1">
-            <kbd className="rounded border border-brand-border bg-brand-darker px-1.5 py-0.5 font-mono">Esc</kbd>
+            <kbd className="rounded border border-brand-border bg-brand-darker px-1.5 py-0.5 font-mono">
+              Esc
+            </kbd>
             Schliessen
           </span>
         </div>
