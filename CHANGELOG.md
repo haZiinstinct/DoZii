@@ -3,6 +3,12 @@
 Alle nennenswerten Änderungen an DoZii werden in dieser Datei dokumentiert.
 Das Format orientiert sich an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [Unreleased]
+
+### Geändert
+
+- Installer heißt jetzt versionslos `DoZii-Setup.exe` (statt `DoZii-Setup-X.Y.Z.exe`), damit der Download-Link `releases/latest/download/DoZii-Setup.exe` über alle Releases hinweg stabil bleibt
+
 ## [1.0.0] – 2026-06-12
 
 Erstes öffentliches Release. Die Versionen davor (intern 1.x–3.x) waren nie veröffentlicht; ihre Funktionen sind hier zusammengefasst.

@@ -7,7 +7,7 @@ Vor jedem öffentlichen Release komplett durchgehen. Empfohlen: frisches Windows
 - [ ] CI auf `main` grün (typecheck, lint, format:check, test, build)
 - [ ] Version in `package.json` korrekt, `CHANGELOG.md`-Eintrag vorhanden
 - [ ] `npm ci && npm run build:win -- --publish never`
-- [ ] `dist/` enthält: `DoZii-Setup-X.Y.Z.exe`, `.exe.blockmap`, `latest.yml`
+- [ ] `dist/` enthält: `DoZii-Setup.exe` (bewusst ohne Version, stabiler Download-Link), `.exe.blockmap`, `latest.yml`
 
 ## Installation
 
@@ -70,6 +70,7 @@ Vor jedem öffentlichen Release komplett durchgehen. Empfohlen: frisches Windows
 
 - [ ] `git tag vX.Y.Z && git push origin vX.Y.Z`
 - [ ] Release anlegen:
-      `gh release create vX.Y.Z dist/DoZii-Setup-X.Y.Z.exe dist/DoZii-Setup-X.Y.Z.exe.blockmap dist/latest.yml --title "DoZii X.Y.Z" --notes-file <notes.md>`
+      `gh release create vX.Y.Z dist/DoZii-Setup.exe dist/DoZii-Setup.exe.blockmap dist/latest.yml --title "DoZii X.Y.Z" --notes-file <notes.md>`
 - [ ] Download von github.com auf Zweitgerät testen
+- [ ] Stabiler Link funktioniert: `https://github.com/haZiinstinct/DoZii/releases/latest/download/DoZii-Setup.exe`
 - [ ] Update-Probe: Dummy-Folgeversion als Draft → installierte Version findet sie → Draft löschen
