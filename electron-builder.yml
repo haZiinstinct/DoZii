@@ -21,6 +21,7 @@ nsis:
   shortcutName: DoZii
   uninstallDisplayName: DoZii
   createDesktopShortcut: always
+  include: build/installer.nsh
   installerIcon: resources/icon.ico
   uninstallerIcon: resources/icon.ico
   installerHeaderIcon: resources/icon.ico

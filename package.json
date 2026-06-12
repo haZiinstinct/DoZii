@@ -1,7 +1,20 @@
 {
   "name": "dozii",
-  "version": "3.0.0",
-  "description": "Lokales, offline AI-Tool fuer Dokumentenanalyse",
+  "version": "1.0.0",
+  "description": "Lokale, 100% offline Dokumentenanalyse mit KI",
+  "author": {
+    "name": "haZii",
+    "email": "h.boerekci@gmail.com"
+  },
+  "license": "SEE LICENSE IN LICENSE",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/haZiinstinct/DoZii.git"
+  },
+  "homepage": "https://github.com/haZiinstinct/DoZii-releases",
+  "bugs": {
+    "url": "https://github.com/haZiinstinct/DoZii-releases/issues"
+  },
   "main": "./out/main/index.js",
   "scripts": {
     "dev": "electron-vite dev",
