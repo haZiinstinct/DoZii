@@ -1,45 +1,102 @@
 {
+  "common": {
+    "words": "words",
+    "loading": "Loading...",
+    "retry": "Try again"
+  },
+  "titlebar": {
+    "minimize": "Minimize window",
+    "maximize": "Maximize window",
+    "close": "Close window"
+  },
   "nav": {
     "upload": "Upload",
     "analysis": "Analysis",
     "history": "History",
     "settings": "Settings"
   },
-  "upload": {
-    "title": "Upload Document",
-    "description": "Drag files here or click to select"
+  "sidebar": {
+    "connected": "Ollama connected",
+    "starting": "Ollama starting...",
+    "inactive": "Ollama not running",
+    "notInstalled": "Ollama not installed",
+    "start": "Start Ollama",
+    "startingShort": "Starting...",
+    "download": "Download Ollama"
   },
-  "analysis": {
-    "title": "Document Analysis",
-    "modes": {
-      "grammar": "Spelling & Grammar",
-      "formulation": "Better Formulations",
-      "arbeitszeugnis": "Work Reference Decoder",
-      "summary": "Summary",
-      "freeform": "Free Question"
-    }
+  "hardware": {
+    "noModel": "No model loaded",
+    "waiting": "Waiting for data...",
+    "profile": "Profile",
+    "runsGpu": "Running entirely on the GPU",
+    "runsHybrid": "Split across GPU + CPU",
+    "runsCpu": "Running on CPU only"
+  },
+  "profile": {
+    "minimal": "Minimal",
+    "light": "Light",
+    "medium": "Medium",
+    "strong": "Strong",
+    "power": "Power"
+  },
+  "command": {
+    "placeholder": "Search documents, content or pages...",
+    "empty": "No results",
+    "emptyHint": "Start typing or navigate...",
+    "navigate": "Navigate",
+    "open": "Open",
+    "close": "Close",
+    "hintUpload": "Upload a new document",
+    "hintAnalysis": "Go to analysis",
+    "hintHistory": "All documents",
+    "hintSettings": "Models, theme, language"
+  },
+  "upload": {
+    "title": "Upload document",
+    "subtitle": "Drag files here or click to select",
+    "processing": "Processing document...",
+    "folderImport": "Import folder",
+    "searchHintSuffix": "to open global search",
+    "imported": "Imported",
+    "importFailed": "Import failed",
+    "errNoFile": "No file found. Please try again.",
+    "errNoFolderFiles": "No supported files found in this folder.",
+    "errNoDrop": "No files detected in the drop.",
+    "errPaths": "Could not read file paths. Please use \"click to select\"."
   },
   "history": {
     "title": "History",
-    "empty": "No documents analyzed yet"
-  },
-  "settings": {
-    "title": "Settings",
-    "ollama": "Ollama Connection",
-    "hardware": "Hardware",
-    "language": "Language",
-    "connected": "Connected",
-    "disconnected": "Not reachable"
+    "count": "{{count}} documents",
+    "searchPlaceholder": "Search documents and content...",
+    "empty": "No documents imported yet",
+    "noResults": "No results",
+    "deleteDoc": "Delete document"
   },
   "welcome": {
-    "title": "DoZii",
     "subtitle": "Local document analysis - 100% offline, 100% private",
-    "privacy": "No data leaves your machine",
+    "privacy": "No data leaves your computer",
+    "systemScan": "System detection",
     "scanning": "Detecting hardware...",
     "recommended": "Recommended model",
-    "start": "Get Started"
+    "ollamaChecking": "Checking Ollama...",
+    "ollamaConnected": "Ollama running on localhost:11434",
+    "ollamaInactive": "Ollama installed but not running",
+    "ollamaNotFound": "Ollama not found",
+    "startOllama": "Start Ollama now",
+    "startingOllama": "Ollama starting...",
+    "startFailedConnect": "Ollama started but isn't responding yet. Wait a moment and try again.",
+    "startFailed": "Ollama could not be started",
+    "continue": "Get started"
   },
-  "common": {
-    "profile": "Profile"
+  "update": {
+    "ready": "Update {{version}} ready",
+    "readyDesc": "Will install on next quit - or restart now.",
+    "restart": "Restart",
+    "dismiss": "Dismiss"
+  },
+  "errorBoundary": {
+    "title": "Something went wrong",
+    "description": "This view could not be rendered. The error was logged (Settings → Logs).",
+    "home": "Go to start"
   }
 }

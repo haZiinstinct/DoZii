@@ -1,6 +1,7 @@
-import { lazy, Suspense } from 'react'
+import { lazy, Suspense, useEffect } from 'react'
 import { HashRouter, Routes, Route } from 'react-router-dom'
 import { Loader2 } from 'lucide-react'
+import i18n from 'i18next'
 import { MainLayout } from './components/layout/MainLayout'
 import './i18n'
 
@@ -32,6 +33,18 @@ function RouteFallback() {
 }
 
 export function App() {
+  // Persistierte UI-Sprache laden und auf i18n anwenden (Default 'de').
+  useEffect(() => {
+    window.api.settings
+      .get()
+      .then((s) => {
+        if (s.language && s.language !== i18n.language) i18n.changeLanguage(s.language)
+      })
+      .catch(() => {
+        /* Default-Sprache bleibt aktiv */
+      })
+  }, [])
+
   return (
     <HashRouter>
       <Suspense fallback={<RouteFallback />}>

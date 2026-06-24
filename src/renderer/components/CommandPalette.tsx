@@ -8,6 +8,7 @@ import {
   Settings as SettingsIcon,
   FileSearch
 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import type { DoziiDocument } from '@shared/types'
 
 interface CommandItem {
@@ -30,6 +31,7 @@ interface CommandPaletteProps {
  */
 export function CommandPalette({ open, onClose }: CommandPaletteProps) {
   const navigate = useNavigate()
+  const { t } = useTranslation()
   const [query, setQuery] = useState('')
   const [docs, setDocs] = useState<DoziiDocument[]>([])
   const [selectedIndex, setSelectedIndex] = useState(0)
@@ -54,38 +56,38 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
     () => [
       {
         id: 'nav-upload',
-        label: 'Upload',
-        hint: 'Neues Dokument hochladen',
-        icon: <Upload size={16} />,
+        label: t('nav.upload'),
+        hint: t('command.hintUpload'),
+        icon: <Upload size={16} aria-hidden="true" />,
         action: () => navigate('/'),
         keywords: ['upload', 'hochladen', 'neu', 'import']
       },
       {
         id: 'nav-analysis',
-        label: 'Analyse',
-        hint: 'Zur Analyse-Seite',
-        icon: <FileSearch size={16} />,
+        label: t('nav.analysis'),
+        hint: t('command.hintAnalysis'),
+        icon: <FileSearch size={16} aria-hidden="true" />,
         action: () => navigate('/analysis'),
         keywords: ['analyse', 'analysis']
       },
       {
         id: 'nav-history',
-        label: 'Historie',
-        hint: 'Alle Dokumente',
-        icon: <HistoryIcon size={16} />,
+        label: t('nav.history'),
+        hint: t('command.hintHistory'),
+        icon: <HistoryIcon size={16} aria-hidden="true" />,
         action: () => navigate('/history'),
         keywords: ['historie', 'history', 'dokumente', 'documents']
       },
       {
         id: 'nav-settings',
-        label: 'Einstellungen',
-        hint: 'Modelle, Theme, Lizenz',
-        icon: <SettingsIcon size={16} />,
+        label: t('nav.settings'),
+        hint: t('command.hintSettings'),
+        icon: <SettingsIcon size={16} aria-hidden="true" />,
         action: () => navigate('/settings'),
-        keywords: ['einstellungen', 'settings', 'config', 'lizenz']
+        keywords: ['einstellungen', 'settings', 'config', 'sprache', 'language']
       }
     ],
-    [navigate]
+    [navigate, t]
   )
 
   const documentItems = useMemo<CommandItem[]>(() => {
@@ -99,13 +101,13 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
       .map((d) => ({
         id: `doc-${d.id}`,
         label: d.filename,
-        hint: `${d.wordCount ?? 0} Wörter · ${
+        hint: `${d.wordCount ?? 0} ${t('common.words')} · ${
           d.detectedLanguage === 'de' ? 'DE' : d.detectedLanguage === 'en' ? 'EN' : ''
         }`,
-        icon: <FileText size={16} />,
+        icon: <FileText size={16} aria-hidden="true" />,
         action: () => navigate(`/document/${d.id}`)
       }))
-  }, [docs, query, navigate])
+  }, [docs, query, navigate, t])
 
   const allItems = useMemo(() => {
     const q = query.toLowerCase().trim()
@@ -166,7 +168,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Suchen nach Dokumenten, Inhalten oder Seiten..."
+            placeholder={t('command.placeholder')}
             className="flex-1 bg-transparent text-sm text-brand-text placeholder:text-brand-text-dim focus:outline-none"
           />
           <kbd className="hidden rounded border border-brand-border bg-brand-darker px-2 py-0.5 font-mono text-[10px] text-brand-text-dim sm:inline-block">
@@ -177,7 +179,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
         <div className="max-h-[50vh] overflow-y-auto p-2">
           {allItems.length === 0 ? (
             <p className="p-4 text-center text-sm text-brand-text-dim">
-              {query ? 'Keine Ergebnisse' : 'Beginne zu tippen oder navigiere...'}
+              {query ? t('command.empty') : t('command.emptyHint')}
             </p>
           ) : (
             allItems.map((item, idx) => (
@@ -217,19 +219,19 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
             <kbd className="rounded border border-brand-border bg-brand-darker px-1.5 py-0.5 font-mono">
               ↑↓
             </kbd>
-            Navigieren
+            {t('command.navigate')}
           </span>
           <span className="flex items-center gap-1">
             <kbd className="rounded border border-brand-border bg-brand-darker px-1.5 py-0.5 font-mono">
               ↵
             </kbd>
-            Öffnen
+            {t('command.open')}
           </span>
           <span className="flex items-center gap-1">
             <kbd className="rounded border border-brand-border bg-brand-darker px-1.5 py-0.5 font-mono">
               Esc
             </kbd>
-            Schliessen
+            {t('command.close')}
           </span>
         </div>
       </div>

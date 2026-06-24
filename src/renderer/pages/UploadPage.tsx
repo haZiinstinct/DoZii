@@ -10,6 +10,7 @@ import {
   AlertCircle,
   FolderOpen
 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 interface ImportedDoc {
   id: string
@@ -24,6 +25,7 @@ function basename(path: string): string {
 
 export function UploadPage() {
   const navigate = useNavigate()
+  const { t } = useTranslation()
   const [dragging, setDragging] = useState(false)
   const [importing, setImporting] = useState(false)
   const [imported, setImported] = useState<ImportedDoc[]>([])
@@ -44,7 +46,7 @@ export function UploadPage() {
   const handleImport = useCallback(
     async (filePaths: string[]) => {
       if (filePaths.length === 0) {
-        setErrorList(['Keine Datei gefunden. Bitte versuche es erneut.'])
+        setErrorList([t('upload.errNoFile')])
         return
       }
       setImporting(true)
@@ -61,7 +63,7 @@ export function UploadPage() {
             wordCount: doc.wordCount ?? 0
           })
         } catch (err) {
-          const message = err instanceof Error ? err.message : 'Import fehlgeschlagen'
+          const message = err instanceof Error ? err.message : t('upload.importFailed')
           errors.push(`${basename(path)}: ${message}`)
         }
       }
@@ -78,7 +80,7 @@ export function UploadPage() {
         navigate(`/document/${results[0].id}`)
       }
     },
-    [navigate]
+    [navigate, t]
   )
 
   const handleClick = async () => {
@@ -94,7 +96,7 @@ export function UploadPage() {
     setErrorList([])
     const paths = await window.api.documents.openDirectoryDialog()
     if (paths.length === 0) {
-      setErrorList(['Keine unterstützten Dateien in diesem Ordner gefunden.'])
+      setErrorList([t('upload.errNoFolderFiles')])
       return
     }
     await handleImport(paths)
@@ -108,7 +110,7 @@ export function UploadPage() {
 
     const files = Array.from(e.dataTransfer.files)
     if (files.length === 0) {
-      setErrorList(['Keine Dateien im Drop erkannt.'])
+      setErrorList([t('upload.errNoDrop')])
       return
     }
 
@@ -118,9 +120,7 @@ export function UploadPage() {
       .filter((p): p is string => Boolean(p))
 
     if (paths.length === 0) {
-      setErrorList([
-        'Dateipfade konnten nicht ausgelesen werden. Bitte "Klick zum Auswählen" benutzen.'
-      ])
+      setErrorList([t('upload.errPaths')])
       return
     }
 
@@ -130,7 +130,15 @@ export function UploadPage() {
   return (
     <div className="flex h-full flex-col items-center justify-center gap-6">
       <div
+        role="button"
+        tabIndex={0}
         onClick={handleClick}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault()
+            handleClick()
+          }
+        }}
         onDragOver={(e) => {
           e.preventDefault()
           e.stopPropagation()
@@ -141,6 +149,7 @@ export function UploadPage() {
           setDragging(false)
         }}
         onDrop={handleDrop}
+        aria-label={t('upload.title')}
         className={`group w-full max-w-2xl cursor-pointer rounded-2xl border-2 border-dashed p-16 text-center transition-all duration-300 ${
           dragging
             ? 'border-brand-cyan bg-brand-cyan/5 shadow-[0_0_40px_rgba(0,212,255,0.1)]'
@@ -149,20 +158,22 @@ export function UploadPage() {
       >
         {importing ? (
           <>
-            <Loader2 size={28} className="mx-auto mb-4 animate-spin text-brand-cyan" />
-            <p className="text-sm text-brand-text-dim">Dokument wird verarbeitet...</p>
+            <Loader2
+              size={28}
+              className="mx-auto mb-4 animate-spin text-brand-cyan"
+              aria-hidden="true"
+            />
+            <p className="text-sm text-brand-text-dim">{t('upload.processing')}</p>
           </>
         ) : (
           <>
             <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-cyan/10 text-brand-cyan transition-colors group-hover:bg-brand-cyan/20">
-              <Upload size={28} />
+              <Upload size={28} aria-hidden="true" />
             </div>
             <h2 className="mb-2 text-xl font-semibold text-brand-text-bright">
-              Dokument hochladen
+              {t('upload.title')}
             </h2>
-            <p className="mb-6 text-sm text-brand-text-dim">
-              Ziehe Dateien hierher oder klicke zum Auswählen
-            </p>
+            <p className="mb-6 text-sm text-brand-text-dim">{t('upload.subtitle')}</p>
             <div className="mb-4 flex justify-center gap-3">
               {[
                 { icon: FileText, label: 'PDF' },
@@ -183,8 +194,8 @@ export function UploadPage() {
               onClick={handleBulkFolderImport}
               className="titlebar-no-drag inline-flex items-center gap-2 rounded-xl border border-brand-border bg-brand-card/50 px-4 py-2 text-xs text-brand-text-dim transition-all hover:border-brand-cyan/30 hover:text-brand-cyan"
             >
-              <FolderOpen size={12} />
-              Ordner importieren
+              <FolderOpen size={12} aria-hidden="true" />
+              {t('upload.folderImport')}
             </button>
           </>
         )}
@@ -195,7 +206,7 @@ export function UploadPage() {
         <kbd className="rounded border border-brand-border bg-brand-card/50 px-1.5 py-0.5 font-mono text-[10px]">
           Ctrl + K
         </kbd>{' '}
-        für globale Suche öffnen
+        {t('upload.searchHintSuffix')}
       </p>
 
       {/* Error display: eine Zeile pro fehlgeschlagener Datei */}
@@ -219,7 +230,7 @@ export function UploadPage() {
       {imported.length > 0 && (
         <div className="w-full max-w-2xl space-y-2">
           <p className="text-xs font-semibold uppercase tracking-wider text-brand-text-dim">
-            Importiert
+            {t('upload.imported')}
           </p>
           {imported.map((doc) => (
             <button
@@ -227,10 +238,10 @@ export function UploadPage() {
               onClick={() => navigate(`/document/${doc.id}`)}
               className="flex w-full items-center gap-3 rounded-xl border border-brand-border bg-brand-card/40 px-4 py-3 text-left transition-all hover:border-brand-border-hover hover:bg-brand-card"
             >
-              <CheckCircle2 size={16} className="text-brand-green" />
+              <CheckCircle2 size={16} className="text-brand-green" aria-hidden="true" />
               <span className="flex-1 truncate text-sm text-brand-text">{doc.filename}</span>
               <span className="text-xs text-brand-text-dim">
-                {doc.wordCount.toLocaleString()} Wörter
+                {doc.wordCount.toLocaleString()} {t('common.words')}
               </span>
             </button>
           ))}

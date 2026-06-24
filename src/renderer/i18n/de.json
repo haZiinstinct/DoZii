@@ -1,45 +1,102 @@
 {
+  "common": {
+    "words": "Wörter",
+    "loading": "Lädt...",
+    "retry": "Erneut versuchen"
+  },
+  "titlebar": {
+    "minimize": "Fenster minimieren",
+    "maximize": "Fenster maximieren",
+    "close": "Fenster schließen"
+  },
   "nav": {
     "upload": "Upload",
     "analysis": "Analyse",
     "history": "Historie",
     "settings": "Einstellungen"
   },
+  "sidebar": {
+    "connected": "Ollama verbunden",
+    "starting": "Ollama startet...",
+    "inactive": "Ollama nicht aktiv",
+    "notInstalled": "Ollama nicht installiert",
+    "start": "Ollama starten",
+    "startingShort": "Startet...",
+    "download": "Ollama herunterladen"
+  },
+  "hardware": {
+    "noModel": "Kein Modell geladen",
+    "waiting": "Warten auf Daten...",
+    "profile": "Profil",
+    "runsGpu": "Läuft komplett auf der GPU",
+    "runsHybrid": "Teilt sich GPU + CPU",
+    "runsCpu": "Läuft nur auf der CPU"
+  },
+  "profile": {
+    "minimal": "Minimal",
+    "light": "Leicht",
+    "medium": "Mittel",
+    "strong": "Stark",
+    "power": "Power"
+  },
+  "command": {
+    "placeholder": "Suchen nach Dokumenten, Inhalten oder Seiten...",
+    "empty": "Keine Ergebnisse",
+    "emptyHint": "Beginne zu tippen oder navigiere...",
+    "navigate": "Navigieren",
+    "open": "Öffnen",
+    "close": "Schließen",
+    "hintUpload": "Neues Dokument hochladen",
+    "hintAnalysis": "Zur Analyse-Seite",
+    "hintHistory": "Alle Dokumente",
+    "hintSettings": "Modelle, Theme, Sprache"
+  },
   "upload": {
     "title": "Dokument hochladen",
-    "description": "Ziehe Dateien hierher oder klicke zum Auswählen"
-  },
-  "analysis": {
-    "title": "Dokumentenanalyse",
-    "modes": {
-      "grammar": "Rechtschreibung & Grammatik",
-      "formulation": "Bessere Formulierungen",
-      "arbeitszeugnis": "Arbeitszeugnis-Decoder",
-      "summary": "Zusammenfassung",
-      "freeform": "Freie Frage"
-    }
+    "subtitle": "Ziehe Dateien hierher oder klicke zum Auswählen",
+    "processing": "Dokument wird verarbeitet...",
+    "folderImport": "Ordner importieren",
+    "searchHintSuffix": "für globale Suche öffnen",
+    "imported": "Importiert",
+    "importFailed": "Import fehlgeschlagen",
+    "errNoFile": "Keine Datei gefunden. Bitte versuche es erneut.",
+    "errNoFolderFiles": "Keine unterstützten Dateien in diesem Ordner gefunden.",
+    "errNoDrop": "Keine Dateien im Drop erkannt.",
+    "errPaths": "Dateipfade konnten nicht ausgelesen werden. Bitte \"Klick zum Auswählen\" benutzen."
   },
   "history": {
     "title": "Historie",
-    "empty": "Noch keine Dokumente analysiert"
-  },
-  "settings": {
-    "title": "Einstellungen",
-    "ollama": "Ollama Verbindung",
-    "hardware": "Hardware",
-    "language": "Sprache",
-    "connected": "Verbunden",
-    "disconnected": "Nicht erreichbar"
+    "count": "{{count}} Dokumente",
+    "searchPlaceholder": "Dokumente und Inhalte durchsuchen...",
+    "empty": "Noch keine Dokumente importiert",
+    "noResults": "Keine Ergebnisse",
+    "deleteDoc": "Dokument löschen"
   },
   "welcome": {
-    "title": "DoZii",
     "subtitle": "Lokale Dokumentenanalyse - 100% offline, 100% privat",
     "privacy": "Keine Daten verlassen deinen Rechner",
+    "systemScan": "System-Erkennung",
     "scanning": "Hardware wird erkannt...",
     "recommended": "Empfohlenes Modell",
-    "start": "Starten"
+    "ollamaChecking": "Ollama wird geprüft...",
+    "ollamaConnected": "Ollama läuft auf localhost:11434",
+    "ollamaInactive": "Ollama installiert aber nicht aktiv",
+    "ollamaNotFound": "Ollama nicht gefunden",
+    "startOllama": "Ollama jetzt starten",
+    "startingOllama": "Ollama startet...",
+    "startFailedConnect": "Ollama wurde gestartet, antwortet aber noch nicht. Einen Moment warten und erneut versuchen.",
+    "startFailed": "Ollama konnte nicht gestartet werden",
+    "continue": "Loslegen"
   },
-  "common": {
-    "profile": "Profil"
+  "update": {
+    "ready": "Update {{version}} bereit",
+    "readyDesc": "Wird beim nächsten Beenden installiert - oder jetzt neu starten.",
+    "restart": "Neustarten",
+    "dismiss": "Hinweis schließen"
+  },
+  "errorBoundary": {
+    "title": "Da ist etwas schiefgelaufen",
+    "description": "Die Ansicht konnte nicht dargestellt werden. Der Fehler wurde protokolliert (Einstellungen → Logs).",
+    "home": "Zur Startseite"
   }
 }

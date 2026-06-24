@@ -9,25 +9,31 @@ import {
   Loader2,
   Download
 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { useOllamaStatus } from '@/hooks/useOllamaStatus'
 import { HardwareIndicator } from './HardwareIndicator'
 
 interface NavItem {
   path: string
-  label: string
+  labelKey: string
   icon: React.ReactNode
 }
 
 const navItems: NavItem[] = [
-  { path: '/', label: 'Upload', icon: <Upload size={18} /> },
-  { path: '/analysis', label: 'Analyse', icon: <FileSearch size={18} /> },
-  { path: '/history', label: 'Historie', icon: <History size={18} /> },
-  { path: '/settings', label: 'Einstellungen', icon: <Settings size={18} /> }
+  { path: '/', labelKey: 'nav.upload', icon: <Upload size={18} aria-hidden="true" /> },
+  {
+    path: '/analysis',
+    labelKey: 'nav.analysis',
+    icon: <FileSearch size={18} aria-hidden="true" />
+  },
+  { path: '/history', labelKey: 'nav.history', icon: <History size={18} aria-hidden="true" /> },
+  { path: '/settings', labelKey: 'nav.settings', icon: <Settings size={18} aria-hidden="true" /> }
 ]
 
 export function Sidebar() {
   const location = useLocation()
   const navigate = useNavigate()
+  const { t } = useTranslation()
   const { connected, model, installed, starting, startError, startOllama } = useOllamaStatus()
 
   return (
@@ -47,7 +53,7 @@ export function Sidebar() {
               }`}
             >
               {item.icon}
-              {item.label}
+              {t(item.labelKey)}
             </button>
           )
         })}
@@ -73,12 +79,12 @@ export function Sidebar() {
           />
           <span className="text-xs text-brand-text-dim">
             {connected
-              ? 'Ollama verbunden'
+              ? t('sidebar.connected')
               : starting
-                ? 'Ollama startet...'
+                ? t('sidebar.starting')
                 : installed
-                  ? 'Ollama nicht aktiv'
-                  : 'Ollama nicht installiert'}
+                  ? t('sidebar.inactive')
+                  : t('sidebar.notInstalled')}
           </span>
         </div>
 
@@ -95,13 +101,13 @@ export function Sidebar() {
           >
             {starting ? (
               <>
-                <Loader2 size={12} className="animate-spin" />
-                Startet...
+                <Loader2 size={12} className="animate-spin" aria-hidden="true" />
+                {t('sidebar.startingShort')}
               </>
             ) : (
               <>
-                <Play size={12} />
-                Ollama starten
+                <Play size={12} aria-hidden="true" />
+                {t('sidebar.start')}
               </>
             )}
           </button>
@@ -119,8 +125,8 @@ export function Sidebar() {
             }}
             className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg border border-brand-border px-3 py-2 text-xs font-medium text-brand-text-dim transition-all hover:border-brand-cyan/30 hover:text-brand-cyan"
           >
-            <Download size={12} />
-            Ollama herunterladen
+            <Download size={12} aria-hidden="true" />
+            {t('sidebar.download')}
           </a>
         )}
 

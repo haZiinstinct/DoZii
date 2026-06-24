@@ -1,4 +1,5 @@
 import React from 'react'
+import i18n from 'i18next'
 
 interface Props {
   children: React.ReactNode
@@ -34,10 +35,9 @@ export class ErrorBoundary extends React.Component<Props, State> {
     if (this.state.error) {
       return (
         <div className="flex h-screen flex-col items-center justify-center gap-4 bg-brand-dark p-8 text-center">
-          <h1 className="text-xl font-bold text-brand-red">Da ist etwas schiefgelaufen</h1>
+          <h1 className="text-xl font-bold text-brand-red">{i18n.t('errorBoundary.title')}</h1>
           <p className="max-w-md text-sm text-brand-text-dim">
-            Die Ansicht konnte nicht dargestellt werden. Der Fehler wurde protokolliert
-            (Einstellungen → Logs).
+            {i18n.t('errorBoundary.description')}
           </p>
           <p className="max-w-md break-words font-mono text-xs text-brand-text-dim">
             {this.state.error.message}
@@ -49,7 +49,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
             }}
             className="rounded-xl bg-brand-cyan px-4 py-2 text-sm font-semibold text-brand-dark transition-colors hover:bg-brand-cyan-dim"
           >
-            Zur Startseite
+            {i18n.t('errorBoundary.home')}
           </button>
         </div>
       )
