@@ -22,16 +22,26 @@ export function extractJsonObject(raw: string): Record<string, unknown> | null {
     if (obj) return obj
   }
 
-  // Balancierter Scan ueber alle '{'-Startpositionen
-  for (let start = trimmed.indexOf('{'); start !== -1; start = trimmed.indexOf('{', start + 1)) {
-    const candidate = sliceBalancedObject(trimmed, start)
+  // Balancierter Scan ueber alle '{'-Startpositionen; das LETZTE gueltige
+  // Top-Level-Objekt gewinnt (die echte Antwort steht meist am Ende, davor
+  // koennen Beispiel-Objekte in der Prosa stehen).
+  let last: Record<string, unknown> | null = null
+  let pos = trimmed.indexOf('{')
+  while (pos !== -1) {
+    const candidate = sliceBalancedObject(trimmed, pos)
     if (candidate) {
       const obj = tryParseObject(candidate)
-      if (obj) return obj
+      if (obj) {
+        last = obj
+        // Hinter dem gefundenen Objekt weitersuchen, nicht mitten hinein
+        pos = trimmed.indexOf('{', pos + candidate.length)
+        continue
+      }
     }
+    pos = trimmed.indexOf('{', pos + 1)
   }
 
-  return null
+  return last
 }
 
 function tryParseObject(text: string): Record<string, unknown> | null {
