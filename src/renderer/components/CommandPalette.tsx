@@ -153,15 +153,23 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
 
   if (!open) return null
 
+  const activeId = allItems[selectedIndex] ? `cmd-item-${allItems[selectedIndex].id}` : undefined
+
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-[12vh]" onClick={onClose}>
+    <div
+      className="fixed inset-0 z-50 flex items-start justify-center pt-[12vh]"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-label={t('command.placeholder')}
+    >
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" aria-hidden="true" />
       <div
         className="relative w-full max-w-xl rounded-2xl border border-brand-border bg-brand-card shadow-[0_0_80px_rgba(0,212,255,0.15)]"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center gap-3 border-b border-brand-border px-4 py-3">
-          <Search size={16} className="text-brand-text-dim" />
+          <Search size={16} className="text-brand-text-dim" aria-hidden="true" />
           <input
             ref={inputRef}
             type="text"
@@ -169,6 +177,11 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={t('command.placeholder')}
+            role="combobox"
+            aria-expanded={allItems.length > 0}
+            aria-controls="command-palette-list"
+            aria-activedescendant={activeId}
+            aria-autocomplete="list"
             className="flex-1 bg-transparent text-sm text-brand-text placeholder:text-brand-text-dim focus:outline-none"
           />
           <kbd className="hidden rounded border border-brand-border bg-brand-darker px-2 py-0.5 font-mono text-[10px] text-brand-text-dim sm:inline-block">
@@ -176,7 +189,12 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
           </kbd>
         </div>
 
-        <div className="max-h-[50vh] overflow-y-auto p-2">
+        <div
+          id="command-palette-list"
+          role="listbox"
+          aria-label={t('command.placeholder')}
+          className="max-h-[50vh] overflow-y-auto p-2"
+        >
           {allItems.length === 0 ? (
             <p className="p-4 text-center text-sm text-brand-text-dim">
               {query ? t('command.empty') : t('command.emptyHint')}
@@ -185,6 +203,9 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
             allItems.map((item, idx) => (
               <button
                 key={item.id}
+                id={`cmd-item-${item.id}`}
+                role="option"
+                aria-selected={idx === selectedIndex}
                 onClick={() => {
                   item.action()
                   onClose()

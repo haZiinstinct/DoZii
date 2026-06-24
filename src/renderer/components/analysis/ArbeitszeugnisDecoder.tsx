@@ -63,11 +63,11 @@ function gradeColor(grade: number): {
     }
   if (grade <= 4)
     return {
-      bg: 'bg-orange-500/10',
-      text: 'text-orange-400',
-      border: 'border-orange-500/30',
-      ring: 'ring-orange-500/20',
-      fill: 'bg-orange-500'
+      bg: 'bg-brand-orange/10',
+      text: 'text-brand-orange',
+      border: 'border-brand-orange/30',
+      ring: 'ring-brand-orange/20',
+      fill: 'bg-brand-orange'
     }
   return {
     bg: 'bg-brand-red/10',
