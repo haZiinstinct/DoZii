@@ -1,15 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Cpu, MemoryStick, Sparkles } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import type { HardwareInfo, LoadedModelInfo } from '@shared/types'
 import { useSystemMetrics } from '@/hooks/useSystemMetrics'
-
-const profileLabels: Record<string, string> = {
-  minimal: 'Minimal',
-  light: 'Leicht',
-  medium: 'Mittel',
-  strong: 'Stark',
-  power: 'Power'
-}
 
 /**
  * Pick the "primary" loaded model - the biggest one. Usually there's only
@@ -57,6 +50,7 @@ function BarRow({ label, icon, percent, detail }: BarRowProps) {
 }
 
 export function HardwareIndicator() {
+  const { t } = useTranslation()
   const { metrics } = useSystemMetrics()
   const [hardware, setHardware] = useState<HardwareInfo | null>(null)
 
@@ -107,10 +101,10 @@ export function HardwareIndicator() {
               }`}
               title={
                 primaryModel.runningOn === 'gpu'
-                  ? 'Läuft komplett auf der GPU'
+                  ? t('hardware.runsGpu')
                   : primaryModel.runningOn === 'hybrid'
-                    ? 'Teilt sich GPU + CPU'
-                    : 'Läuft nur auf der CPU'
+                    ? t('hardware.runsHybrid')
+                    : t('hardware.runsCpu')
               }
             >
               {primaryModel.runningOn}
@@ -118,7 +112,7 @@ export function HardwareIndicator() {
           </>
         ) : (
           <span className="flex-1 text-[11px] text-brand-text-dim/70">
-            {metrics ? 'Kein Modell geladen' : 'Warten auf Daten...'}
+            {metrics ? t('hardware.noModel') : t('hardware.waiting')}
           </span>
         )}
       </div>
@@ -140,10 +134,8 @@ export function HardwareIndicator() {
       {/* Profile footer */}
       {hardware && (
         <p className="mt-3 border-t border-brand-border pt-2 text-[9px] uppercase tracking-wider text-brand-text-dim">
-          Profil:{' '}
-          <span className="text-brand-text-dim">
-            {profileLabels[hardware.profile] ?? hardware.profile}
-          </span>
+          {t('hardware.profile')}:{' '}
+          <span className="text-brand-text-dim">{t(`profile.${hardware.profile}`)}</span>
         </p>
       )}
     </div>

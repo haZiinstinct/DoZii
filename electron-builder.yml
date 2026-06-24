@@ -17,7 +17,8 @@ win:
     - nsis
   signAndEditExecutable: false
 nsis:
-  artifactName: DoZii-Setup-${version}.${ext}
+  # Stabiler Name ohne Version: hazii.org verlinkt releases/latest/download/DoZii-Setup.exe
+  artifactName: DoZii-Setup.${ext}
   shortcutName: DoZii
   uninstallDisplayName: DoZii
   createDesktopShortcut: always

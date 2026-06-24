@@ -1,7 +1,7 @@
 import { app } from 'electron'
+import { randomUUID } from 'crypto'
 import { join, extname, basename } from 'path'
 import { copyFile, mkdir, stat, unlink } from 'fs/promises'
-import { v4 as uuid } from 'uuid'
 import { eq, desc } from 'drizzle-orm'
 import { getDb, schema } from '../db'
 import { extractPdf } from './pdf-extractor.service'
@@ -9,30 +9,17 @@ import { extractDocx } from './docx-extractor.service'
 import { extractXlsx } from './xlsx-extractor.service'
 import { recognizeImage } from './ocr.service'
 import { logger } from './logger.service'
+import {
+  SUPPORTED_EXTENSION_SET,
+  LEGACY_OFFICE_HINTS,
+  getMimeType,
+  isImageExtension
+} from '@shared/file-types'
+import { checkPrintability } from '@shared/text-validators'
 import type { DoziiDocument } from '@shared/types'
 
 function getDocumentsDir(): string {
   return join(app.getPath('userData'), 'documents')
-}
-
-// .doc/.xls (Legacy-Formate) fehlen bewusst: mammoth/xlsx können sie nicht
-// lesen. importDocument gibt dafür einen Konvertier-Hinweis.
-const SUPPORTED_EXTENSIONS = new Set([
-  '.pdf',
-  '.docx',
-  '.xlsx',
-  '.jpg',
-  '.jpeg',
-  '.png',
-  '.tiff',
-  '.tif',
-  '.bmp',
-  '.webp'
-])
-
-const LEGACY_OFFICE_HINTS: Record<string, string> = {
-  '.doc': 'Bitte die Datei in Word als .docx speichern und erneut importieren.',
-  '.xls': 'Bitte die Datei in Excel als .xlsx speichern und erneut importieren.'
 }
 
 const MAX_FILE_SIZE_BYTES = 200 * 1024 * 1024 // 200 MB
@@ -72,98 +59,6 @@ function detectLanguage(text: string): string {
   return ratio > 0.02 ? 'de' : 'en'
 }
 
-export interface PrintabilityCheck {
-  printableRatio: number
-  controlRatio: number
-  ok: boolean
-  reason?: string
-}
-
-/**
- * Validate that extracted text is actually human-readable.
- * Rejects binary/garbled extractions that would make the model hallucinate.
- *
- * Printable = ASCII 32-126, common whitespace (\n\r\t), and Latin-1 extended
- * letters (umlauts, accented characters, €, §, °, etc.).
- */
-export function checkPrintability(text: string): PrintabilityCheck {
-  if (text.length === 0) {
-    return { printableRatio: 0, controlRatio: 0, ok: false, reason: 'Text ist leer' }
-  }
-
-  let printable = 0
-  let control = 0
-  for (let i = 0; i < text.length; i++) {
-    const code = text.charCodeAt(i)
-    // Whitespace we always accept
-    if (code === 9 || code === 10 || code === 13) {
-      printable++
-      continue
-    }
-    // ASCII printable
-    if (code >= 32 && code <= 126) {
-      printable++
-      continue
-    }
-    // Latin-1 Supplement (umlauts, accented letters) + common symbols
-    // 160-255 = Latin-1 Supplement, 0x20AC = Euro, 0x2013/2014 = en/em dash,
-    // 0x201C-201F = smart quotes, 0x2026 = ellipsis, 0x00B0 = degree, 0x00A7 = section
-    if (
-      (code >= 160 && code <= 255) ||
-      code === 0x20ac ||
-      (code >= 0x2013 && code <= 0x2014) ||
-      (code >= 0x2018 && code <= 0x201f) ||
-      code === 0x2026
-    ) {
-      printable++
-      continue
-    }
-    // Control chars (below 32, not whitespace)
-    if (code < 32) {
-      control++
-    }
-    // Everything else (extended unicode, CJK, etc.) counts as neutral (not printable, not control)
-  }
-
-  const printableRatio = printable / text.length
-  const controlRatio = control / text.length
-
-  if (controlRatio > 0.05) {
-    return {
-      printableRatio,
-      controlRatio,
-      ok: false,
-      reason: `Zu viele Steuerzeichen (${Math.round(controlRatio * 100)}%) - Text ist wahrscheinlich binär/beschädigt`
-    }
-  }
-  if (printableRatio < 0.8) {
-    return {
-      printableRatio,
-      controlRatio,
-      ok: false,
-      reason: `Nur ${Math.round(printableRatio * 100)}% druckbare Zeichen - PDF ist möglicherweise ein gescanntes Bild, beschädigt oder in einem unbekannten Encoding`
-    }
-  }
-
-  return { printableRatio, controlRatio, ok: true }
-}
-
-function getMimeType(ext: string): string {
-  const map: Record<string, string> = {
-    '.pdf': 'application/pdf',
-    '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    '.jpg': 'image/jpeg',
-    '.jpeg': 'image/jpeg',
-    '.png': 'image/png',
-    '.tiff': 'image/tiff',
-    '.tif': 'image/tiff',
-    '.bmp': 'image/bmp',
-    '.webp': 'image/webp'
-  }
-  return map[ext.toLowerCase()] || 'application/octet-stream'
-}
-
 async function extractTextByType(
   destPath: string,
   ext: string
@@ -180,7 +75,7 @@ async function extractTextByType(
     const result = extractXlsx(destPath)
     return { text: result.text, pageCount: result.sheetCount }
   }
-  if (['.jpg', '.jpeg', '.png', '.tiff', '.tif', '.bmp', '.webp'].includes(ext)) {
+  if (isImageExtension(ext)) {
     const result = await recognizeImage(destPath)
     return { text: result.text, pageCount: 1 }
   }
@@ -192,13 +87,13 @@ export async function importDocument(filePath: string): Promise<DoziiDocument> {
   const filename = basename(filePath)
 
   // Validate extension against allow-list
-  if (!SUPPORTED_EXTENSIONS.has(ext)) {
+  if (!SUPPORTED_EXTENSION_SET.has(ext)) {
     const legacyHint = LEGACY_OFFICE_HINTS[ext]
     if (legacyHint) {
       throw new Error(`Das alte Office-Format "${ext}" wird nicht unterstützt. ${legacyHint}`)
     }
     throw new Error(
-      `Dateityp "${ext}" wird nicht unterstützt. Erlaubt: ${[...SUPPORTED_EXTENSIONS].join(', ')}`
+      `Dateityp "${ext}" wird nicht unterstützt. Erlaubt: ${[...SUPPORTED_EXTENSION_SET].join(', ')}`
     )
   }
 
@@ -220,7 +115,7 @@ export async function importDocument(filePath: string): Promise<DoziiDocument> {
   const docsDir = getDocumentsDir()
   await mkdir(docsDir, { recursive: true })
 
-  const id = uuid()
+  const id = randomUUID()
   const mimeType = getMimeType(ext)
   const destPath = join(docsDir, `${id}${ext}`)
 

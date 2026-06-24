@@ -8,6 +8,7 @@ import {
   Settings as SettingsIcon,
   FileSearch
 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import type { DoziiDocument } from '@shared/types'
 
 interface CommandItem {
@@ -30,6 +31,7 @@ interface CommandPaletteProps {
  */
 export function CommandPalette({ open, onClose }: CommandPaletteProps) {
   const navigate = useNavigate()
+  const { t } = useTranslation()
   const [query, setQuery] = useState('')
   const [docs, setDocs] = useState<DoziiDocument[]>([])
   const [selectedIndex, setSelectedIndex] = useState(0)
@@ -54,38 +56,38 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
     () => [
       {
         id: 'nav-upload',
-        label: 'Upload',
-        hint: 'Neues Dokument hochladen',
-        icon: <Upload size={16} />,
+        label: t('nav.upload'),
+        hint: t('command.hintUpload'),
+        icon: <Upload size={16} aria-hidden="true" />,
         action: () => navigate('/'),
         keywords: ['upload', 'hochladen', 'neu', 'import']
       },
       {
         id: 'nav-analysis',
-        label: 'Analyse',
-        hint: 'Zur Analyse-Seite',
-        icon: <FileSearch size={16} />,
+        label: t('nav.analysis'),
+        hint: t('command.hintAnalysis'),
+        icon: <FileSearch size={16} aria-hidden="true" />,
         action: () => navigate('/analysis'),
         keywords: ['analyse', 'analysis']
       },
       {
         id: 'nav-history',
-        label: 'Historie',
-        hint: 'Alle Dokumente',
-        icon: <HistoryIcon size={16} />,
+        label: t('nav.history'),
+        hint: t('command.hintHistory'),
+        icon: <HistoryIcon size={16} aria-hidden="true" />,
         action: () => navigate('/history'),
         keywords: ['historie', 'history', 'dokumente', 'documents']
       },
       {
         id: 'nav-settings',
-        label: 'Einstellungen',
-        hint: 'Modelle, Theme, Lizenz',
-        icon: <SettingsIcon size={16} />,
+        label: t('nav.settings'),
+        hint: t('command.hintSettings'),
+        icon: <SettingsIcon size={16} aria-hidden="true" />,
         action: () => navigate('/settings'),
-        keywords: ['einstellungen', 'settings', 'config', 'lizenz']
+        keywords: ['einstellungen', 'settings', 'config', 'sprache', 'language']
       }
     ],
-    [navigate]
+    [navigate, t]
   )
 
   const documentItems = useMemo<CommandItem[]>(() => {
@@ -99,13 +101,13 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
       .map((d) => ({
         id: `doc-${d.id}`,
         label: d.filename,
-        hint: `${d.wordCount ?? 0} Wörter · ${
+        hint: `${d.wordCount ?? 0} ${t('common.words')} · ${
           d.detectedLanguage === 'de' ? 'DE' : d.detectedLanguage === 'en' ? 'EN' : ''
         }`,
-        icon: <FileText size={16} />,
+        icon: <FileText size={16} aria-hidden="true" />,
         action: () => navigate(`/document/${d.id}`)
       }))
-  }, [docs, query, navigate])
+  }, [docs, query, navigate, t])
 
   const allItems = useMemo(() => {
     const q = query.toLowerCase().trim()
@@ -151,22 +153,35 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
 
   if (!open) return null
 
+  const activeId = allItems[selectedIndex] ? `cmd-item-${allItems[selectedIndex].id}` : undefined
+
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-[12vh]" onClick={onClose}>
+    <div
+      className="fixed inset-0 z-50 flex items-start justify-center pt-[12vh]"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-label={t('command.placeholder')}
+    >
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" aria-hidden="true" />
       <div
         className="relative w-full max-w-xl rounded-2xl border border-brand-border bg-brand-card shadow-[0_0_80px_rgba(0,212,255,0.15)]"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center gap-3 border-b border-brand-border px-4 py-3">
-          <Search size={16} className="text-brand-text-dim" />
+          <Search size={16} className="text-brand-text-dim" aria-hidden="true" />
           <input
             ref={inputRef}
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Suchen nach Dokumenten, Inhalten oder Seiten..."
+            placeholder={t('command.placeholder')}
+            role="combobox"
+            aria-expanded={allItems.length > 0}
+            aria-controls="command-palette-list"
+            aria-activedescendant={activeId}
+            aria-autocomplete="list"
             className="flex-1 bg-transparent text-sm text-brand-text placeholder:text-brand-text-dim focus:outline-none"
           />
           <kbd className="hidden rounded border border-brand-border bg-brand-darker px-2 py-0.5 font-mono text-[10px] text-brand-text-dim sm:inline-block">
@@ -174,15 +189,23 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
           </kbd>
         </div>
 
-        <div className="max-h-[50vh] overflow-y-auto p-2">
+        <div
+          id="command-palette-list"
+          role="listbox"
+          aria-label={t('command.placeholder')}
+          className="max-h-[50vh] overflow-y-auto p-2"
+        >
           {allItems.length === 0 ? (
             <p className="p-4 text-center text-sm text-brand-text-dim">
-              {query ? 'Keine Ergebnisse' : 'Beginne zu tippen oder navigiere...'}
+              {query ? t('command.empty') : t('command.emptyHint')}
             </p>
           ) : (
             allItems.map((item, idx) => (
               <button
                 key={item.id}
+                id={`cmd-item-${item.id}`}
+                role="option"
+                aria-selected={idx === selectedIndex}
                 onClick={() => {
                   item.action()
                   onClose()
@@ -217,19 +240,19 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
             <kbd className="rounded border border-brand-border bg-brand-darker px-1.5 py-0.5 font-mono">
               ↑↓
             </kbd>
-            Navigieren
+            {t('command.navigate')}
           </span>
           <span className="flex items-center gap-1">
             <kbd className="rounded border border-brand-border bg-brand-darker px-1.5 py-0.5 font-mono">
               ↵
             </kbd>
-            Öffnen
+            {t('command.open')}
           </span>
           <span className="flex items-center gap-1">
             <kbd className="rounded border border-brand-border bg-brand-darker px-1.5 py-0.5 font-mono">
               Esc
             </kbd>
-            Schliessen
+            {t('command.close')}
           </span>
         </div>
       </div>

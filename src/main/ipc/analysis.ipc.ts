@@ -8,23 +8,8 @@ import {
 } from '../services/model-resolver.service'
 import { logger } from '../services/logger.service'
 import { friendlyError } from './_error-mapping'
-import type { AnalysisMode } from '@shared/types'
-
-const VALID_MODES: ReadonlySet<AnalysisMode> = new Set<AnalysisMode>([
-  'grammar',
-  'formulation',
-  'arbeitszeugnis',
-  'summary',
-  'freeform'
-])
-
-// Freitext-Fragen sind UI-Eingaben, keine Dokumente - 5000 Zeichen reichen
-// und schützen vor versehentlich eingefügten Riesen-Payloads.
-const MAX_USER_QUESTION_CHARS = 5000
-
-function isValidMode(mode: unknown): mode is AnalysisMode {
-  return typeof mode === 'string' && VALID_MODES.has(mode as AnalysisMode)
-}
+import { MAX_USER_QUESTION_CHARS } from '../config/constants'
+import { isValidAnalysisMode, isValidId } from './_validators'
 
 // Re-export for backwards compatibility (other IPC modules import these)
 export function setSelectedModel(model: string): void {
@@ -42,7 +27,7 @@ export function registerAnalysisIpc(): void {
       const win = BrowserWindow.fromWebContents(event.sender)
       if (!win) throw new Error('No window found')
 
-      if (typeof docId !== 'string' || !isValidMode(mode)) {
+      if (!isValidId(docId) || !isValidAnalysisMode(mode)) {
         logger.warn('analysis.ipc', 'Invalid analysis request rejected', { docId, mode })
         win.webContents.send('analysis:error', 'Ungültige Analyse-Anfrage')
         return null
@@ -108,6 +93,7 @@ export function registerAnalysisIpc(): void {
   })
 
   ipcMain.handle('analysis:getHistory', (_event, docId: string) => {
+    if (!isValidId(docId)) return []
     return getAnalysisHistory(docId)
   })
 

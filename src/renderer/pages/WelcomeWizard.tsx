@@ -11,20 +11,14 @@ import {
   Loader2,
   Download
 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import type { HardwareInfo } from '@shared/types'
-
-const profileLabels: Record<string, string> = {
-  minimal: 'Minimal',
-  light: 'Leicht',
-  medium: 'Mittel',
-  strong: 'Stark',
-  power: 'Power'
-}
 
 type OllamaState = 'checking' | 'connected' | 'installed-not-running' | 'not-installed'
 
 export function WelcomeWizard() {
   const navigate = useNavigate()
+  const { t } = useTranslation()
   const [hardware, setHardware] = useState<HardwareInfo | null>(null)
   const [ollamaState, setOllamaState] = useState<OllamaState>('checking')
   const [scanning, setScanning] = useState(true)
@@ -60,15 +54,13 @@ export function WelcomeWizard() {
         const state = await refreshOllama()
         setOllamaState(state)
         if (state !== 'connected') {
-          setStartError(
-            'Ollama wurde gestartet, antwortet aber noch nicht. Einen Moment warten und erneut versuchen.'
-          )
+          setStartError(t('welcome.startFailedConnect'))
         }
       } else {
-        setStartError(result.error ?? 'Ollama konnte nicht gestartet werden')
+        setStartError(result.error ?? t('welcome.startFailed'))
       }
     } catch (err) {
-      setStartError(err instanceof Error ? err.message : 'Ollama konnte nicht gestartet werden')
+      setStartError(err instanceof Error ? err.message : t('welcome.startFailed'))
     } finally {
       setStarting(false)
     }
@@ -89,29 +81,25 @@ export function WelcomeWizard() {
           {/* Header */}
           <div className="text-center">
             <h1 className="mb-2 font-mono text-4xl font-bold text-brand-cyan">DoZii</h1>
-            <p className="text-brand-text-dim">
-              Lokale Dokumentenanalyse - 100% offline, 100% privat
-            </p>
+            <p className="text-brand-text-dim">{t('welcome.subtitle')}</p>
           </div>
 
           {/* Privacy badge */}
           <div className="mx-auto flex w-fit items-center gap-2 rounded-full border border-brand-green/20 bg-brand-green/5 px-4 py-2">
-            <Shield size={14} className="text-brand-green" />
-            <span className="text-xs font-medium text-brand-green">
-              Keine Daten verlassen deinen Rechner
-            </span>
+            <Shield size={14} className="text-brand-green" aria-hidden="true" />
+            <span className="text-xs font-medium text-brand-green">{t('welcome.privacy')}</span>
           </div>
 
           {/* Hardware scan */}
           <div className="rounded-2xl border border-brand-border bg-brand-card/60 p-6">
             <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-brand-text-dim">
-              System-Erkennung
+              {t('welcome.systemScan')}
             </h2>
 
             {scanning ? (
               <div className="flex items-center justify-center gap-3 py-8">
                 <div className="h-5 w-5 animate-spin rounded-full border-2 border-brand-cyan border-t-transparent" />
-                <span className="text-sm text-brand-text-dim">Hardware wird erkannt...</span>
+                <span className="text-sm text-brand-text-dim">{t('welcome.scanning')}</span>
               </div>
             ) : (
               hardware && (
@@ -141,12 +129,12 @@ export function WelcomeWizard() {
                   )}
 
                   <div className="mt-4 rounded-xl border border-brand-cyan/20 bg-brand-cyan/5 p-4">
-                    <p className="text-xs text-brand-text-dim">Empfohlenes Modell</p>
+                    <p className="text-xs text-brand-text-dim">{t('welcome.recommended')}</p>
                     <p className="mt-1 font-mono text-lg font-bold text-brand-cyan">
                       {hardware.recommendedModel}
                     </p>
                     <p className="mt-0.5 text-xs text-brand-text-dim">
-                      Profil: {profileLabels[hardware.profile] ?? hardware.profile}
+                      {t('hardware.profile')}: {t(`profile.${hardware.profile}`)}
                     </p>
                   </div>
                 </div>
@@ -170,10 +158,10 @@ export function WelcomeWizard() {
                 }
               />
               <span className="text-sm text-brand-text">
-                {ollamaState === 'checking' && 'Ollama wird geprüft...'}
-                {ollamaState === 'connected' && 'Ollama läuft auf localhost:11434'}
-                {ollamaState === 'installed-not-running' && 'Ollama installiert aber nicht aktiv'}
-                {ollamaState === 'not-installed' && 'Ollama nicht gefunden'}
+                {ollamaState === 'checking' && t('welcome.ollamaChecking')}
+                {ollamaState === 'connected' && t('welcome.ollamaConnected')}
+                {ollamaState === 'installed-not-running' && t('welcome.ollamaInactive')}
+                {ollamaState === 'not-installed' && t('welcome.ollamaNotFound')}
               </span>
             </div>
 
@@ -186,13 +174,13 @@ export function WelcomeWizard() {
               >
                 {starting ? (
                   <>
-                    <Loader2 size={14} className="animate-spin" />
-                    Ollama startet...
+                    <Loader2 size={14} className="animate-spin" aria-hidden="true" />
+                    {t('welcome.startingOllama')}
                   </>
                 ) : (
                   <>
-                    <Play size={14} />
-                    Ollama jetzt starten
+                    <Play size={14} aria-hidden="true" />
+                    {t('welcome.startOllama')}
                   </>
                 )}
               </button>
@@ -204,8 +192,8 @@ export function WelcomeWizard() {
                 onClick={() => window.open('https://ollama.com/download', '_blank')}
                 className="flex w-full items-center justify-center gap-2 rounded-xl border border-brand-border px-4 py-3 text-sm font-semibold text-brand-text-dim transition-all hover:border-brand-cyan/30 hover:text-brand-cyan"
               >
-                <Download size={14} />
-                Ollama herunterladen
+                <Download size={14} aria-hidden="true" />
+                {t('sidebar.download')}
               </button>
             )}
 
@@ -218,8 +206,8 @@ export function WelcomeWizard() {
             disabled={scanning}
             className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand-cyan px-8 py-4 text-lg font-semibold text-brand-dark transition-all duration-200 hover:bg-brand-cyan-dim hover:shadow-[0_0_40px_rgba(0,212,255,0.3)] disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            Starten
-            <ArrowRight size={18} />
+            {t('welcome.continue')}
+            <ArrowRight size={18} aria-hidden="true" />
           </button>
         </div>
       </div>

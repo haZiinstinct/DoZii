@@ -1,4 +1,3 @@
-import { extractText } from 'unpdf'
 import { readFile } from 'fs/promises'
 
 export interface PdfResult {
@@ -11,6 +10,9 @@ export async function extractPdf(filePath: string): Promise<PdfResult> {
   // unpdf requires a real Uint8Array, not a Node Buffer.
   // Buffer extends Uint8Array but unpdf does a strict constructor check.
   const uint8 = new Uint8Array(data.buffer, data.byteOffset, data.byteLength)
+  // Lazy-Import: unpdf/pdf.js (~1,9MB) wird erst beim ersten PDF geladen,
+  // nicht beim App-Start (die meisten Sessions oeffnen kein PDF).
+  const { extractText } = await import('unpdf')
   try {
     const { text, totalPages } = await extractText(uint8)
     return {

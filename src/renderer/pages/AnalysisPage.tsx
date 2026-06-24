@@ -28,14 +28,7 @@ import {
   parseArbeitszeugnis,
   stripTrailingJsonBlock
 } from '@/lib/parse-analysis'
-
-const modeLabels: Record<string, string> = {
-  grammar: 'Rechtschreibung & Grammatik',
-  formulation: 'Bessere Formulierungen',
-  arbeitszeugnis: 'Arbeitszeugnis-Decoder',
-  summary: 'Zusammenfassung',
-  freeform: 'Freie Frage'
-}
+import { useTranslation } from 'react-i18next'
 
 // ============================================================================
 // State machine: discriminated union prevents invalid boolean combinations
@@ -58,6 +51,7 @@ type ChatState =
 export function AnalysisPage() {
   const [params] = useSearchParams()
   const navigate = useNavigate()
+  const { t } = useTranslation()
   const docId = params.get('doc')
   const mode = (params.get('mode') || 'grammar') as AnalysisMode
 
@@ -256,10 +250,8 @@ export function AnalysisPage() {
   if (!docId) {
     return (
       <div className="flex h-full flex-col items-center justify-center text-center">
-        <FileSearch size={28} className="mb-4 text-brand-cyan" />
-        <p className="text-brand-text-dim">
-          Kein Dokument ausgewählt. Bitte zuerst ein Dokument hochladen und öffnen.
-        </p>
+        <FileSearch size={28} className="mb-4 text-brand-cyan" aria-hidden="true" />
+        <p className="text-brand-text-dim">{t('analysis.noDocument')}</p>
       </div>
     )
   }
@@ -285,29 +277,39 @@ export function AnalysisPage() {
       <div className="flex items-center gap-3">
         <button
           onClick={() => navigate(`/document/${docId}`)}
+          aria-label={t('document.back')}
+          title={t('document.back')}
           className="flex h-9 w-9 items-center justify-center rounded-lg text-brand-text-dim transition-colors hover:bg-brand-card hover:text-brand-text"
         >
-          <ArrowLeft size={18} />
+          <ArrowLeft size={18} aria-hidden="true" />
         </button>
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-cyan/10 text-brand-cyan">
-          <FileSearch size={16} />
+          <FileSearch size={16} aria-hidden="true" />
         </div>
         <h1 className="flex-1 text-lg font-semibold text-brand-text-bright">
-          {modeLabels[mode] || mode}
+          {t(`analysis.modes.${mode}`)}
         </h1>
 
         {/* Status icons + phase text */}
         {analysis.kind === 'streaming' && (
-          <div className="flex items-center gap-1.5">
-            <Loader2 size={16} className="animate-spin text-brand-cyan" />
+          <div className="flex items-center gap-1.5" role="status" aria-live="polite">
+            <Loader2 size={16} className="animate-spin text-brand-cyan" aria-hidden="true" />
             <span className="text-xs text-brand-text-dim">
-              {analysis.phase === 'verifying' ? 'Verifiziert...' : 'Analysiert...'}
+              {analysis.phase === 'verifying'
+                ? t('analysis.phaseVerifying')
+                : t('analysis.phaseAnalyzing')}
             </span>
           </div>
         )}
-        {analysis.kind === 'done' && <CheckCircle2 size={16} className="text-brand-green" />}
-        {analysis.kind === 'aborted' && <CircleSlash size={16} className="text-brand-amber" />}
-        {analysis.kind === 'error' && <AlertCircle size={16} className="text-brand-red" />}
+        {analysis.kind === 'done' && (
+          <CheckCircle2 size={16} className="text-brand-green" aria-hidden="true" />
+        )}
+        {analysis.kind === 'aborted' && (
+          <CircleSlash size={16} className="text-brand-amber" aria-hidden="true" />
+        )}
+        {analysis.kind === 'error' && (
+          <AlertCircle size={16} className="text-brand-red" aria-hidden="true" />
+        )}
 
         {/* Stop button - only while streaming */}
         {analysis.kind === 'streaming' && (
@@ -315,8 +317,8 @@ export function AnalysisPage() {
             onClick={handleStopAnalysis}
             className="flex items-center gap-1.5 rounded-lg border border-brand-red/30 bg-brand-red/10 px-3 py-1.5 text-xs font-semibold text-brand-red transition-colors hover:bg-brand-red/20"
           >
-            <Square size={12} fill="currentColor" />
-            Stoppen
+            <Square size={12} fill="currentColor" aria-hidden="true" />
+            {t('analysis.stop')}
           </button>
         )}
 
@@ -327,7 +329,7 @@ export function AnalysisPage() {
               onClick={() => startAnalysis()}
               className="flex items-center gap-1.5 rounded-lg border border-brand-border px-3 py-1.5 text-xs text-brand-text-dim transition-colors hover:border-brand-cyan/30 hover:text-brand-cyan"
             >
-              Neu starten
+              {t('analysis.restart')}
             </button>
           )}
 
@@ -335,11 +337,11 @@ export function AnalysisPage() {
         {analysis.kind === 'done' && (
           <button
             onClick={handleExportPdf}
-            title="Als PDF exportieren"
+            title={t('analysis.exportTitle')}
             className="flex items-center gap-1.5 rounded-lg border border-brand-border px-3 py-1.5 text-xs text-brand-text-dim transition-colors hover:border-brand-cyan/30 hover:text-brand-cyan"
           >
-            <FileDown size={12} />
-            PDF
+            <FileDown size={12} aria-hidden="true" />
+            {t('analysis.exportPdf')}
           </button>
         )}
       </div>
@@ -356,15 +358,16 @@ export function AnalysisPage() {
                 startAnalysis(freeQuestion)
               }
             }}
-            placeholder="Stelle eine Frage zum Dokument..."
+            placeholder={t('analysis.askPlaceholder')}
             className="flex-1 rounded-xl border border-brand-border bg-brand-dark/80 px-4 py-3 text-sm text-brand-text placeholder:text-brand-text-dim/70 focus:border-brand-cyan/50 focus:outline-none focus:ring-1 focus:ring-brand-cyan/20"
           />
           <button
             onClick={() => freeQuestion.trim() && startAnalysis(freeQuestion)}
             disabled={!freeQuestion.trim()}
+            aria-label={t('analysis.send')}
             className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-cyan text-brand-dark transition-all hover:bg-brand-cyan-dim disabled:opacity-40"
           >
-            <Send size={16} />
+            <Send size={16} aria-hidden="true" />
           </button>
         </div>
       )}
@@ -390,7 +393,7 @@ export function AnalysisPage() {
       {mode === 'freeform' && askedQuestion && analysis.kind !== 'idle' && (
         <div className="rounded-xl border border-brand-cyan/20 bg-brand-cyan/5 px-4 py-3">
           <p className="text-xs font-semibold uppercase tracking-wider text-brand-text-dim">
-            Deine Frage
+            {t('analysis.yourQuestion')}
           </p>
           <p className="mt-1 text-sm text-brand-text">{askedQuestion}</p>
         </div>
@@ -403,9 +406,7 @@ export function AnalysisPage() {
       >
         {analysis.kind === 'idle' && (
           <p className="text-sm text-brand-text-dim">
-            {mode === 'freeform'
-              ? 'Stelle eine Frage zum Dokument, um die Analyse zu starten.'
-              : 'Analyse wird gestartet...'}
+            {mode === 'freeform' ? t('analysis.idleFreeform') : t('analysis.idleStarting')}
           </p>
         )}
 
@@ -434,8 +435,8 @@ export function AnalysisPage() {
         {analysis.kind === 'aborted' && (
           <div className="mt-4 rounded-xl border border-brand-amber/30 bg-brand-amber/5 p-3">
             <p className="flex items-center gap-2 text-xs text-brand-amber">
-              <CircleSlash size={12} />
-              Analyse vom Nutzer abgebrochen. Der bisherige Text wurde gespeichert.
+              <CircleSlash size={12} aria-hidden="true" />
+              {t('analysis.aborted')}
             </p>
           </div>
         )}
@@ -445,17 +446,17 @@ export function AnalysisPage() {
           <div className="mt-8 space-y-4 border-t border-brand-border pt-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Sparkles size={14} className="text-brand-cyan" />
+                <Sparkles size={14} className="text-brand-cyan" aria-hidden="true" />
                 <span className="text-xs font-semibold uppercase tracking-wider text-brand-text-dim">
-                  Weiteres Gespräch
+                  {t('analysis.conversation')}
                 </span>
               </div>
               <button
                 onClick={handleClearChat}
                 className="flex items-center gap-1 rounded-lg px-2 py-1 text-xs text-brand-text-dim hover:bg-brand-red/10 hover:text-brand-red"
               >
-                <Trash2 size={12} />
-                Chat löschen
+                <Trash2 size={12} aria-hidden="true" />
+                {t('analysis.chatDelete')}
               </button>
             </div>
 
@@ -525,8 +526,8 @@ export function AnalysisPage() {
             disabled={chat.kind === 'streaming'}
             placeholder={
               chatMessages.length === 0
-                ? 'Frage stellen oder weiter diskutieren...'
-                : 'Nachricht schreiben...'
+                ? t('analysis.chatPlaceholderEmpty')
+                : t('analysis.chatPlaceholderMore')
             }
             className="flex-1 rounded-xl border border-brand-border bg-brand-dark/80 px-4 py-3 text-sm text-brand-text placeholder:text-brand-text-dim/70 focus:border-brand-cyan/50 focus:outline-none focus:ring-1 focus:ring-brand-cyan/20 disabled:opacity-50"
           />
@@ -534,17 +535,19 @@ export function AnalysisPage() {
             <button
               onClick={handleStopChat}
               className="flex h-11 w-11 items-center justify-center rounded-xl border border-brand-red/30 bg-brand-red/10 text-brand-red transition-colors hover:bg-brand-red/20"
-              title="Antwort stoppen"
+              title={t('analysis.stopChat')}
+              aria-label={t('analysis.stopChat')}
             >
-              <Square size={16} fill="currentColor" />
+              <Square size={16} fill="currentColor" aria-hidden="true" />
             </button>
           ) : (
             <button
               onClick={sendChatMessage}
               disabled={!chatInput.trim()}
+              aria-label={t('analysis.send')}
               className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-cyan text-brand-dark transition-all hover:bg-brand-cyan-dim disabled:opacity-40"
             >
-              <Send size={16} />
+              <Send size={16} aria-hidden="true" />
             </button>
           )}
         </div>

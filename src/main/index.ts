@@ -16,6 +16,7 @@ import { initUpdater } from './services/updater.service'
 import { closeDb, getDb } from './db'
 import { logger, initLogger } from './services/logger.service'
 import { abortAllStreams } from './services/ollama-client.service'
+import { shutdownOcr } from './services/ocr.service'
 
 /**
  * Build the Content-Security-Policy. In production we drop `'unsafe-inline'`
@@ -165,6 +166,7 @@ app.whenReady().then(() => {
 app.on('window-all-closed', () => {
   logger.info('main', 'App shutting down')
   abortAllStreams()
+  void shutdownOcr()
   closeDb()
   if (process.platform !== 'darwin') {
     app.quit()

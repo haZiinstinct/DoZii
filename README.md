@@ -55,8 +55,12 @@ Voraussetzungen: Node.js >= 24, laufendes Ollama mit mindestens einem Modell.
 1. Version in `package.json` erhöhen, `CHANGELOG.md` ergänzen, committen + taggen (`vX.Y.Z`)
 2. `npm run build:win -- --publish never`
 3. Smoke-Test laut [Checkliste](docs/RELEASE_CHECKLIST.md) (frisches Windows-Profil/VM)
-4. Release anlegen: `gh release create vX.Y.Z dist/DoZii-Setup-X.Y.Z.exe dist/DoZii-Setup-X.Y.Z.exe.blockmap dist/latest.yml --notes-file <notes>`
+4. Release anlegen: `gh release create vX.Y.Z dist/DoZii-Setup.exe dist/DoZii-Setup.exe.blockmap dist/latest.yml --notes-file <notes>`
 5. Update-Flow gegen das Release prüfen (installierte Vorversion findet das Update)
+
+Der Installer heißt bewusst versionslos `DoZii-Setup.exe`, damit der Link
+`https://github.com/haZiinstinct/DoZii/releases/latest/download/DoZii-Setup.exe`
+über alle Releases hinweg stabil bleibt (die Version steckt im Release-Tag).
 
 ## Tech-Stack
 

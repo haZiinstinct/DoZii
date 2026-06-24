@@ -11,21 +11,8 @@ import {
 import { generateFirstImpression, getFirstImpression } from '../services/first-impression.service'
 import { getSelectedModel } from './analysis.ipc'
 import { logger } from '../services/logger.service'
-
-// .doc/.xls (Legacy-Formate) fehlen bewusst: mammoth/xlsx können sie nicht
-// lesen - Import würde crashen. Nutzer bekommen einen Konvertier-Hinweis.
-const SUPPORTED_EXTS = new Set([
-  '.pdf',
-  '.docx',
-  '.xlsx',
-  '.jpg',
-  '.jpeg',
-  '.png',
-  '.tiff',
-  '.tif',
-  '.bmp',
-  '.webp'
-])
+import { SUPPORTED_EXTENSION_SET, DIALOG_EXTENSIONS } from '@shared/file-types'
+import { isValidId } from './_validators'
 
 export function registerDocumentsIpc(): void {
   ipcMain.handle('documents:openDialog', async (event) => {
@@ -33,12 +20,7 @@ export function registerDocumentsIpc(): void {
     if (!win) return []
     const result = await dialog.showOpenDialog(win, {
       properties: ['openFile', 'multiSelections'],
-      filters: [
-        {
-          name: 'Dokumente',
-          extensions: ['pdf', 'docx', 'xlsx', 'jpg', 'jpeg', 'png', 'tiff', 'tif', 'bmp', 'webp']
-        }
-      ]
+      filters: [{ name: 'Dokumente', extensions: [...DIALOG_EXTENSIONS] }]
     })
     return result.canceled ? [] : result.filePaths
   })
@@ -58,7 +40,7 @@ export function registerDocumentsIpc(): void {
       const files = entries
         .filter((e) => e.isFile())
         .map((e) => join(dir, e.name))
-        .filter((p) => SUPPORTED_EXTS.has(extname(p).toLowerCase()))
+        .filter((p) => SUPPORTED_EXTENSION_SET.has(extname(p).toLowerCase()))
       logger.info('documents.ipc', 'Directory scan for bulk import', {
         dir,
         totalEntries: entries.length,
@@ -111,19 +93,23 @@ export function registerDocumentsIpc(): void {
   })
 
   ipcMain.handle('documents:getById', (_event, id: string) => {
+    if (!isValidId(id)) return undefined
     return getDocumentById(id)
   })
 
   ipcMain.handle('documents:delete', async (_event, id: string) => {
+    if (!isValidId(id)) throw new Error('Ungültige Dokument-ID')
     logger.info('documents.ipc', 'Deleting document', { id })
     await deleteDocument(id)
   })
 
   ipcMain.handle('documents:getFirstImpression', (_event, id: string) => {
+    if (!isValidId(id)) return null
     return getFirstImpression(id)
   })
 
   ipcMain.handle('documents:generateFirstImpression', async (_event, id: string) => {
+    if (!isValidId(id)) return null
     const model = getSelectedModel()
     if (!model) {
       logger.warn('documents.ipc', 'First impression requested but no model selected', { id })
@@ -133,6 +119,7 @@ export function registerDocumentsIpc(): void {
   })
 
   ipcMain.handle('documents:reImport', async (_event, id: string) => {
+    if (!isValidId(id)) return { ok: false, error: 'Ungültige Dokument-ID' }
     logger.info('documents.ipc', 'Re-importing document', { id })
     try {
       const doc = await reImportDocument(id)

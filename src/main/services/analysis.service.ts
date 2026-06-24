@@ -1,5 +1,5 @@
 import { BrowserWindow } from 'electron'
-import { v4 as uuid } from 'uuid'
+import { randomUUID } from 'crypto'
 import { eq, desc } from 'drizzle-orm'
 import { getDb, schema } from '../db'
 import { getDocumentById } from './document-store.service'
@@ -143,29 +143,26 @@ export async function runAnalysis(
 
       verifyAborted = verifyResult.aborted
 
-      // Nur übernehmen, wenn Pass 2 wirklich parsebare JSON liefert -
-      // sonst landet Prosa ("Here is the cleaned JSON: ...") in der DB und
-      // der Renderer kann das Ergebnis nicht mehr strukturiert anzeigen.
+      // Nur übernehmen, wenn Pass 2 ein nicht-leeres, parsebares JSON-Objekt
+      // liefert - sonst landet Prosa ("Here is the cleaned JSON: ...") in der DB
+      // und der Renderer kann das Ergebnis nicht mehr strukturiert anzeigen.
+      // (Frueher zusaetzlich willkuerliche Laengenschwelle >100 - entfernt,
+      // ein gueltiges JSON-Objekt ist das richtige Kriterium.)
       const verifyJson = verifyAborted ? null : extractJsonObject(verifyResult.text)
-      if (!verifyAborted && verifyJson !== null && verifyResult.text.trim().length > 100) {
+      if (verifyJson !== null && Object.keys(verifyJson).length > 0) {
         finalResponse = verifyResult.text
         logger.info('analysis.service', 'Verification pass completed', {
           docId,
           pass1Length: pass1Response.length,
           finalLength: finalResponse.length
         })
-      } else if (!verifyAborted && verifyJson === null) {
-        logger.warn('analysis.service', 'Verification pass returned non-JSON, using pass 1', {
+      } else if (!verifyAborted) {
+        logger.warn('analysis.service', 'Verification pass returned no valid JSON, using pass 1', {
           docId,
           verifyLength: verifyResult.text.length
         })
-      } else if (verifyAborted) {
-        logger.info('analysis.service', 'Verification pass aborted, using pass 1', { docId })
       } else {
-        logger.warn('analysis.service', 'Verification pass returned too little, using pass 1', {
-          docId,
-          verifyLength: verifyResult.text.length
-        })
+        logger.info('analysis.service', 'Verification pass aborted, using pass 1', { docId })
       }
     } catch (err) {
       logger.warn('analysis.service', 'Verification pass failed, using pass 1', {
@@ -197,7 +194,7 @@ function persistAnalysis(
 ): AnalysisRunResult {
   const durationMs = Date.now() - startTime
   const db = getDb()
-  const id = uuid()
+  const id = randomUUID()
   const now = new Date().toISOString()
 
   const finalResult = aborted ? `${response}\n\n[Analyse vom Nutzer abgebrochen]` : response

@@ -14,55 +14,16 @@ import {
   X,
   ArrowRight
 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import type { DoziiDocument, FirstImpression } from '@shared/types'
+import { isLikelyGarbled } from '@shared/text-validators'
 
-const MODE_LABELS: Record<string, string> = {
-  grammar: 'Rechtschreibung',
-  formulation: 'Formulierungen',
-  arbeitszeugnis: 'Zeugnis-Decoder',
-  summary: 'Zusammenfassung',
-  freeform: 'Freie Frage'
-}
-
-/**
- * Client-side printability check - mirrors main/services/document-store.service.ts
- * so we can warn users about legacy/corrupted documents without calling the backend.
- */
-function isLikelyGarbled(text: string): boolean {
-  if (text.length === 0) return false
-  let printable = 0
-  let control = 0
-  const sample = text.length > 5000 ? text.slice(0, 5000) : text
-  for (let i = 0; i < sample.length; i++) {
-    const code = sample.charCodeAt(i)
-    if (code === 9 || code === 10 || code === 13) {
-      printable++
-      continue
-    }
-    if (code >= 32 && code <= 126) {
-      printable++
-      continue
-    }
-    if (
-      (code >= 160 && code <= 255) ||
-      code === 0x20ac ||
-      (code >= 0x2013 && code <= 0x2014) ||
-      (code >= 0x2018 && code <= 0x201f) ||
-      code === 0x2026
-    ) {
-      printable++
-      continue
-    }
-    if (code < 32) control++
-  }
-  const printableRatio = printable / sample.length
-  const controlRatio = control / sample.length
-  return printableRatio < 0.8 || controlRatio > 0.05
-}
+const ANALYSIS_MODES = ['grammar', 'formulation', 'arbeitszeugnis', 'summary', 'freeform'] as const
 
 export function DocumentViewPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const { t } = useTranslation()
   const [doc, setDoc] = useState<DoziiDocument | null>(null)
   const [loading, setLoading] = useState(true)
   const [reImporting, setReImporting] = useState(false)
@@ -125,7 +86,7 @@ export function DocumentViewPage() {
         setReImportError(result.error)
       }
     } catch (err) {
-      setReImportError(err instanceof Error ? err.message : 'Re-Import fehlgeschlagen')
+      setReImportError(err instanceof Error ? err.message : t('document.reimportFailed'))
     } finally {
       setReImporting(false)
     }
@@ -146,9 +107,9 @@ export function DocumentViewPage() {
   if (!doc) {
     return (
       <div className="flex h-full flex-col items-center justify-center text-brand-text-dim">
-        <p>Dokument nicht gefunden</p>
+        <p>{t('document.notFound')}</p>
         <button onClick={() => navigate('/')} className="mt-4 text-brand-cyan hover:underline">
-          Zurück
+          {t('document.back')}
         </button>
       </div>
     )
@@ -165,47 +126,56 @@ export function DocumentViewPage() {
       <div className="flex items-center gap-3">
         <button
           onClick={() => navigate('/')}
+          aria-label={t('document.back')}
+          title={t('document.back')}
           className="flex h-9 w-9 items-center justify-center rounded-lg text-brand-text-dim transition-colors hover:bg-brand-card hover:text-brand-text"
         >
-          <ArrowLeft size={18} />
+          <ArrowLeft size={18} aria-hidden="true" />
         </button>
-        <FileText size={20} className="text-brand-cyan" />
+        <FileText size={20} className="text-brand-cyan" aria-hidden="true" />
         <h1 className="flex-1 truncate text-lg font-semibold text-brand-text-bright">
           {doc.filename}
         </h1>
         <button
           onClick={handleReImport}
           disabled={reImporting}
-          title="Text neu einlesen (bei defekter Extraktion)"
+          title={t('document.reimport')}
+          aria-label={t('document.reimport')}
           className="flex h-9 w-9 items-center justify-center rounded-lg text-brand-text-dim transition-colors hover:bg-brand-card hover:text-brand-text disabled:opacity-50"
         >
-          {reImporting ? <Loader2 size={16} className="animate-spin" /> : <RefreshCw size={16} />}
+          {reImporting ? (
+            <Loader2 size={16} className="animate-spin" aria-hidden="true" />
+          ) : (
+            <RefreshCw size={16} aria-hidden="true" />
+          )}
         </button>
         <button
           onClick={handleDelete}
+          aria-label={t('document.delete')}
+          title={t('document.delete')}
           className="flex h-9 w-9 items-center justify-center rounded-lg text-brand-text-dim transition-colors hover:bg-brand-red/10 hover:text-brand-red"
         >
-          <Trash2 size={16} />
+          <Trash2 size={16} aria-hidden="true" />
         </button>
       </div>
 
       {/* Garbage-warning banner */}
       {isGarbled && (
         <div className="flex items-start gap-3 rounded-xl border border-brand-amber/30 bg-brand-amber/5 p-4">
-          <AlertTriangle size={16} className="mt-0.5 flex-shrink-0 text-brand-amber" />
+          <AlertTriangle
+            size={16}
+            className="mt-0.5 flex-shrink-0 text-brand-amber"
+            aria-hidden="true"
+          />
           <div className="flex-1 text-sm">
-            <p className="font-semibold text-brand-amber">Text-Extraktion problematisch</p>
-            <p className="mt-1 text-brand-text-dim">
-              Der extrahierte Text enthält ungewöhnlich viele nicht-druckbare Zeichen. Die KI kann
-              damit keine sinnvolle Analyse machen. Klick auf das{' '}
-              <RefreshCw size={12} className="inline" /> Symbol oben um das Dokument neu einzulesen.
-            </p>
+            <p className="font-semibold text-brand-amber">{t('document.garbledTitle')}</p>
+            <p className="mt-1 text-brand-text-dim">{t('document.garbledDesc')}</p>
             {reImportError && <p className="mt-2 text-xs text-brand-red">{reImportError}</p>}
             <button
               onClick={() => setGarbledDismissed(true)}
               className="mt-3 rounded-lg border border-brand-amber/30 px-3 py-1.5 text-xs text-brand-amber transition-colors hover:bg-brand-amber/10"
             >
-              Trotzdem fortfahren - der Text sieht für mich in Ordnung aus
+              {t('document.garbledProceed')}
             </button>
           </div>
         </div>
@@ -224,12 +194,12 @@ export function DocumentViewPage() {
             <div className="rounded-xl border border-brand-cyan/30 bg-brand-cyan/5 p-4">
               <div className="flex items-start gap-3">
                 <div className="mt-0.5 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg bg-brand-cyan/20 text-brand-cyan">
-                  <Sparkles size={14} />
+                  <Sparkles size={14} aria-hidden="true" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-xs font-semibold uppercase tracking-wider text-brand-cyan">
-                      Ersteindruck
+                      {t('document.firstImpression')}
                     </span>
                     <span className="rounded-md border border-brand-border bg-brand-darker/60 px-1.5 py-0.5 text-[10px] uppercase text-brand-text-dim">
                       {firstImpression.documentType}
@@ -240,52 +210,54 @@ export function DocumentViewPage() {
                     onClick={() => handleAnalyze(firstImpression.recommendedMode)}
                     className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-brand-cyan px-3 py-1.5 text-xs font-semibold text-brand-dark transition-all hover:bg-brand-cyan-dim"
                   >
-                    {MODE_LABELS[firstImpression.recommendedMode] ??
-                      firstImpression.recommendedMode}{' '}
-                    starten
-                    <ArrowRight size={12} />
+                    {t(`analysis.modesShort.${firstImpression.recommendedMode}`)}{' '}
+                    {t('document.startSuffix')}
+                    <ArrowRight size={12} aria-hidden="true" />
                   </button>
                 </div>
                 <button
                   onClick={() => setFirstImpressionDismissed(true)}
                   className="text-brand-text-dim hover:text-brand-text"
-                  title="Ausblenden"
+                  title={t('document.hide')}
+                  aria-label={t('document.hide')}
                 >
-                  <X size={14} />
+                  <X size={14} aria-hidden="true" />
                 </button>
               </div>
             </div>
           ) : firstImpressionLoading ? (
             <div className="rounded-xl border border-brand-border bg-brand-card/40 p-4">
               <div className="flex items-center gap-3 text-xs text-brand-text-dim">
-                <Loader2 size={14} className="animate-spin text-brand-cyan" />
-                Ersteindruck wird erstellt...
+                <Loader2 size={14} className="animate-spin text-brand-cyan" aria-hidden="true" />
+                {t('document.firstImpressionGenerating')}
                 <button
                   onClick={() => setFirstImpressionDismissed(true)}
                   className="ml-auto text-brand-text-dim hover:text-brand-text"
+                  aria-label={t('document.hide')}
                 >
-                  <X size={12} />
+                  <X size={12} aria-hidden="true" />
                 </button>
               </div>
             </div>
           ) : (
             <div className="rounded-xl border border-brand-border bg-brand-card/40 p-4">
               <div className="flex items-center gap-3">
-                <Sparkles size={14} className="text-brand-text-dim" />
+                <Sparkles size={14} className="text-brand-text-dim" aria-hidden="true" />
                 <span className="text-xs text-brand-text-dim flex-1">
-                  Kein Ersteindruck vorhanden. Manuell generieren?
+                  {t('document.firstImpressionNone')}
                 </span>
                 <button
                   onClick={handleGenerateFirstImpression}
                   className="rounded-lg border border-brand-border px-3 py-1 text-xs text-brand-text-dim hover:border-brand-cyan/30 hover:text-brand-cyan"
                 >
-                  Generieren
+                  {t('document.generate')}
                 </button>
                 <button
                   onClick={() => setFirstImpressionDismissed(true)}
                   className="text-brand-text-dim hover:text-brand-text"
+                  aria-label={t('document.hide')}
                 >
-                  <X size={12} />
+                  <X size={12} aria-hidden="true" />
                 </button>
               </div>
             </div>
@@ -297,14 +269,14 @@ export function DocumentViewPage() {
       <div className="flex flex-wrap gap-2">
         {doc.detectedLanguage && (
           <span className="inline-flex items-center gap-1.5 rounded-lg border border-brand-border bg-brand-card/50 px-3 py-1 text-xs text-brand-text-dim">
-            <Languages size={12} />
-            {doc.detectedLanguage === 'de' ? 'Deutsch' : 'English'}
+            <Languages size={12} aria-hidden="true" />
+            {doc.detectedLanguage === 'de' ? t('document.german') : t('document.english')}
           </span>
         )}
         {doc.wordCount && (
           <span className="inline-flex items-center gap-1.5 rounded-lg border border-brand-border bg-brand-card/50 px-3 py-1 text-xs text-brand-text-dim">
-            <Hash size={12} />
-            {doc.wordCount.toLocaleString()} Wörter
+            <Hash size={12} aria-hidden="true" />
+            {doc.wordCount.toLocaleString()} {t('common.words')}
           </span>
         )}
         <span className="inline-flex items-center gap-1.5 rounded-lg border border-brand-border bg-brand-card/50 px-3 py-1 text-xs text-brand-text-dim">
@@ -312,27 +284,21 @@ export function DocumentViewPage() {
         </span>
         {doc.pageCount && (
           <span className="inline-flex items-center gap-1.5 rounded-lg border border-brand-border bg-brand-card/50 px-3 py-1 text-xs text-brand-text-dim">
-            {doc.pageCount} {doc.pageCount === 1 ? 'Seite' : 'Seiten'}
+            {t('document.pages', { count: doc.pageCount })}
           </span>
         )}
       </div>
 
       {/* Analyze buttons */}
       <div className="flex flex-wrap gap-2">
-        {[
-          { mode: 'grammar', label: 'Rechtschreibung' },
-          { mode: 'formulation', label: 'Formulierungen' },
-          { mode: 'arbeitszeugnis', label: 'Zeugnis-Decoder' },
-          { mode: 'summary', label: 'Zusammenfassung' },
-          { mode: 'freeform', label: 'Freie Frage' }
-        ].map(({ mode, label }) => (
+        {ANALYSIS_MODES.map((mode) => (
           <button
             key={mode}
             onClick={() => handleAnalyze(mode)}
             className="inline-flex items-center gap-2 rounded-xl border border-brand-border px-4 py-2 text-sm text-brand-text-dim transition-all hover:border-brand-cyan/30 hover:bg-brand-cyan/5 hover:text-brand-cyan"
           >
-            <FileSearch size={14} />
-            {label}
+            <FileSearch size={14} aria-hidden="true" />
+            {t(`analysis.modesShort.${mode}`)}
           </button>
         ))}
       </div>
@@ -340,10 +306,10 @@ export function DocumentViewPage() {
       {/* Extracted text */}
       <div className="flex-1 overflow-y-auto rounded-2xl border border-brand-border bg-brand-card/40 p-6">
         <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-brand-text-dim">
-          Extrahierter Text
+          {t('document.extractedText')}
         </p>
         <pre className="whitespace-pre-wrap font-mono text-sm leading-relaxed text-brand-text">
-          {doc.extractedText || '(Kein Text extrahiert)'}
+          {doc.extractedText || t('document.noText')}
         </pre>
       </div>
     </div>

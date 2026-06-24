@@ -263,6 +263,52 @@ async function withTransientRetry<T>(label: string, run: () => Promise<T>): Prom
   }
 }
 
+// IPC-Batching: statt ein webContents.send pro Token bündeln wir Chunks und
+// senden hoechstens alle ~90ms bzw. ab ~1KB. Spart bei schnellen Modellen
+// hunderte IPC-Events/s und ebenso viele React-Re-Renders. Der volle Text
+// wird ueber ein Array gesammelt (kein O(n^2)-String-+=).
+const STREAM_FLUSH_MS = 90
+const STREAM_FLUSH_CHARS = 1024
+
+async function consumeStream(
+  stream: AsyncIterable<{ message?: { content?: string } }>,
+  win: BrowserWindow,
+  channel: string
+): Promise<StreamResult> {
+  const chunks: string[] = []
+  let pending = ''
+  let lastFlush = Date.now()
+
+  const flush = (): void => {
+    if (pending && !win.isDestroyed()) {
+      win.webContents.send(channel, pending)
+    }
+    pending = ''
+  }
+
+  try {
+    for await (const chunk of stream) {
+      const text = chunk.message?.content ?? ''
+      if (!text) continue
+      chunks.push(text)
+      pending += text
+      const now = Date.now()
+      if (pending.length >= STREAM_FLUSH_CHARS || now - lastFlush >= STREAM_FLUSH_MS) {
+        flush()
+        lastFlush = now
+      }
+    }
+    flush()
+    return { text: chunks.join(''), aborted: false }
+  } catch (err) {
+    if (isAbortError(err)) {
+      flush() // Teiltext noch zustellen
+      return { text: chunks.join(''), aborted: true }
+    }
+    throw err
+  }
+}
+
 export async function streamChat(options: StreamOptions): Promise<StreamResult> {
   const { model, prompt, system, win, channel = 'analysis:chunk', temperature, numCtx } = options
   const ollama = getClient()
@@ -283,8 +329,6 @@ export async function streamChat(options: StreamOptions): Promise<StreamResult> 
   incrementActiveStreams()
   try {
     return await withTransientRetry('streamChat', async () => {
-      let fullResponse = ''
-
       try {
         const stream = await ollama.chat({
           model,
@@ -296,24 +340,16 @@ export async function streamChat(options: StreamOptions): Promise<StreamResult> 
           options: Object.keys(chatOptions).length > 0 ? chatOptions : undefined
         })
 
-        for await (const chunk of stream) {
-          const text = chunk.message?.content ?? ''
-          fullResponse += text
-          if (!win.isDestroyed()) {
-            win.webContents.send(channel, text)
-          }
-        }
-
+        const result = await consumeStream(stream, win, channel)
         logger.info('ollama-client', 'Chat stream completed', {
-          responseLength: fullResponse.length
+          responseLength: result.text.length,
+          aborted: result.aborted
         })
-        return { text: fullResponse, aborted: false }
+        return result
       } catch (err) {
         if (isAbortError(err)) {
-          logger.info('ollama-client', 'Chat stream aborted by user', {
-            partialLength: fullResponse.length
-          })
-          return { text: fullResponse, aborted: true }
+          logger.info('ollama-client', 'Chat stream aborted by user')
+          return { text: '', aborted: true }
         }
         logger.error('ollama-client', 'Chat stream failed', {
           model,
@@ -360,8 +396,6 @@ export async function streamConversation(
   incrementActiveStreams()
   try {
     return await withTransientRetry('streamConversation', async () => {
-      let fullResponse = ''
-
       try {
         const stream = await ollama.chat({
           model,
@@ -370,24 +404,16 @@ export async function streamConversation(
           options: Object.keys(chatOptions).length > 0 ? chatOptions : undefined
         })
 
-        for await (const chunk of stream) {
-          const text = chunk.message?.content ?? ''
-          fullResponse += text
-          if (!win.isDestroyed()) {
-            win.webContents.send(channel, text)
-          }
-        }
-
+        const result = await consumeStream(stream, win, channel)
         logger.info('ollama-client', 'Conversation stream completed', {
-          responseLength: fullResponse.length
+          responseLength: result.text.length,
+          aborted: result.aborted
         })
-        return { text: fullResponse, aborted: false }
+        return result
       } catch (err) {
         if (isAbortError(err)) {
-          logger.info('ollama-client', 'Conversation stream aborted by user', {
-            partialLength: fullResponse.length
-          })
-          return { text: fullResponse, aborted: true }
+          logger.info('ollama-client', 'Conversation stream aborted by user')
+          return { text: '', aborted: true }
         }
         logger.error('ollama-client', 'Conversation stream failed', {
           model,

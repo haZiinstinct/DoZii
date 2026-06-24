@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { History, FileText, Image, FileSpreadsheet, Search, Trash2 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import type { DoziiDocument } from '@shared/types'
 
 function getFileIcon(mimeType: string) {
@@ -22,6 +23,7 @@ function formatDate(iso: string): string {
 
 export function HistoryPage() {
   const navigate = useNavigate()
+  const { t } = useTranslation()
   const [docs, setDocs] = useState<DoziiDocument[]>([])
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
@@ -52,8 +54,10 @@ export function HistoryPage() {
         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-cyan/10 text-brand-cyan">
           <History size={20} />
         </div>
-        <h1 className="text-2xl font-bold text-brand-text-bright">Historie</h1>
-        <span className="ml-auto text-sm text-brand-text-dim">{docs.length} Dokumente</span>
+        <h1 className="text-2xl font-bold text-brand-text-bright">{t('history.title')}</h1>
+        <span className="ml-auto text-sm text-brand-text-dim">
+          {t('history.count', { count: docs.length })}
+        </span>
       </div>
 
       {/* Search */}
@@ -66,7 +70,7 @@ export function HistoryPage() {
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Dokumente und Inhalte durchsuchen..."
+          placeholder={t('history.searchPlaceholder')}
           className="w-full rounded-xl border border-brand-border bg-brand-dark/80 py-3 pl-11 pr-4 text-sm text-brand-text placeholder:text-brand-text-dim/70 focus:border-brand-cyan/50 focus:outline-none focus:ring-1 focus:ring-brand-cyan/20"
         />
       </div>
@@ -80,7 +84,7 @@ export function HistoryPage() {
         <div className="rounded-2xl border border-brand-border bg-brand-card/40 py-16 text-center">
           <History size={32} className="mx-auto mb-3 text-brand-text-dim/30" />
           <p className="text-sm text-brand-text-dim">
-            {search ? 'Keine Ergebnisse' : 'Noch keine Dokumente importiert'}
+            {search ? t('history.noResults') : t('history.empty')}
           </p>
         </div>
       ) : (
@@ -103,7 +107,9 @@ export function HistoryPage() {
                     <p className="truncate text-sm font-medium text-brand-text">{doc.filename}</p>
                     <p className="text-xs text-brand-text-dim">
                       {formatDate(doc.createdAt)}
-                      {doc.wordCount ? ` · ${doc.wordCount.toLocaleString()} Wörter` : ''}
+                      {doc.wordCount
+                        ? ` · ${doc.wordCount.toLocaleString()} ${t('common.words')}`
+                        : ''}
                       {doc.detectedLanguage
                         ? ` · ${doc.detectedLanguage === 'de' ? 'DE' : 'EN'}`
                         : ''}
@@ -113,9 +119,10 @@ export function HistoryPage() {
                 <button
                   onClick={() => handleDelete(doc.id)}
                   className="flex h-8 w-8 items-center justify-center rounded-lg text-brand-text-dim opacity-0 transition-all hover:bg-brand-red/10 hover:text-brand-red group-hover:opacity-100"
-                  title="Dokument löschen"
+                  title={t('history.deleteDoc')}
+                  aria-label={t('history.deleteDoc')}
                 >
-                  <Trash2 size={14} />
+                  <Trash2 size={14} aria-hidden="true" />
                 </button>
               </div>
             )

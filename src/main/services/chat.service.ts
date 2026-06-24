@@ -1,20 +1,14 @@
 import { BrowserWindow } from 'electron'
-import { v4 as uuid } from 'uuid'
+import { randomUUID } from 'crypto'
 import { eq, asc } from 'drizzle-orm'
 import type { Message } from 'ollama'
 import { getDb, schema } from '../db'
 import { getDocumentById } from './document-store.service'
 import { streamConversation, warmupModel } from './ollama-client.service'
 import { fitTextToTokenBudget } from '../prompts/token-budget'
+import { DEFAULT_NUM_CTX, MAX_HISTORY_CHARS, DOC_TOKEN_BUDGET } from '../config/constants'
 import { logger } from './logger.service'
 import type { ChatMessage, ChatRole } from '@shared/types'
-
-// Budget-Aufteilung für num_ctx=8192: Dokument ~3500 Tokens, Historie
-// ~8000 Zeichen (~2300 Tokens), Rest für Antwort + Overhead. Ohne diese
-// Grenzen verwirft Ollama bei Überlauf still die AELTESTEN Tokens - also
-// ausgerechnet den System-Prompt mit dem Dokument.
-const MAX_HISTORY_CHARS = 8_000
-const DOC_TOKEN_BUDGET = 3_500
 
 function buildSystemPrompt(documentText: string, language: string): string {
   const isGerman = language === 'de'
@@ -55,7 +49,7 @@ function saveMessage(
 ): ChatMessage {
   const db = getDb()
   const message: typeof schema.chatMessages.$inferInsert = {
-    id: uuid(),
+    id: randomUUID(),
     documentId,
     role,
     content,
@@ -139,7 +133,7 @@ export async function sendChatMessage(
       win,
       channel: 'chat:chunk',
       temperature: 0.6,
-      numCtx: 8192
+      numCtx: DEFAULT_NUM_CTX
     })
     fullResponse = result.text
     aborted = result.aborted

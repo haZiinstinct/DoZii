@@ -1,4 +1,5 @@
 import { AlertOctagon, AlertTriangle, Info, CheckCircle2, BookOpen } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import type { GrammarResult, Severity } from '@/lib/parse-analysis'
 
 interface Props {
@@ -7,32 +8,30 @@ interface Props {
 
 const severityConfig: Record<
   Severity,
-  { color: string; bg: string; border: string; icon: React.ReactNode; label: string }
+  { color: string; bg: string; border: string; icon: React.ReactNode }
 > = {
   high: {
     color: 'text-brand-red',
     bg: 'bg-brand-red/10',
     border: 'border-brand-red/30',
-    icon: <AlertOctagon size={14} />,
-    label: 'Hoch'
+    icon: <AlertOctagon size={14} aria-hidden="true" />
   },
   medium: {
     color: 'text-brand-amber',
     bg: 'bg-brand-amber/10',
     border: 'border-brand-amber/30',
-    icon: <AlertTriangle size={14} />,
-    label: 'Mittel'
+    icon: <AlertTriangle size={14} aria-hidden="true" />
   },
   low: {
     color: 'text-brand-text-dim',
     bg: 'bg-brand-card',
     border: 'border-brand-border',
-    icon: <Info size={14} />,
-    label: 'Niedrig'
+    icon: <Info size={14} aria-hidden="true" />
   }
 }
 
 export function GrammarResults({ result }: Props) {
+  const { t } = useTranslation()
   const { overall, errors } = result
   // Use the actual verified error count (after evidence validation),
   // not the model's self-reported count which may include halluzinated findings.
@@ -53,7 +52,7 @@ export function GrammarResults({ result }: Props) {
           </div>
           <div className="flex-1">
             <p className="text-xs font-semibold uppercase tracking-wider text-brand-text-dim">
-              Qualität
+              {t('results.grammar.quality')}
             </p>
             <h2 className="text-xl font-bold text-brand-text-bright">{overall.quality}</h2>
           </div>
@@ -63,9 +62,7 @@ export function GrammarResults({ result }: Props) {
         )}
         {filteredHallucinations > 0 && (
           <p className="mt-3 rounded-lg border border-brand-amber/20 bg-brand-amber/5 px-3 py-2 text-xs text-brand-amber">
-            {filteredHallucinations} nicht belegbare{' '}
-            {filteredHallucinations === 1 ? 'Befund wurde' : 'Befunde wurden'} automatisch
-            herausgefiltert (Text konnte nicht im Dokument verifiziert werden).
+            {t('results.grammar.filtered', { count: filteredHallucinations })}
           </p>
         )}
       </div>
@@ -73,13 +70,13 @@ export function GrammarResults({ result }: Props) {
       {/* Errors */}
       {errors.length === 0 ? (
         <div className="rounded-2xl border border-brand-green/20 bg-brand-green/5 p-6 text-center">
-          <CheckCircle2 size={32} className="mx-auto mb-2 text-brand-green" />
-          <p className="text-sm text-brand-green">Keine Fehler gefunden!</p>
+          <CheckCircle2 size={32} className="mx-auto mb-2 text-brand-green" aria-hidden="true" />
+          <p className="text-sm text-brand-green">{t('results.grammar.noErrors')}</p>
         </div>
       ) : (
         <div className="space-y-3">
           <h3 className="text-xs font-semibold uppercase tracking-wider text-brand-text-dim">
-            Fehler-Details
+            {t('results.grammar.errorDetails')}
           </h3>
           {errors.map((err) => {
             const sev = severityConfig[err.severity]
@@ -94,14 +91,14 @@ export function GrammarResults({ result }: Props) {
                     className={`inline-flex items-center gap-1 rounded-lg px-2 py-0.5 text-xs font-semibold ${sev.color}`}
                   >
                     {sev.icon}
-                    {sev.label}
+                    {t(`severity.${err.severity}`)}
                   </span>
                 </div>
 
                 <div className="mb-3 grid gap-2 sm:grid-cols-2">
                   <div>
                     <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-brand-text-dim">
-                      Original
+                      {t('results.grammar.original')}
                     </p>
                     <code className="block rounded-lg border border-brand-red/20 bg-brand-darker px-3 py-2 font-mono text-xs text-brand-red">
                       {err.original}
@@ -109,7 +106,7 @@ export function GrammarResults({ result }: Props) {
                   </div>
                   <div>
                     <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-brand-text-dim">
-                      Korrektur
+                      {t('results.grammar.correction')}
                     </p>
                     <code className="block rounded-lg border border-brand-green/20 bg-brand-darker px-3 py-2 font-mono text-xs text-brand-green">
                       {err.correction}
@@ -120,7 +117,7 @@ export function GrammarResults({ result }: Props) {
                 {err.context && (
                   <div className="mb-2 rounded-lg border-l-2 border-brand-cyan/40 bg-brand-darker/60 px-3 py-2">
                     <p className="text-[10px] font-semibold uppercase tracking-wider text-brand-text-dim">
-                      Kontext
+                      {t('results.grammar.context')}
                     </p>
                     <p className="text-xs italic text-brand-text-dim">{err.context}</p>
                   </div>
