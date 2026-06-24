@@ -37,6 +37,20 @@ export default defineConfig({
       }
     },
     plugins: [react(), tailwindcss()],
-    publicDir: resolve('resources')
+    publicDir: resolve('resources'),
+    build: {
+      rollupOptions: {
+        output: {
+          // Vendor-Chunks getrennt halten: React + Icons aendern sich selten,
+          // bleiben so ueber App-Updates cachebar; Seiten werden via React.lazy
+          // ohnehin in eigene Chunks gesplittet.
+          manualChunks: {
+            react: ['react', 'react-dom', 'react-router-dom'],
+            icons: ['lucide-react'],
+            markdown: ['react-markdown', 'remark-gfm']
+          }
+        }
+      }
+    }
   }
 })

@@ -1,15 +1,19 @@
 import os from 'os'
-import { execFileSync } from 'child_process'
+import { execFile } from 'child_process'
+import { promisify } from 'util'
 import type { GpuInfo, HardwareInfo, HardwareProfile } from '@shared/types'
 import { logger } from './logger.service'
 
-function detectNvidiaGpu(): GpuInfo | null {
+const execFileAsync = promisify(execFile)
+
+async function detectNvidiaGpu(): Promise<GpuInfo | null> {
   try {
-    const output = execFileSync(
+    const { stdout } = await execFileAsync(
       'nvidia-smi',
       ['--query-gpu=name,memory.total', '--format=csv,noheader,nounits'],
       { encoding: 'utf8', timeout: 5000 }
-    ).trim()
+    )
+    const output = stdout.trim()
     if (!output) return null
     const [name, vramStr] = output.split(',').map((s) => s.trim())
     const gpu: GpuInfo = {
@@ -28,12 +32,13 @@ function detectNvidiaGpu(): GpuInfo | null {
   }
 }
 
-function detectAmdGpu(): GpuInfo | null {
+async function detectAmdGpu(): Promise<GpuInfo | null> {
   try {
-    const output = execFileSync('rocm-smi', ['--showmeminfo', 'vram', '--csv'], {
+    const { stdout } = await execFileAsync('rocm-smi', ['--showmeminfo', 'vram', '--csv'], {
       encoding: 'utf8',
       timeout: 5000
-    }).trim()
+    })
+    const output = stdout.trim()
     if (!output) return null
     const lines = output.split('\n')
     if (lines.length < 2) return null
@@ -89,7 +94,7 @@ function classifyGpuVendor(name: string): GpuInfo['vendor'] {
  *   HKLM:\SYSTEM\CurrentControlSet\Control\Class\{4d36e968-e325-11ce-bfc1-08002be10318}\NNNN
  * where NNNN are numeric subkeys per installed display adapter.
  */
-function detectWindowsGpuViaPowerShell(): GpuInfo | null {
+async function detectWindowsGpuViaPowerShell(): Promise<GpuInfo | null> {
   if (process.platform !== 'win32') return null
   try {
     // Enumerate all display adapter subkeys, read qwMemorySize + DriverDesc,
@@ -125,11 +130,12 @@ if ($gpu) {
 }
 `.trim()
 
-    const output = execFileSync(
+    const { stdout } = await execFileAsync(
       'powershell.exe',
       ['-NoProfile', '-NonInteractive', '-Command', script],
       { encoding: 'utf8', timeout: 10000 }
-    ).trim()
+    )
+    const output = stdout.trim()
 
     if (!output) return null
 
@@ -154,8 +160,21 @@ if ($gpu) {
   }
 }
 
-function detectGpu(): GpuInfo | null {
-  return detectNvidiaGpu() || detectAmdGpu() || detectWindowsGpuViaPowerShell()
+async function detectGpu(): Promise<GpuInfo | null> {
+  return (
+    (await detectNvidiaGpu()) || (await detectAmdGpu()) || (await detectWindowsGpuViaPowerShell())
+  )
+}
+
+// GPU + CPU-Modell aendern sich zur Laufzeit nicht -> einmal erkennen und cachen.
+// Verhindert wiederholte (blockierende) PowerShell/Tool-Aufrufe bei jedem
+// hardware:detect bzw. Metrics-Poll.
+let cachedGpu: GpuInfo | null | undefined
+async function detectGpuCached(): Promise<GpuInfo | null> {
+  if (cachedGpu === undefined) {
+    cachedGpu = await detectGpu()
+  }
+  return cachedGpu
 }
 
 function determineProfile(ramGb: number, gpu: GpuInfo | null): HardwareProfile {
@@ -176,7 +195,7 @@ const MODEL_MAP: Record<HardwareProfile, string> = {
   power: 'llama3.1:70b'
 }
 
-export function detectHardware(): HardwareInfo {
+export async function detectHardware(): Promise<HardwareInfo> {
   const cpus = os.cpus()
   const totalRam = os.totalmem()
   const freeRam = os.freemem()
@@ -189,7 +208,7 @@ export function detectHardware(): HardwareInfo {
   const logicalCpus = cpus.length
   const threads = logicalCpus
 
-  const gpu = detectGpu()
+  const gpu = await detectGpuCached()
   const profile = determineProfile(totalGb, gpu)
 
   const info: HardwareInfo = {

@@ -51,10 +51,10 @@ function sampleCpuLoad(): number {
 
 let gpuVramTotalMb = -1 // -1 = not yet detected; 0 = no GPU; >0 = detected
 
-function getGpuVramTotalMb(): number {
+async function getGpuVramTotalMb(): Promise<number> {
   if (gpuVramTotalMb < 0) {
     try {
-      const hw = detectHardware()
+      const hw = await detectHardware()
       gpuVramTotalMb = hw.gpu?.vramMb ?? 0
     } catch {
       gpuVramTotalMb = 0
@@ -67,8 +67,7 @@ function getGpuVramTotalMb(): number {
 // Loaded model classification
 // ============================================================================
 
-function classifyLoadedModel(raw: LoadedModelRaw): LoadedModelInfo {
-  const totalVramMb = getGpuVramTotalMb()
+function classifyLoadedModel(raw: LoadedModelRaw, totalVramMb: number): LoadedModelInfo {
   const vramMb = raw.sizeVram / (1024 * 1024)
 
   // runningOn: gpu if all weights fit in VRAM, cpu if no VRAM at all,
@@ -106,8 +105,9 @@ export async function getSystemMetrics(): Promise<SystemMetrics> {
   const ramUsedGb = Math.round(((totalMem - freeMem) / (1024 * 1024 * 1024)) * 10) / 10
   const ramUsedPercent = Math.round(((totalMem - freeMem) / totalMem) * 100)
 
+  const totalVramMb = await getGpuVramTotalMb()
   const raw = await listLoadedModels()
-  const loadedModels = raw.map(classifyLoadedModel)
+  const loadedModels = raw.map((m) => classifyLoadedModel(m, totalVramMb))
 
   return {
     cpuLoadPercent,
