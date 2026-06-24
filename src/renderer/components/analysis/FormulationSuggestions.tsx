@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { FileText, ArrowRight, Copy, Check } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import type { FormulationResult } from '@/lib/parse-analysis'
 
 interface Props {
@@ -7,6 +8,7 @@ interface Props {
 }
 
 export function FormulationSuggestions({ result }: Props) {
+  const { t } = useTranslation()
   const [copied, setCopied] = useState(false)
 
   const handleCopy = () => {
@@ -23,18 +25,18 @@ export function FormulationSuggestions({ result }: Props) {
       <div className="rounded-2xl border border-brand-border bg-brand-card/40 p-6">
         <div className="mb-3 flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-cyan/10 text-brand-cyan">
-            <FileText size={20} />
+            <FileText size={20} aria-hidden="true" />
           </div>
           <div>
             <p className="text-xs font-semibold uppercase tracking-wider text-brand-text-dim">
-              Dokumenttyp
+              {t('results.formulation.documentType')}
             </p>
             <h2 className="text-lg font-bold text-brand-text-bright">{result.documentType}</h2>
           </div>
         </div>
         {result.toneRecommendation && (
           <p className="mt-2 text-sm text-brand-text-dim">
-            <span className="font-semibold text-brand-text">Tonalität:</span>{' '}
+            <span className="font-semibold text-brand-text">{t('results.formulation.tone')}:</span>{' '}
             {result.toneRecommendation}
           </p>
         )}
@@ -49,7 +51,7 @@ export function FormulationSuggestions({ result }: Props) {
       {result.suggestions.length > 0 && (
         <div className="space-y-3">
           <h3 className="text-xs font-semibold uppercase tracking-wider text-brand-text-dim">
-            {result.suggestions.length} Verbesserungsvorschläge
+            {t('results.formulation.suggestions', { count: result.suggestions.length })}
           </h3>
           {result.suggestions.map((s) => (
             <div
@@ -71,16 +73,16 @@ export function FormulationSuggestions({ result }: Props) {
               <div className="flex flex-col gap-2 sm:flex-row sm:items-stretch">
                 <div className="flex-1 rounded-xl border border-brand-border bg-brand-darker/60 p-3">
                   <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-brand-text-dim">
-                    Vorher
+                    {t('results.formulation.before')}
                   </p>
                   <p className="text-sm italic text-brand-text-dim line-through">{s.before}</p>
                 </div>
                 <div className="hidden items-center text-brand-cyan sm:flex">
-                  <ArrowRight size={16} />
+                  <ArrowRight size={16} aria-hidden="true" />
                 </div>
                 <div className="flex-1 rounded-xl border border-brand-cyan/20 bg-brand-cyan/5 p-3">
                   <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-brand-cyan">
-                    Nachher
+                    {t('results.formulation.after')}
                   </p>
                   <p className="text-sm text-brand-text">{s.after}</p>
                 </div>
@@ -88,7 +90,10 @@ export function FormulationSuggestions({ result }: Props) {
 
               {s.why && (
                 <p className="mt-3 text-xs italic text-brand-text-dim">
-                  <span className="font-semibold text-brand-text">Warum:</span> {s.why}
+                  <span className="font-semibold text-brand-text">
+                    {t('results.formulation.why')}:
+                  </span>{' '}
+                  {s.why}
                 </p>
               )}
             </div>
@@ -101,7 +106,7 @@ export function FormulationSuggestions({ result }: Props) {
         <div className="rounded-2xl border border-brand-cyan/20 bg-brand-cyan/5 p-5">
           <div className="mb-3 flex items-center justify-between">
             <h3 className="text-xs font-semibold uppercase tracking-wider text-brand-cyan">
-              Überarbeitete Gesamtversion
+              {t('results.formulation.revised')}
             </h3>
             <button
               onClick={handleCopy}
@@ -109,13 +114,13 @@ export function FormulationSuggestions({ result }: Props) {
             >
               {copied ? (
                 <>
-                  <Check size={12} className="text-brand-green" />
-                  Kopiert
+                  <Check size={12} className="text-brand-green" aria-hidden="true" />
+                  {t('results.formulation.copied')}
                 </>
               ) : (
                 <>
-                  <Copy size={12} />
-                  Kopieren
+                  <Copy size={12} aria-hidden="true" />
+                  {t('results.formulation.copy')}
                 </>
               )}
             </button>

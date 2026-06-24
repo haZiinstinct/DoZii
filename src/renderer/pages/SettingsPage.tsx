@@ -20,6 +20,8 @@ import {
   Flag,
   RefreshCw
 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
+import i18n from 'i18next'
 import type {
   AppSettings,
   HardwareInfo,
@@ -30,14 +32,6 @@ import type {
 } from '@shared/types'
 import { useOllamaStatus } from '@/hooks/useOllamaStatus'
 import { useTheme } from '@/hooks/useTheme'
-
-const profileLabels: Record<string, string> = {
-  minimal: 'Minimal',
-  light: 'Leicht',
-  medium: 'Mittel',
-  strong: 'Stark',
-  power: 'Power'
-}
 
 // budgetLaptopFriendly: runs on 8 GB RAM CPU-only, ~30-90s per Arbeitszeugnis.
 const cpuModels: SuggestedModel[] = [
@@ -117,6 +111,7 @@ const gpuModels: SuggestedModel[] = [
 ]
 
 export function SettingsPage() {
+  const { t } = useTranslation()
   const [hardware, setHardware] = useState<HardwareInfo | null>(null)
   const [models, setModels] = useState<OllamaModel[]>([])
   const [selectedModel, setSelectedModel] = useState('')
@@ -174,6 +169,12 @@ export function SettingsPage() {
     setSettings(next)
   }
 
+  const handleSetLanguage = async (language: AppSettings['language']) => {
+    i18n.changeLanguage(language)
+    const next = await window.api.settings.update({ language })
+    setSettings(next)
+  }
+
   const handleSelectModel = async (name: string) => {
     setSelectedModel(name)
     await window.api.ollama.selectModel(name)
@@ -201,7 +202,10 @@ export function SettingsPage() {
       if (selectedModel === name) setSelectedModel('')
     } catch (err) {
       setDeleteError(
-        `Fehler beim Löschen von ${name}: ${err instanceof Error ? err.message : 'Unbekannt'}`
+        t('settings.deleteFailed', {
+          name,
+          error: err instanceof Error ? err.message : t('settings.unknown')
+        })
       )
     } finally {
       setDeleting(null)
@@ -223,7 +227,7 @@ export function SettingsPage() {
       await window.api.ollama.pullModel(name)
       await loadModels()
     } catch {
-      setPullProgress('Fehler beim Download')
+      setPullProgress(t('settings.downloadError'))
       setTimeout(() => setPullProgress(''), 3000)
     } finally {
       setPulling(null)
@@ -237,44 +241,45 @@ export function SettingsPage() {
     <div className="mx-auto max-w-3xl space-y-6">
       <div className="flex items-center gap-3">
         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-cyan/10 text-brand-cyan">
-          <Settings size={20} />
+          <Settings size={20} aria-hidden="true" />
         </div>
-        <h1 className="text-2xl font-bold text-brand-text-bright">Einstellungen</h1>
+        <h1 className="text-2xl font-bold text-brand-text-bright">{t('settings.title')}</h1>
       </div>
 
       {/* Updates */}
       <section className="rounded-2xl border border-brand-border bg-brand-card/60 p-6">
         <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-brand-text-dim">
-          <RefreshCw size={12} />
-          Updates
+          <RefreshCw size={12} aria-hidden="true" />
+          {t('settings.updates')}
         </h2>
         <div className="flex flex-wrap items-center gap-3">
           <span className="font-mono text-sm text-brand-text">DoZii {appVersion || '–'}</span>
 
           {updateStatus.state === 'checking' ? (
             <span className="flex items-center gap-1.5 text-xs text-brand-text-dim">
-              <Loader2 size={12} className="animate-spin" /> Suche nach Updates...
+              <Loader2 size={12} className="animate-spin" aria-hidden="true" />{' '}
+              {t('settings.updateChecking')}
             </span>
           ) : updateStatus.state === 'available' ? (
             <span className="text-xs text-brand-cyan">
-              Version {updateStatus.version} verfügbar
+              {t('settings.updateAvailable', { version: updateStatus.version })}
             </span>
           ) : updateStatus.state === 'downloading' ? (
             <span className="flex items-center gap-1.5 text-xs text-brand-cyan">
-              <Loader2 size={12} className="animate-spin" /> Lädt herunter... {updateStatus.percent}
-              %
+              <Loader2 size={12} className="animate-spin" aria-hidden="true" />{' '}
+              {t('settings.updateDownloading', { percent: updateStatus.percent })}
             </span>
           ) : updateStatus.state === 'downloaded' ? (
             <span className="text-xs text-brand-green">
-              Version {updateStatus.version} bereit zur Installation
+              {t('settings.updateReadyInstall', { version: updateStatus.version })}
             </span>
           ) : updateStatus.state === 'up-to-date' ? (
             <span className="flex items-center gap-1.5 text-xs text-brand-green">
-              <Check size={12} /> Aktuell
+              <Check size={12} aria-hidden="true" /> {t('settings.upToDate')}
             </span>
           ) : updateStatus.state === 'error' ? (
             <span className="text-xs text-brand-red" title={updateStatus.message}>
-              Update-Check fehlgeschlagen
+              {t('settings.updateFailed')}
             </span>
           ) : null}
 
@@ -284,8 +289,8 @@ export function SettingsPage() {
                 onClick={() => window.api.update.download()}
                 className="flex items-center gap-1.5 rounded-lg bg-brand-cyan px-3 py-1.5 text-xs font-semibold text-brand-dark transition-colors hover:bg-brand-cyan-dim"
               >
-                <Download size={12} />
-                Herunterladen
+                <Download size={12} aria-hidden="true" />
+                {t('settings.download')}
               </button>
             )}
             {updateStatus.state === 'downloaded' && (
@@ -293,7 +298,7 @@ export function SettingsPage() {
                 onClick={() => window.api.update.install()}
                 className="flex items-center gap-1.5 rounded-lg bg-brand-green px-3 py-1.5 text-xs font-semibold text-brand-dark transition-colors hover:opacity-90"
               >
-                Neustarten & installieren
+                {t('settings.restartInstall')}
               </button>
             )}
             {(updateStatus.state === 'idle' ||
@@ -303,7 +308,7 @@ export function SettingsPage() {
                 onClick={() => window.api.update.check()}
                 className="rounded-lg border border-brand-border px-3 py-1.5 text-xs text-brand-text-dim transition-colors hover:border-brand-cyan/30 hover:text-brand-cyan"
               >
-                Jetzt prüfen
+                {t('settings.checkNow')}
               </button>
             )}
           </div>
@@ -311,16 +316,13 @@ export function SettingsPage() {
 
         <div className="mt-4 flex items-start justify-between gap-4 border-t border-brand-border pt-4">
           <div>
-            <p className="text-sm text-brand-text">Beim Start automatisch nach Updates suchen</p>
-            <p className="mt-1 text-xs text-brand-text-dim">
-              Fragt nur die Versionsnummer bei GitHub ab - es werden keine Dokumente oder
-              Nutzungsdaten übertragen. Ausgeschaltet bleibt DoZii vollständig offline (außer
-              Ollama).
-            </p>
+            <p className="text-sm text-brand-text">{t('settings.autoUpdate')}</p>
+            <p className="mt-1 text-xs text-brand-text-dim">{t('settings.autoUpdateHint')}</p>
           </div>
           <button
             onClick={handleToggleAutoUpdate}
             role="switch"
+            aria-label={t('settings.autoUpdate')}
             aria-checked={settings?.autoUpdateCheck ?? true}
             className={`relative h-6 w-11 flex-shrink-0 rounded-full transition-colors ${
               (settings?.autoUpdateCheck ?? true) ? 'bg-brand-cyan' : 'bg-brand-border'
@@ -335,19 +337,52 @@ export function SettingsPage() {
         </div>
       </section>
 
+      {/* Language */}
+      <section className="rounded-2xl border border-brand-border bg-brand-card/60 p-6">
+        <h2 className="mb-1 text-sm font-semibold uppercase tracking-wider text-brand-text-dim">
+          {t('settings.language')}
+        </h2>
+        <p className="mb-4 text-xs text-brand-text-dim">{t('settings.languageHint')}</p>
+        <div role="tablist" aria-label={t('settings.language')} className="flex gap-2">
+          {[
+            { value: 'de' as const, label: 'Deutsch' },
+            { value: 'en' as const, label: 'English' }
+          ].map(({ value, label }) => {
+            const active = (settings?.language ?? 'de') === value
+            return (
+              <button
+                key={value}
+                role="tab"
+                aria-selected={active}
+                onClick={() => handleSetLanguage(value)}
+                className={`flex flex-1 items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-medium transition-all ${
+                  active
+                    ? 'border-brand-cyan/30 bg-brand-cyan/10 text-brand-cyan'
+                    : 'border-brand-border text-brand-text-dim hover:border-brand-border-hover'
+                }`}
+              >
+                {label}
+              </button>
+            )
+          })}
+        </div>
+      </section>
+
       {/* Theme */}
       <section className="rounded-2xl border border-brand-border bg-brand-card/60 p-6">
         <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-brand-text-dim">
-          Theme
+          {t('settings.theme')}
         </h2>
-        <div className="flex gap-2">
+        <div role="tablist" aria-label={t('settings.theme')} className="flex gap-2">
           {[
-            { value: 'dark' as ThemeMode, label: 'Dunkel', icon: Moon },
-            { value: 'light' as ThemeMode, label: 'Hell', icon: Sun },
-            { value: 'system' as ThemeMode, label: 'System', icon: Laptop }
+            { value: 'dark' as ThemeMode, label: t('settings.themeDark'), icon: Moon },
+            { value: 'light' as ThemeMode, label: t('settings.themeLight'), icon: Sun },
+            { value: 'system' as ThemeMode, label: t('settings.themeSystem'), icon: Laptop }
           ].map(({ value, label, icon: Icon }) => (
             <button
               key={value}
+              role="tab"
+              aria-selected={themeMode === value}
               onClick={() => setThemeMode(value)}
               className={`flex flex-1 items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-medium transition-all ${
                 themeMode === value
@@ -355,7 +390,7 @@ export function SettingsPage() {
                   : 'border-brand-border text-brand-text-dim hover:border-brand-border-hover'
               }`}
             >
-              <Icon size={14} />
+              <Icon size={14} aria-hidden="true" />
               {label}
             </button>
           ))}
@@ -365,7 +400,7 @@ export function SettingsPage() {
       {/* Ollama Connection */}
       <section className="rounded-2xl border border-brand-border bg-brand-card/60 p-6">
         <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-brand-text-dim">
-          Ollama Verbindung
+          {t('settings.ollama')}
         </h2>
         <div className="flex items-center gap-3">
           <Circle
@@ -380,29 +415,29 @@ export function SettingsPage() {
           />
           <span className="text-brand-text">
             {connected
-              ? 'Verbunden'
+              ? t('settings.connected')
               : starting
-                ? 'Startet...'
+                ? t('settings.starting')
                 : stopping
-                  ? 'Wird gestoppt...'
+                  ? t('settings.stopping')
                   : installed
-                    ? 'Nicht aktiv'
-                    : 'Nicht installiert'}
+                    ? t('settings.inactive')
+                    : t('settings.notInstalled')}
           </span>
 
           {connected && (
             <button
               onClick={stopOllama}
               disabled={stopping}
-              title="Ollama-Server stoppen"
+              title={t('settings.stopServer')}
               className="flex items-center gap-1.5 rounded-lg border border-brand-red/30 bg-brand-red/10 px-2.5 py-1 text-xs font-medium text-brand-red transition-colors hover:bg-brand-red/20 disabled:opacity-50"
             >
               {stopping ? (
-                <Loader2 size={12} className="animate-spin" />
+                <Loader2 size={12} className="animate-spin" aria-hidden="true" />
               ) : (
-                <Square size={10} fill="currentColor" />
+                <Square size={10} fill="currentColor" aria-hidden="true" />
               )}
-              Stoppen
+              {t('settings.stop')}
             </button>
           )}
 
@@ -427,13 +462,13 @@ export function SettingsPage() {
           >
             {starting ? (
               <>
-                <Loader2 size={16} className="animate-spin" />
-                Ollama wird gestartet...
+                <Loader2 size={16} className="animate-spin" aria-hidden="true" />
+                {t('settings.startingServer')}
               </>
             ) : (
               <>
-                <Play size={16} />
-                Ollama jetzt starten
+                <Play size={16} aria-hidden="true" />
+                {t('settings.startServer')}
               </>
             )}
           </button>
@@ -442,11 +477,11 @@ export function SettingsPage() {
         {!installed && !starting && (
           <div className="mt-4 rounded-xl border border-brand-amber/20 bg-brand-amber/5 p-4">
             <div className="mb-2 flex items-center gap-2">
-              <AlertCircle size={14} className="text-brand-amber" />
-              <p className="text-sm text-brand-amber">Ollama ist nicht installiert</p>
+              <AlertCircle size={14} className="text-brand-amber" aria-hidden="true" />
+              <p className="text-sm text-brand-amber">{t('settings.notInstalledTitle')}</p>
             </div>
             <p className="text-xs text-brand-text-dim">
-              Lade Ollama von{' '}
+              {t('settings.notInstalledHintPrefix')}
               <a
                 href="https://ollama.com/download"
                 onClick={(e) => {
@@ -456,8 +491,8 @@ export function SettingsPage() {
                 className="text-brand-cyan hover:underline"
               >
                 ollama.com/download
-              </a>{' '}
-              herunter und installiere es. Danach kannst du es hier direkt starten.
+              </a>
+              {t('settings.notInstalledHintSuffix')}
             </p>
           </div>
         )}
@@ -472,12 +507,12 @@ export function SettingsPage() {
       {/* Models */}
       <section className="rounded-2xl border border-brand-border bg-brand-card/60 p-6">
         <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-brand-text-dim">
-          Modelle
+          {t('settings.models')}
         </h2>
 
         {models.length > 0 && (
           <div className="mb-4 space-y-2">
-            <p className="text-xs text-brand-text-dim">Installiert:</p>
+            <p className="text-xs text-brand-text-dim">{t('settings.installed')}</p>
             {models.map((m) => {
               const isDeleting = deleting === m.name
               const isConfirmingDelete = confirmDelete === m.name
@@ -493,7 +528,7 @@ export function SettingsPage() {
                         : 'border-brand-border text-brand-text hover:border-brand-border-hover'
                     }`}
                   >
-                    {selectedModel === m.name && <Check size={14} />}
+                    {selectedModel === m.name && <Check size={14} aria-hidden="true" />}
                     <span className="font-mono">{m.name}</span>
                     <span className="ml-auto text-xs text-brand-text-dim">
                       {(m.size / (1024 * 1024 * 1024)).toFixed(1)} GB
@@ -502,12 +537,13 @@ export function SettingsPage() {
                   <button
                     onClick={() => handleDeleteClick(m.name)}
                     disabled={deleteDisabled}
+                    aria-label={t('settings.deleteModel')}
                     title={
                       pulling
-                        ? 'Warte bis der Download abgeschlossen ist'
+                        ? t('settings.waitDownload')
                         : isConfirmingDelete
-                          ? 'Nochmal klicken zum bestätigen'
-                          : 'Modell löschen'
+                          ? t('settings.confirmDeleteHint')
+                          : t('settings.deleteModel')
                     }
                     className={`flex items-center justify-center gap-1.5 rounded-xl border px-3 py-3 text-xs font-semibold transition-all disabled:cursor-not-allowed disabled:opacity-40 ${
                       isConfirmingDelete
@@ -516,14 +552,14 @@ export function SettingsPage() {
                     }`}
                   >
                     {isDeleting ? (
-                      <Loader2 size={14} className="animate-spin" />
+                      <Loader2 size={14} className="animate-spin" aria-hidden="true" />
                     ) : isConfirmingDelete ? (
                       <>
-                        <Trash2 size={12} />
-                        Wirklich löschen?
+                        <Trash2 size={12} aria-hidden="true" />
+                        {t('settings.confirmDelete')}
                       </>
                     ) : (
-                      <Trash2 size={14} />
+                      <Trash2 size={14} aria-hidden="true" />
                     )}
                   </button>
                 </div>
@@ -538,11 +574,17 @@ export function SettingsPage() {
         )}
 
         <div className="space-y-3">
-          <p className="text-xs text-brand-text-dim">Empfohlene Modelle:</p>
+          <p className="text-xs text-brand-text-dim">{t('settings.recommendedModels')}</p>
 
           {/* CPU / GPU Tabs */}
-          <div className="flex gap-1 rounded-xl border border-brand-border bg-brand-dark/60 p-1">
+          <div
+            role="tablist"
+            aria-label={t('settings.models')}
+            className="flex gap-1 rounded-xl border border-brand-border bg-brand-dark/60 p-1"
+          >
             <button
+              role="tab"
+              aria-selected={modelTab === 'cpu'}
               onClick={() => setModelTab('cpu')}
               className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
                 modelTab === 'cpu'
@@ -550,10 +592,12 @@ export function SettingsPage() {
                   : 'text-brand-text-dim hover:text-brand-text'
               }`}
             >
-              <Cpu size={14} />
+              <Cpu size={14} aria-hidden="true" />
               CPU ({cpuModels.length})
             </button>
             <button
+              role="tab"
+              aria-selected={modelTab === 'gpu'}
               onClick={() => setModelTab('gpu')}
               className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
                 modelTab === 'gpu'
@@ -561,35 +605,28 @@ export function SettingsPage() {
                   : 'text-brand-text-dim hover:text-brand-text'
               }`}
             >
-              <Monitor size={14} />
+              <Monitor size={14} aria-hidden="true" />
               GPU ({gpuModels.length})
             </button>
           </div>
 
           {modelTab === 'cpu' && (
             <div className="space-y-2">
-              <p className="text-xs text-brand-text-dim">
-                Läuft ohne dedizierte Grafikkarte - nur RAM wird gebraucht.
-              </p>
+              <p className="text-xs text-brand-text-dim">{t('settings.cpuHint')}</p>
               <div className="flex items-start gap-2 rounded-xl border border-brand-amber/20 bg-brand-amber/5 p-3">
-                <Flag size={12} className="mt-0.5 flex-shrink-0 text-brand-amber" />
+                <Flag
+                  size={12}
+                  className="mt-0.5 flex-shrink-0 text-brand-amber"
+                  aria-hidden="true"
+                />
                 <p className="text-xs text-brand-text-dim leading-relaxed">
-                  Modelle mit dem{' '}
-                  <span className="inline-flex items-center gap-1 rounded bg-brand-amber/20 px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase text-brand-amber">
-                    BUDGET-TAUGLICH
-                  </span>{' '}
-                  Badge laufen auch auf schwacher Hardware (ab 8 GB RAM, kein GPU nötig) und
-                  schaffen trotzdem Arbeitszeugnis-Dekodierung - nur mit ~30-90 Sekunden pro Analyse
-                  statt &lt;10s.
+                  {t('settings.budgetExplain')}
                 </p>
               </div>
             </div>
           )}
           {modelTab === 'gpu' && (
-            <p className="text-xs text-brand-text-dim">
-              Braucht eine GPU mit genug VRAM für beste Geschwindigkeit. Läuft sonst auf
-              CPU-Fallback langsamer.
-            </p>
+            <p className="text-xs text-brand-text-dim">{t('settings.gpuHint')}</p>
           )}
 
           {(modelTab === 'cpu' ? cpuModels : gpuModels).map((m) => {
@@ -602,9 +639,9 @@ export function SettingsPage() {
               (hardware?.gpu ? hardware.gpu.vramMb / 1024 >= m.minVramGb : false)
             const canRun = hasEnoughRam && hasEnoughVram
             const insufficientReason = !hasEnoughRam
-              ? `Erfordert min. ${m.minRamGb} GB RAM`
+              ? t('settings.requiresRam', { n: m.minRamGb })
               : !hasEnoughVram
-                ? `Erfordert min. ${m.minVramGb} GB VRAM (GPU)`
+                ? t('settings.requiresVram', { n: m.minVramGb })
                 : null
 
             return (
@@ -615,38 +652,46 @@ export function SettingsPage() {
                 } ${!canRun && !isInstalled ? 'opacity-50' : ''}`}
               >
                 <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg bg-brand-card text-brand-text-dim">
-                  {m.runtime === 'cpu' ? <Cpu size={12} /> : <Monitor size={12} />}
+                  {m.runtime === 'cpu' ? (
+                    <Cpu size={12} aria-hidden="true" />
+                  ) : (
+                    <Monitor size={12} aria-hidden="true" />
+                  )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-mono text-sm text-brand-text">{m.name}</span>
                     {isRecommended && (
                       <span className="rounded bg-brand-cyan/20 px-1.5 py-0.5 text-[10px] font-semibold text-brand-cyan">
-                        EMPFOHLEN
+                        {t('settings.recommended')}
                       </span>
                     )}
                     {m.budgetLaptopFriendly && (
                       <span
                         className="inline-flex items-center gap-1 rounded bg-brand-amber/20 px-1.5 py-0.5 text-[10px] font-semibold text-brand-amber"
-                        title="Läuft auch auf schwacher Hardware und schafft Arbeitszeugnis-Dekodierung"
+                        title={t('settings.budgetTitle')}
                       >
-                        <Flag size={8} />
-                        BUDGET-TAUGLICH
+                        <Flag size={8} aria-hidden="true" />
+                        {t('settings.budgetBadge')}
                       </span>
                     )}
                   </div>
                   <p className="text-xs text-brand-text-dim">
-                    {m.size} | {m.strengths}
+                    {m.size} | {t(`settings.strengths.${m.name}`)}
                   </p>
                   {!canRun && !isInstalled && (
                     <p className="mt-1 text-xs text-brand-amber">{insufficientReason}</p>
                   )}
                 </div>
                 {isInstalled ? (
-                  <Check size={16} className="text-brand-green" />
+                  <Check size={16} className="text-brand-green" aria-hidden="true" />
                 ) : isPulling ? (
                   <div className="flex items-center gap-2">
-                    <Loader2 size={14} className="animate-spin text-brand-cyan" />
+                    <Loader2
+                      size={14}
+                      className="animate-spin text-brand-cyan"
+                      aria-hidden="true"
+                    />
                     <span className="text-xs text-brand-text-dim">{pullProgress}</span>
                   </div>
                 ) : (
@@ -656,8 +701,8 @@ export function SettingsPage() {
                     title={!canRun ? (insufficientReason ?? '') : undefined}
                     className="flex items-center gap-1 rounded-lg bg-brand-cyan/10 px-3 py-1.5 text-xs text-brand-cyan transition-all hover:bg-brand-cyan/20 disabled:opacity-40 disabled:cursor-not-allowed"
                   >
-                    <Download size={12} />
-                    Pull
+                    <Download size={12} aria-hidden="true" />
+                    {t('settings.pull')}
                   </button>
                 )}
               </div>
@@ -670,26 +715,30 @@ export function SettingsPage() {
       {hardware && (
         <section className="rounded-2xl border border-brand-border bg-brand-card/60 p-6">
           <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-brand-text-dim">
-            Hardware
+            {t('settings.hardware')}
           </h2>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="flex items-start gap-3">
-              <Cpu size={16} className="mt-0.5 text-brand-cyan" />
+              <Cpu size={16} className="mt-0.5 text-brand-cyan" aria-hidden="true" />
               <div>
                 <p className="text-sm text-brand-text">{hardware.cpu.model}</p>
-                <p className="text-xs text-brand-text-dim">{hardware.cpu.threads} Threads</p>
+                <p className="text-xs text-brand-text-dim">
+                  {t('settings.threads', { count: hardware.cpu.threads })}
+                </p>
               </div>
             </div>
             <div className="flex items-start gap-3">
-              <HardDrive size={16} className="mt-0.5 text-brand-cyan" />
+              <HardDrive size={16} className="mt-0.5 text-brand-cyan" aria-hidden="true" />
               <div>
                 <p className="text-sm text-brand-text">{hardware.ram.totalGb} GB RAM</p>
-                <p className="text-xs text-brand-text-dim">{hardware.ram.freeGb} GB frei</p>
+                <p className="text-xs text-brand-text-dim">
+                  {t('settings.ramFree', { n: hardware.ram.freeGb })}
+                </p>
               </div>
             </div>
             {hardware.gpu && (
               <div className="flex items-start gap-3">
-                <Monitor size={16} className="mt-0.5 text-brand-cyan" />
+                <Monitor size={16} className="mt-0.5 text-brand-cyan" aria-hidden="true" />
                 <div>
                   <p className="text-sm text-brand-text">{hardware.gpu.name}</p>
                   <p className="text-xs text-brand-text-dim">
@@ -704,7 +753,7 @@ export function SettingsPage() {
               </div>
               <div>
                 <p className="text-sm text-brand-text">
-                  Profil: {profileLabels[hardware.profile] ?? hardware.profile}
+                  {t('settings.profile')}: {t(`profile.${hardware.profile}`)}
                 </p>
               </div>
             </div>
@@ -715,19 +764,16 @@ export function SettingsPage() {
       {/* Logs */}
       <section className="rounded-2xl border border-brand-border bg-brand-card/60 p-6">
         <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-brand-text-dim">
-          Entwickler & Logs
+          {t('settings.logs')}
         </h2>
-        <p className="mb-4 text-sm text-brand-text-dim">
-          Alle App-Events, Fehler und Stack-Traces werden lokal in täglich rotierten Log-Dateien
-          gespeichert. Nützlich für Fehlersuche und Entwicklung.
-        </p>
+        <p className="mb-4 text-sm text-brand-text-dim">{t('settings.logsDesc')}</p>
         <div className="flex flex-wrap gap-2">
           <button
             onClick={() => window.api.logs.openDirectory()}
             className="flex items-center gap-2 rounded-xl border border-brand-border px-4 py-2 text-sm text-brand-text-dim transition-all hover:border-brand-cyan/30 hover:text-brand-cyan"
           >
-            <FolderOpen size={14} />
-            Logs-Ordner öffnen
+            <FolderOpen size={14} aria-hidden="true" />
+            {t('settings.openLogs')}
           </button>
           <button
             onClick={async () => {
@@ -738,8 +784,8 @@ export function SettingsPage() {
             }}
             className="flex items-center gap-2 rounded-xl border border-brand-border px-4 py-2 text-sm text-brand-text-dim transition-all hover:border-brand-cyan/30 hover:text-brand-cyan"
           >
-            <FileText size={14} />
-            Pfad kopieren
+            <FileText size={14} aria-hidden="true" />
+            {t('settings.copyPath')}
           </button>
         </div>
         {settings && (

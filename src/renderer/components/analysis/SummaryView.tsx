@@ -1,4 +1,5 @@
 import { FileText, Calendar, AlertTriangle, CheckSquare, Info, ShieldAlert } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import type { SummaryResult, ActionItem } from '@/lib/parse-analysis'
 
 interface Props {
@@ -15,36 +16,30 @@ function priorityColor(priority?: ActionItem['priority']): string {
   return 'border-brand-text-dim/30 text-brand-text-dim bg-brand-card/40'
 }
 
-function priorityLabel(priority?: ActionItem['priority']): string {
-  if (!priority) return ''
-  const map: Record<string, string> = {
-    hoch: 'Hoch',
-    high: 'Hoch',
-    mittel: 'Mittel',
-    medium: 'Mittel',
-    niedrig: 'Niedrig',
-    low: 'Niedrig'
-  }
-  return map[priority.toLowerCase()] ?? priority
+function priorityKey(
+  priority: ActionItem['priority']
+): 'severity.high' | 'severity.medium' | 'severity.low' {
+  const lower = (priority ?? '').toLowerCase()
+  if (lower === 'hoch' || lower === 'high') return 'severity.high'
+  if (lower === 'mittel' || lower === 'medium') return 'severity.medium'
+  return 'severity.low'
 }
 
 export function SummaryView({ result }: Props) {
+  const { t } = useTranslation()
   return (
     <div className="space-y-6">
       {/* Phishing warning - shown prominently at the top if detected */}
       {result.phishingWarning && (
         <div className="rounded-2xl border border-brand-red/40 bg-brand-red/10 p-5">
           <div className="mb-2 flex items-center gap-2">
-            <ShieldAlert size={18} className="text-brand-red" />
+            <ShieldAlert size={18} className="text-brand-red" aria-hidden="true" />
             <h3 className="text-sm font-bold uppercase tracking-wider text-brand-red">
-              Phishing-Verdacht
+              {t('results.summary.phishingTitle')}
             </h3>
           </div>
           <p className="text-sm text-brand-text">{result.phishingWarning}</p>
-          <p className="mt-2 text-xs text-brand-text-dim">
-            Klicke auf keine Links und gib keine Daten ein. Überprüfe den Absender direkt über die
-            offizielle Website.
-          </p>
+          <p className="mt-2 text-xs text-brand-text-dim">{t('results.summary.phishingHint')}</p>
         </div>
       )}
 
@@ -56,7 +51,7 @@ export function SummaryView({ result }: Props) {
           </div>
           <div className="flex-1">
             <p className="text-xs font-semibold uppercase tracking-wider text-brand-text-dim">
-              Dokumenttyp
+              {t('results.summary.documentType')}
             </p>
             <h2 className="text-xl font-bold text-brand-text-bright">{result.documentType}</h2>
             {result.title && <p className="mt-1 text-sm text-brand-text-dim">{result.title}</p>}
@@ -68,7 +63,7 @@ export function SummaryView({ result }: Props) {
       {result.keyFacts.length > 0 && (
         <div className="rounded-2xl border border-brand-border bg-brand-card/40 p-6">
           <h3 className="mb-4 text-xs font-semibold uppercase tracking-wider text-brand-text-dim">
-            Wichtige Fakten
+            {t('results.summary.keyFacts')}
           </h3>
           <div className="space-y-2">
             {result.keyFacts.map((fact, idx) => (
@@ -90,7 +85,7 @@ export function SummaryView({ result }: Props) {
       {result.keyPoints.length > 0 && (
         <div className="rounded-2xl border border-brand-border bg-brand-card/40 p-6">
           <h3 className="mb-4 text-xs font-semibold uppercase tracking-wider text-brand-text-dim">
-            Kernaussagen
+            {t('results.summary.keyPoints')}
           </h3>
           <ul className="space-y-2">
             {result.keyPoints.map((point, idx) => (
@@ -107,7 +102,7 @@ export function SummaryView({ result }: Props) {
       {result.summary && (
         <div className="rounded-2xl border border-brand-cyan/20 bg-brand-cyan/5 p-6">
           <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-brand-cyan">
-            Zusammenfassung
+            {t('results.summary.summary')}
           </h3>
           <p className="leading-relaxed text-brand-text">{result.summary}</p>
         </div>
@@ -117,8 +112,8 @@ export function SummaryView({ result }: Props) {
       {result.actionItems.length > 0 && (
         <div className="rounded-2xl border border-brand-amber/20 bg-brand-amber/5 p-6">
           <h3 className="mb-4 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-brand-amber">
-            <CheckSquare size={12} />
-            Handlungsbedarf
+            <CheckSquare size={12} aria-hidden="true" />
+            {t('results.summary.actionItems')}
           </h3>
           <div className="space-y-2">
             {result.actionItems.map((item, idx) => (
@@ -134,7 +129,7 @@ export function SummaryView({ result }: Props) {
                       <span
                         className={`rounded-lg border px-2 py-0.5 text-[10px] font-semibold uppercase ${priorityColor(item.priority)}`}
                       >
-                        {priorityLabel(item.priority)}
+                        {t(priorityKey(item.priority))}
                       </span>
                     )}
                     {item.deadline && (
@@ -155,8 +150,8 @@ export function SummaryView({ result }: Props) {
       {result.observations.length > 0 && (
         <div className="rounded-2xl border border-brand-border bg-brand-card/40 p-6">
           <h3 className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-brand-text-dim">
-            <Info size={12} />
-            Auffälligkeiten
+            <Info size={12} aria-hidden="true" />
+            {t('results.summary.observations')}
           </h3>
           <ul className="space-y-2">
             {result.observations.map((obs, idx) => (
