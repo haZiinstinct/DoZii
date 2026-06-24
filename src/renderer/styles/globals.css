@@ -124,6 +124,20 @@ body {
   background-color: var(--color-brand-dark);
   color: var(--color-brand-text);
   overflow: hidden;
+}
+
+/*
+ * Text-Auswahl: Inhalte (Analyse-Ergebnisse, Chat, extrahierter Text) sollen
+ * markier-/kopierbar sein - das ist Kernzweck einer Analyse-App. App-Chrome
+ * (Buttons, Nav, Titlebar) bleibt nicht-selektierbar, damit sich die App nativ
+ * anfuehlt. Vorher: global user-select:none -> nichts war kopierbar.
+ */
+button,
+a,
+[role='button'],
+[role='tab'],
+.titlebar-drag,
+.no-select {
   user-select: none;
 }
 
@@ -145,10 +159,22 @@ body {
   background: rgba(255, 255, 255, 0.2);
 }
 
+html[data-theme='light'] ::-webkit-scrollbar-track {
+  background: var(--color-brand-darker);
+}
+
+html[data-theme='light'] ::-webkit-scrollbar-thumb {
+  background: rgba(15, 23, 42, 0.15);
+}
+
+html[data-theme='light'] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(15, 23, 42, 0.28);
+}
+
 /* Text selection */
 ::selection {
   background-color: rgba(0, 212, 255, 0.25);
-  color: #ffffff;
+  color: var(--color-brand-text-bright);
 }
 
 /* Focus styles */
