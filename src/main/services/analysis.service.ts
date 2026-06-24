@@ -1,5 +1,5 @@
 import { BrowserWindow } from 'electron'
-import { v4 as uuid } from 'uuid'
+import { randomUUID } from 'crypto'
 import { eq, desc } from 'drizzle-orm'
 import { getDb, schema } from '../db'
 import { getDocumentById } from './document-store.service'
@@ -197,7 +197,7 @@ function persistAnalysis(
 ): AnalysisRunResult {
   const durationMs = Date.now() - startTime
   const db = getDb()
-  const id = uuid()
+  const id = randomUUID()
   const now = new Date().toISOString()
 
   const finalResult = aborted ? `${response}\n\n[Analyse vom Nutzer abgebrochen]` : response

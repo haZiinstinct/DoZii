@@ -15,6 +15,7 @@ import {
   ArrowRight
 } from 'lucide-react'
 import type { DoziiDocument, FirstImpression } from '@shared/types'
+import { isLikelyGarbled } from '@shared/text-validators'
 
 const MODE_LABELS: Record<string, string> = {
   grammar: 'Rechtschreibung',
@@ -22,42 +23,6 @@ const MODE_LABELS: Record<string, string> = {
   arbeitszeugnis: 'Zeugnis-Decoder',
   summary: 'Zusammenfassung',
   freeform: 'Freie Frage'
-}
-
-/**
- * Client-side printability check - mirrors main/services/document-store.service.ts
- * so we can warn users about legacy/corrupted documents without calling the backend.
- */
-function isLikelyGarbled(text: string): boolean {
-  if (text.length === 0) return false
-  let printable = 0
-  let control = 0
-  const sample = text.length > 5000 ? text.slice(0, 5000) : text
-  for (let i = 0; i < sample.length; i++) {
-    const code = sample.charCodeAt(i)
-    if (code === 9 || code === 10 || code === 13) {
-      printable++
-      continue
-    }
-    if (code >= 32 && code <= 126) {
-      printable++
-      continue
-    }
-    if (
-      (code >= 160 && code <= 255) ||
-      code === 0x20ac ||
-      (code >= 0x2013 && code <= 0x2014) ||
-      (code >= 0x2018 && code <= 0x201f) ||
-      code === 0x2026
-    ) {
-      printable++
-      continue
-    }
-    if (code < 32) control++
-  }
-  const printableRatio = printable / sample.length
-  const controlRatio = control / sample.length
-  return printableRatio < 0.8 || controlRatio > 0.05
 }
 
 export function DocumentViewPage() {

@@ -18,20 +18,17 @@ import { buildArbeitszeugnisPrompt } from './arbeitszeugnis.prompt'
 import { buildSummaryPrompt } from './summary.prompt'
 import { buildFreeformPrompt } from './freeform.prompt'
 import { estimateTokens, fitTextToTokenBudget } from './token-budget'
+import { DEFAULT_NUM_CTX, RESPONSE_RESERVE_TOKENS } from '../config/constants'
 
-// Reserve fuer die Modell-Antwort innerhalb von num_ctx
-const RESPONSE_RESERVE_TOKENS = 1500
-
-// Per-mode Ollama parameters. num_ctx=8192 is critical: the default is often
-// 2048 which silently truncates long documents.
-// num_ctx=8192 is critical: Ollama default is 2048 which silently truncates
-// long documents. temperature is mode-specific: low = deterministic/faithful.
+// Per-mode Ollama parameters. num_ctx (DEFAULT_NUM_CTX) ist kritisch: Ollama-Default
+// (2048) wuerde lange Dokumente still abschneiden. temperature ist modus-spezifisch
+// (niedrig = deterministisch/treu).
 const MODE_PARAMS: Record<AnalysisMode, { temperature: number; numCtx: number }> = {
-  grammar: { temperature: 0.1, numCtx: 8192 },
-  formulation: { temperature: 0.3, numCtx: 8192 },
-  arbeitszeugnis: { temperature: 0.15, numCtx: 8192 },
-  summary: { temperature: 0.15, numCtx: 8192 },
-  freeform: { temperature: 0.2, numCtx: 8192 }
+  grammar: { temperature: 0.1, numCtx: DEFAULT_NUM_CTX },
+  formulation: { temperature: 0.3, numCtx: DEFAULT_NUM_CTX },
+  arbeitszeugnis: { temperature: 0.15, numCtx: DEFAULT_NUM_CTX },
+  summary: { temperature: 0.15, numCtx: DEFAULT_NUM_CTX },
+  freeform: { temperature: 0.2, numCtx: DEFAULT_NUM_CTX }
 }
 
 function buildPair(

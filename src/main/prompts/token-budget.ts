@@ -10,7 +10,7 @@
  * (englisch ~4). Lieber etwas zu frueh kuerzen als still Kontext verlieren.
  */
 
-const CHARS_PER_TOKEN = 3.5
+import { CHARS_PER_TOKEN } from '../config/constants'
 
 export const TRUNCATION_MARKER =
   '\n\n[... Dokument fuer die Analyse gekuerzt - der restliche Text passte nicht in das Kontextfenster des Modells ...]'

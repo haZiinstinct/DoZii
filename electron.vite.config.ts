@@ -4,7 +4,7 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
 // ESM-only packages that must be bundled (not externalized)
-const esmPackages = ['electron-store', 'conf', 'unpdf', 'ollama', 'tesseract.js', 'uuid']
+const esmPackages = ['electron-store', 'conf', 'unpdf', 'ollama', 'tesseract.js']
 
 export default defineConfig({
   main: {
