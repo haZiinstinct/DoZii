@@ -64,7 +64,9 @@
   --color-brand-orange: #f97316;
   --color-brand-green: #22c55e;
 
-  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  /* Inter ist latin-only; system-ui/Segoe UI/Tahoma decken Arabisch, Kyrillisch
+     und CJK ab (Fallback fuer die nicht-lateinischen UI-Sprachen). */
+  --font-sans: 'Inter', system-ui, 'Segoe UI', Tahoma, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', 'Consolas', monospace;
 
   /* Animations */
@@ -192,4 +194,14 @@ html[data-theme='light'] ::-webkit-scrollbar-thumb:hover {
 
 .titlebar-no-drag {
   -webkit-app-region: no-drag;
+}
+
+/*
+ * RTL (Arabisch): logische Tailwind-Klassen (ms-/me-/ps-/pe-/start-/end-/
+ * border-s/e/text-start/end) spiegeln das Layout automatisch ueber das
+ * dir="rtl"-Attribut auf <html>. Richtungs-Icons (Pfeile) tragen keine
+ * Schreibrichtung in sich und muessen explizit gespiegelt werden.
+ */
+html[dir='rtl'] .rtl-flip {
+  transform: scaleX(-1);
 }

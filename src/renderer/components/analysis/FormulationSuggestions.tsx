@@ -78,7 +78,7 @@ export function FormulationSuggestions({ result }: Props) {
                   <p className="text-sm italic text-brand-text-dim line-through">{s.before}</p>
                 </div>
                 <div className="hidden items-center text-brand-cyan sm:flex">
-                  <ArrowRight size={16} aria-hidden="true" />
+                  <ArrowRight size={16} className="rtl-flip" aria-hidden="true" />
                 </div>
                 <div className="flex-1 rounded-xl border border-brand-cyan/20 bg-brand-cyan/5 p-3">
                   <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-brand-cyan">

@@ -286,7 +286,7 @@ export function SettingsPage() {
             </span>
           ) : null}
 
-          <div className="ml-auto flex items-center gap-2">
+          <div className="ms-auto flex items-center gap-2">
             {updateStatus.state === 'available' && (
               <button
                 onClick={() => window.api.update.download()}
@@ -333,7 +333,7 @@ export function SettingsPage() {
           >
             <span
               className={`absolute top-0.5 h-5 w-5 rounded-full bg-brand-dark transition-all ${
-                (settings?.autoUpdateCheck ?? true) ? 'left-[22px]' : 'left-0.5'
+                (settings?.autoUpdateCheck ?? true) ? 'start-[22px]' : 'start-0.5'
               }`}
             />
           </button>
@@ -445,7 +445,7 @@ export function SettingsPage() {
             </button>
           )}
 
-          <span className="ml-auto font-mono text-sm text-brand-text-dim">localhost:11434</span>
+          <span className="ms-auto font-mono text-sm text-brand-text-dim">localhost:11434</span>
         </div>
 
         {stopError && (
@@ -526,7 +526,7 @@ export function SettingsPage() {
                   <button
                     onClick={() => handleSelectModel(m.name)}
                     disabled={isDeleting}
-                    className={`flex flex-1 items-center gap-3 rounded-xl border px-4 py-3 text-left text-sm transition-all disabled:opacity-50 ${
+                    className={`flex flex-1 items-center gap-3 rounded-xl border px-4 py-3 text-start text-sm transition-all disabled:opacity-50 ${
                       selectedModel === m.name
                         ? 'border-brand-cyan/30 bg-brand-cyan/5 text-brand-cyan'
                         : 'border-brand-border text-brand-text hover:border-brand-border-hover'
@@ -534,7 +534,7 @@ export function SettingsPage() {
                   >
                     {selectedModel === m.name && <Check size={14} aria-hidden="true" />}
                     <span className="font-mono">{m.name}</span>
-                    <span className="ml-auto text-xs text-brand-text-dim">
+                    <span className="ms-auto text-xs text-brand-text-dim">
                       {(m.size / (1024 * 1024 * 1024)).toFixed(1)} GB
                     </span>
                   </button>

@@ -165,7 +165,7 @@ function GradeHero({ title, data }: { title: string; data: ZeugnisGrade }): Reac
         <p className="text-xs font-semibold uppercase tracking-wider text-brand-text-dim">
           {title}
         </p>
-        <span className="ml-auto rounded-lg border border-brand-border bg-brand-darker/60 px-2 py-0.5 text-[10px] font-semibold uppercase text-brand-text-dim">
+        <span className="ms-auto rounded-lg border border-brand-border bg-brand-darker/60 px-2 py-0.5 text-[10px] font-semibold uppercase text-brand-text-dim">
           {t('results.az.confidence')}: {data.confidence}
         </span>
       </div>
@@ -209,7 +209,7 @@ function RedFlagsBlock({ phrases }: { phrases: ZeugnisCodedPhrase[] }): React.Re
               aria-hidden="true"
             />
             <div className="min-w-0 flex-1">
-              <blockquote className="mb-1 border-l-2 border-brand-red/40 pl-3 text-sm italic text-brand-text">
+              <blockquote className="mb-1 border-s-2 border-brand-red/40 ps-3 text-sm italic text-brand-text">
                 &quot;{p.phrase}&quot;
               </blockquote>
               <p className="text-xs text-brand-red">
@@ -328,7 +328,7 @@ export function ArbeitszeugnisDecoder({ result }: Props): React.ReactElement {
                     )}
                   </div>
                   {section.excerpt && (
-                    <blockquote className="my-2 border-l-2 border-brand-cyan/40 pl-3 text-xs italic text-brand-text-dim">
+                    <blockquote className="my-2 border-s-2 border-brand-cyan/40 ps-3 text-xs italic text-brand-text-dim">
                       &quot;{section.excerpt}&quot;
                     </blockquote>
                   )}
@@ -371,7 +371,7 @@ export function ArbeitszeugnisDecoder({ result }: Props): React.ReactElement {
                       </span>
                     )}
                   </div>
-                  <blockquote className="my-2 border-l-2 border-brand-cyan/40 pl-3 text-sm italic text-brand-text">
+                  <blockquote className="my-2 border-s-2 border-brand-cyan/40 ps-3 text-sm italic text-brand-text">
                     &quot;{cp.phrase}&quot;
                   </blockquote>
                   <p className={`text-sm ${sev.text}`}>

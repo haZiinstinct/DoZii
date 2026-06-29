@@ -37,7 +37,7 @@ export function Sidebar() {
   const { connected, model, installed, starting, startError, startOllama } = useOllamaStatus()
 
   return (
-    <aside className="flex w-[260px] flex-col border-r border-brand-border bg-brand-darker">
+    <aside className="flex w-[260px] flex-col border-e border-brand-border bg-brand-darker">
       <nav className="flex flex-1 flex-col gap-1 p-3 pt-4">
         {navItems.map((item) => {
           const isActive =
@@ -89,7 +89,7 @@ export function Sidebar() {
         </div>
 
         {connected && model && (
-          <p className="mt-1 truncate pl-4 font-mono text-xs text-brand-text-dim">{model}</p>
+          <p className="mt-1 truncate ps-4 font-mono text-xs text-brand-text-dim">{model}</p>
         )}
 
         {/* Start button if installed but not connected */}

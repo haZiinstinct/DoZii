@@ -40,14 +40,14 @@ export function MarkdownView({ content, className = '' }: MarkdownViewProps) {
           ),
           em: ({ children }) => <em className="italic text-brand-text">{children}</em>,
           ul: ({ children }) => (
-            <ul className="mb-3 ml-5 list-disc space-y-1 text-brand-text">{children}</ul>
+            <ul className="mb-3 ms-5 list-disc space-y-1 text-brand-text">{children}</ul>
           ),
           ol: ({ children }) => (
-            <ol className="mb-3 ml-5 list-decimal space-y-1 text-brand-text">{children}</ol>
+            <ol className="mb-3 ms-5 list-decimal space-y-1 text-brand-text">{children}</ol>
           ),
           li: ({ children }) => <li className="leading-relaxed">{children}</li>,
           blockquote: ({ children }) => (
-            <blockquote className="my-3 border-l-2 border-brand-cyan/40 bg-brand-card/40 px-4 py-2 italic text-brand-text-dim">
+            <blockquote className="my-3 border-s-2 border-brand-cyan/40 bg-brand-card/40 px-4 py-2 italic text-brand-text-dim">
               {children}
             </blockquote>
           ),
@@ -78,7 +78,7 @@ export function MarkdownView({ content, className = '' }: MarkdownViewProps) {
           ),
           thead: ({ children }) => <thead className="bg-brand-card/60">{children}</thead>,
           th: ({ children }) => (
-            <th className="border-b border-brand-border px-3 py-2 text-left font-semibold text-brand-text-bright">
+            <th className="border-b border-brand-border px-3 py-2 text-start font-semibold text-brand-text-bright">
               {children}
             </th>
           ),

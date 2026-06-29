@@ -55,7 +55,7 @@ export function HistoryPage() {
           <History size={20} />
         </div>
         <h1 className="text-2xl font-bold text-brand-text-bright">{t('history.title')}</h1>
-        <span className="ml-auto text-sm text-brand-text-dim">
+        <span className="ms-auto text-sm text-brand-text-dim">
           {t('history.count', { count: docs.length })}
         </span>
       </div>
@@ -64,14 +64,14 @@ export function HistoryPage() {
       <div className="relative">
         <Search
           size={16}
-          className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-text-dim"
+          className="absolute start-4 top-1/2 -translate-y-1/2 text-brand-text-dim"
         />
         <input
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder={t('history.searchPlaceholder')}
-          className="w-full rounded-xl border border-brand-border bg-brand-dark/80 py-3 pl-11 pr-4 text-sm text-brand-text placeholder:text-brand-text-dim/70 focus:border-brand-cyan/50 focus:outline-none focus:ring-1 focus:ring-brand-cyan/20"
+          className="w-full rounded-xl border border-brand-border bg-brand-dark/80 py-3 ps-11 pe-4 text-sm text-brand-text placeholder:text-brand-text-dim/70 focus:border-brand-cyan/50 focus:outline-none focus:ring-1 focus:ring-brand-cyan/20"
         />
       </div>
 
@@ -94,11 +94,11 @@ export function HistoryPage() {
             return (
               <div
                 key={doc.id}
-                className="group flex items-center gap-3 rounded-xl border border-brand-border bg-brand-card/40 pl-3 pr-3 transition-all hover:border-brand-border-hover hover:bg-brand-card"
+                className="group flex items-center gap-3 rounded-xl border border-brand-border bg-brand-card/40 ps-3 pe-3 transition-all hover:border-brand-border-hover hover:bg-brand-card"
               >
                 <button
                   onClick={() => navigate(`/document/${doc.id}`)}
-                  className="flex flex-1 items-center gap-4 py-4 text-left"
+                  className="flex flex-1 items-center gap-4 py-4 text-start"
                 >
                   <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-cyan/10 text-brand-cyan">
                     <Icon size={18} />

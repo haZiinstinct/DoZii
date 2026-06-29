@@ -236,7 +236,7 @@ export function UploadPage() {
             <button
               key={doc.id}
               onClick={() => navigate(`/document/${doc.id}`)}
-              className="flex w-full items-center gap-3 rounded-xl border border-brand-border bg-brand-card/40 px-4 py-3 text-left transition-all hover:border-brand-border-hover hover:bg-brand-card"
+              className="flex w-full items-center gap-3 rounded-xl border border-brand-border bg-brand-card/40 px-4 py-3 text-start transition-all hover:border-brand-border-hover hover:bg-brand-card"
             >
               <CheckCircle2 size={16} className="text-brand-green" aria-hidden="true" />
               <span className="flex-1 truncate text-sm text-brand-text">{doc.filename}</span>

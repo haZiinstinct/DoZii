@@ -281,7 +281,7 @@ export function AnalysisPage() {
           title={t('document.back')}
           className="flex h-9 w-9 items-center justify-center rounded-lg text-brand-text-dim transition-colors hover:bg-brand-card hover:text-brand-text"
         >
-          <ArrowLeft size={18} aria-hidden="true" />
+          <ArrowLeft size={18} className="rtl-flip" aria-hidden="true" />
         </button>
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-cyan/10 text-brand-cyan">
           <FileSearch size={16} aria-hidden="true" />
@@ -429,7 +429,7 @@ export function AnalysisPage() {
         )}
 
         {analysis.kind === 'streaming' && (
-          <span className="ml-1 inline-block h-4 w-2 animate-pulse bg-brand-cyan" />
+          <span className="ms-1 inline-block h-4 w-2 animate-pulse bg-brand-cyan" />
         )}
 
         {analysis.kind === 'aborted' && (

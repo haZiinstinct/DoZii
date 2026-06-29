@@ -130,7 +130,7 @@ export function DocumentViewPage() {
           title={t('document.back')}
           className="flex h-9 w-9 items-center justify-center rounded-lg text-brand-text-dim transition-colors hover:bg-brand-card hover:text-brand-text"
         >
-          <ArrowLeft size={18} aria-hidden="true" />
+          <ArrowLeft size={18} className="rtl-flip" aria-hidden="true" />
         </button>
         <FileText size={20} className="text-brand-cyan" aria-hidden="true" />
         <h1 className="flex-1 truncate text-lg font-semibold text-brand-text-bright">
@@ -212,7 +212,7 @@ export function DocumentViewPage() {
                   >
                     {t(`analysis.modesShort.${firstImpression.recommendedMode}`)}{' '}
                     {t('document.startSuffix')}
-                    <ArrowRight size={12} aria-hidden="true" />
+                    <ArrowRight size={12} className="rtl-flip" aria-hidden="true" />
                   </button>
                 </div>
                 <button
@@ -232,7 +232,7 @@ export function DocumentViewPage() {
                 {t('document.firstImpressionGenerating')}
                 <button
                   onClick={() => setFirstImpressionDismissed(true)}
-                  className="ml-auto text-brand-text-dim hover:text-brand-text"
+                  className="ms-auto text-brand-text-dim hover:text-brand-text"
                   aria-label={t('document.hide')}
                 >
                   <X size={12} aria-hidden="true" />
