@@ -12,6 +12,7 @@ DoZii ist eine Electron-Desktop-App, die sensible Dokumente (Arbeitszeugnisse, V
 
 ## Features
 
+- **9 Sprachen**: Oberfläche **und** KI-Analyse-Ausgabe in Deutsch, English, Español, Français, Português, Русский, العربية (mit RTL-Layout), 日本語, 中文 – umschaltbar über den Globus in der Titelleiste. Ausnahme: der Arbeitszeugnis-Decoder bleibt deutsch (deutsches Rechtskonzept).
 - **5 Analyse-Modi**: Rechtschreibung & Grammatik, Formulierungen, Arbeitszeugnis-Decoder, Zusammenfassung, Freie Frage
 - **Arbeitszeugnis-Decoder** mit Dual-Grading: Inhalts-Note + Struktur-Note, 80+ versteckte Codes, evidenzbasierte Befunde mit 2-Pass-Verifizierung
 - **Persistenter Chat** pro Dokument – nach der Analyse weiter mit der KI diskutieren
