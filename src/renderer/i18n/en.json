@@ -128,7 +128,7 @@
     "themeLight": "Light",
     "themeSystem": "System",
     "language": "Language",
-    "languageHint": "Interface language. Analysis output follows the language of the document.",
+    "languageHint": "Interface language. Analysis output is generated in this language too (except the German reference decoder, which stays German).",
     "ollama": "Ollama connection",
     "connected": "Connected",
     "starting": "Starting...",

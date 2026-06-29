@@ -1,4 +1,5 @@
 import type { PromptPair } from './prompt-builder'
+import { withLanguageDirective } from './language-directive'
 
 export function buildGrammarPrompt(text: string, language: string): PromptPair {
   const isGerman = language === 'de'
@@ -215,5 +216,5 @@ Provide ONLY this format.`
     ? `Bitte pruefe den folgenden Text auf Fehler:\n\n---\n${text}\n---`
     : `Please check the following text for errors:\n\n---\n${text}\n---`
 
-  return { system, user }
+  return { system: withLanguageDirective(system, language), user }
 }

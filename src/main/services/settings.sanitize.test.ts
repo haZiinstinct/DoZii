@@ -17,9 +17,15 @@ describe('sanitizeSettings', () => {
   })
 
   it('faellt bei ungueltigem theme/language auf Default zurueck', () => {
-    const result = sanitizeSettings({ ...DEFAULT_SETTINGS, theme: 'neon', language: 'fr' })
+    const result = sanitizeSettings({ ...DEFAULT_SETTINGS, theme: 'neon', language: 'klingon' })
     expect(result.theme).toBe(DEFAULT_SETTINGS.theme)
     expect(result.language).toBe(DEFAULT_SETTINGS.language)
+  })
+
+  it('akzeptiert die neuen Sprachen (z.B. fr, ar, zh)', () => {
+    expect(sanitizeSettings({ ...DEFAULT_SETTINGS, language: 'fr' }).language).toBe('fr')
+    expect(sanitizeSettings({ ...DEFAULT_SETTINGS, language: 'ar' }).language).toBe('ar')
+    expect(sanitizeSettings({ ...DEFAULT_SETTINGS, language: 'zh' }).language).toBe('zh')
   })
 
   it('repariert falsche Typen feldweise', () => {

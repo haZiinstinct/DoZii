@@ -1,4 +1,5 @@
 import type { PromptPair } from './prompt-builder'
+import { withLanguageDirective } from './language-directive'
 
 export function buildSummaryPrompt(text: string, language: string): PromptPair {
   const isGerman = language === 'de'
@@ -329,5 +330,5 @@ Jetzt analysiere das folgende Dokument. Liefere AUSSCHLIESSLICH das Markdown-For
     ? `Bitte analysiere und fasse das folgende Dokument zusammen:\n\n---\n${text}\n---`
     : `Please analyze and summarize the following document:\n\n---\n${text}\n---`
 
-  return { system, user }
+  return { system: withLanguageDirective(system, language), user }
 }

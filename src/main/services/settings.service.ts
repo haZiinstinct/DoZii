@@ -1,5 +1,6 @@
 import Store from 'electron-store'
 import { DEFAULT_SETTINGS, type AppSettings, type ThemeMode } from '@shared/types'
+import { LANGUAGE_CODES } from '@shared/languages'
 import { logger } from './logger.service'
 
 // electron-store v10 is ESM-only; we need the default export
@@ -19,7 +20,7 @@ function getStore(): Store<StoreSchema> {
 }
 
 const THEMES: ThemeMode[] = ['dark', 'light', 'system']
-const LANGUAGES: AppSettings['language'][] = ['de', 'en']
+const LANGUAGES: AppSettings['language'][] = LANGUAGE_CODES
 const OCR_QUALITIES: AppSettings['ocrQuality'][] = ['fast', 'balanced', 'best']
 
 /**

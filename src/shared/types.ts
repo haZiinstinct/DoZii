@@ -3,6 +3,8 @@
  * This is the single source of truth for data shapes that cross the IPC boundary.
  */
 
+import type { LanguageCode } from './languages'
+
 // ============================================================================
 // Analysis Modes
 // ============================================================================
@@ -174,7 +176,7 @@ export type ThemeMode = 'dark' | 'light' | 'system'
 export interface AppSettings {
   ollamaUrl: string
   selectedModel: string
-  language: 'de' | 'en'
+  language: LanguageCode
   theme: ThemeMode
   ocrLanguages: string[]
   ocrQuality: 'fast' | 'balanced' | 'best'
