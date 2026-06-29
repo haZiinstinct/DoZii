@@ -3,6 +3,7 @@ import { HashRouter, Routes, Route } from 'react-router-dom'
 import { Loader2 } from 'lucide-react'
 import i18n from 'i18next'
 import { MainLayout } from './components/layout/MainLayout'
+import { applyLanguageDirection } from './hooks/useLanguageDirection'
 import './i18n'
 
 // Route-basiertes Code-Splitting: jede Seite wird erst beim Navigieren geladen,
@@ -33,12 +34,15 @@ function RouteFallback() {
 }
 
 export function App() {
-  // Persistierte UI-Sprache laden und auf i18n anwenden (Default 'de').
+  // Persistierte UI-Sprache laden und auf i18n + Schreibrichtung anwenden.
   useEffect(() => {
+    // Richtung fuer die Default-Sprache sofort setzen (vermeidet RTL-Flackern).
+    applyLanguageDirection(i18n.language)
     window.api.settings
       .get()
       .then((s) => {
         if (s.language && s.language !== i18n.language) i18n.changeLanguage(s.language)
+        if (s.language) applyLanguageDirection(s.language)
       })
       .catch(() => {
         /* Default-Sprache bleibt aktiv */

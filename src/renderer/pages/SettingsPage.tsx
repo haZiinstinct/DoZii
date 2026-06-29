@@ -30,8 +30,10 @@ import type {
   ThemeMode,
   UpdateStatus
 } from '@shared/types'
+import { SUPPORTED_LANGUAGES } from '@shared/languages'
 import { useOllamaStatus } from '@/hooks/useOllamaStatus'
 import { useTheme } from '@/hooks/useTheme'
+import { applyLanguageDirection } from '@/hooks/useLanguageDirection'
 
 // budgetLaptopFriendly: runs on 8 GB RAM CPU-only, ~30-90s per Arbeitszeugnis.
 const cpuModels: SuggestedModel[] = [
@@ -171,6 +173,7 @@ export function SettingsPage() {
 
   const handleSetLanguage = async (language: AppSettings['language']) => {
     i18n.changeLanguage(language)
+    applyLanguageDirection(language)
     const next = await window.api.settings.update({ language })
     setSettings(next)
   }
@@ -343,25 +346,26 @@ export function SettingsPage() {
           {t('settings.language')}
         </h2>
         <p className="mb-4 text-xs text-brand-text-dim">{t('settings.languageHint')}</p>
-        <div role="tablist" aria-label={t('settings.language')} className="flex gap-2">
-          {[
-            { value: 'de' as const, label: 'Deutsch' },
-            { value: 'en' as const, label: 'English' }
-          ].map(({ value, label }) => {
-            const active = (settings?.language ?? 'de') === value
+        <div
+          role="tablist"
+          aria-label={t('settings.language')}
+          className="grid grid-cols-2 gap-2 sm:grid-cols-3"
+        >
+          {SUPPORTED_LANGUAGES.map(({ code, nativeName }) => {
+            const active = (settings?.language ?? 'de') === code
             return (
               <button
-                key={value}
+                key={code}
                 role="tab"
                 aria-selected={active}
-                onClick={() => handleSetLanguage(value)}
-                className={`flex flex-1 items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-medium transition-all ${
+                onClick={() => handleSetLanguage(code)}
+                className={`flex items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-medium transition-all ${
                   active
                     ? 'border-brand-cyan/30 bg-brand-cyan/10 text-brand-cyan'
                     : 'border-brand-border text-brand-text-dim hover:border-brand-border-hover'
                 }`}
               >
-                {label}
+                {nativeName}
               </button>
             )
           })}
