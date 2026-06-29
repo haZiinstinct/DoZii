@@ -36,7 +36,7 @@ function BarRow({ label, icon, percent, detail }: BarRowProps) {
       <div className="flex items-center gap-1.5 text-[10px] text-brand-text-dim">
         <span className="flex h-3 w-3 items-center justify-center">{icon}</span>
         <span className="font-mono uppercase tracking-wider">{label}</span>
-        <span className="ml-auto font-mono tabular-nums text-brand-text">{clamped}%</span>
+        <span className="ms-auto font-mono tabular-nums text-brand-text">{clamped}%</span>
       </div>
       <div className="h-1 overflow-hidden rounded-full bg-brand-card">
         <div
@@ -44,7 +44,7 @@ function BarRow({ label, icon, percent, detail }: BarRowProps) {
           style={{ width: `${clamped}%` }}
         />
       </div>
-      {detail && <p className="pl-[18px] text-[9px] text-brand-text-dim/70">{detail}</p>}
+      {detail && <p className="ps-[18px] text-[9px] text-brand-text-dim/70">{detail}</p>}
     </div>
   )
 }

@@ -115,7 +115,7 @@ export function GrammarResults({ result }: Props) {
                 </div>
 
                 {err.context && (
-                  <div className="mb-2 rounded-lg border-l-2 border-brand-cyan/40 bg-brand-darker/60 px-3 py-2">
+                  <div className="mb-2 rounded-lg border-s-2 border-brand-cyan/40 bg-brand-darker/60 px-3 py-2">
                     <p className="text-[10px] font-semibold uppercase tracking-wider text-brand-text-dim">
                       {t('results.grammar.context')}
                     </p>

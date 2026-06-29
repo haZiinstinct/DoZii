@@ -3,6 +3,7 @@ import { eq } from 'drizzle-orm'
 import { getDb, schema } from '../db'
 import { buildFirstImpressionPrompt } from '../prompts/first-impression.prompt'
 import { extractJsonObject } from '../lib/extract-json'
+import { getSettings } from './settings.service'
 import { logger } from './logger.service'
 import type { FirstImpression, AnalysisMode } from '@shared/types'
 
@@ -65,7 +66,7 @@ export async function generateFirstImpression(
   // Take only the first 800 chars as the sample - keeps the prompt tiny
   // so the model can answer in 1-3 seconds even on small hardware.
   const sample = doc.extractedText.slice(0, 800)
-  const prompt = buildFirstImpressionPrompt(sample)
+  const prompt = buildFirstImpressionPrompt(sample, getSettings().language)
 
   const startTime = Date.now()
   logger.info('first-impression', 'Generating for document', {

@@ -25,7 +25,7 @@ export function UpdateToast() {
   if (status.state !== 'downloaded' || dismissed) return null
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3 rounded-xl border border-brand-cyan/30 bg-brand-card p-4 shadow-xl">
+    <div className="fixed bottom-6 end-6 z-50 flex items-center gap-3 rounded-xl border border-brand-cyan/30 bg-brand-card p-4 shadow-xl">
       <Download size={16} className="flex-shrink-0 text-brand-cyan" aria-hidden="true" />
       <div>
         <p className="text-sm font-semibold text-brand-text">

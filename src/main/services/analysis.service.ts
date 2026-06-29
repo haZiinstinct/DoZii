@@ -3,6 +3,7 @@ import { randomUUID } from 'crypto'
 import { eq, desc } from 'drizzle-orm'
 import { getDb, schema } from '../db'
 import { getDocumentById } from './document-store.service'
+import { getSettings } from './settings.service'
 import { streamChat, warmupModel } from './ollama-client.service'
 import { buildPrompt, type AnalysisMode } from '../prompts/prompt-builder'
 import { buildArbeitszeugnisVerifyPrompt } from '../prompts/arbeitszeugnis-verify.prompt'
@@ -55,7 +56,11 @@ export async function runAnalysis(
   if (!doc) throw new Error(`Dokument ${docId} nicht gefunden`)
   if (!doc.extractedText) throw new Error('Dokument hat keinen extrahierten Text')
 
-  const language = doc.detectedLanguage || 'de'
+  // Ausgabesprache folgt der gewaehlten UI-Sprache (settings.language), nicht
+  // mehr der erkannten Dokumentsprache. So bekommt der Nutzer die Analyse in
+  // seiner Sprache - unabhaengig davon, in welcher Sprache das Dokument ist.
+  // (Arbeitszeugnis ignoriert das bewusst und bleibt deutsch.)
+  const language = getSettings().language || 'de'
   const { system, user, temperature, numCtx, truncated } = buildPrompt(
     mode,
     doc.extractedText,

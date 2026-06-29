@@ -128,7 +128,7 @@
     "themeLight": "Hell",
     "themeSystem": "System",
     "language": "Sprache",
-    "languageHint": "Sprache der Oberfläche. Die Analyse-Ausgabe richtet sich nach der Sprache des Dokuments.",
+    "languageHint": "Sprache der Oberfläche. Die Analyse-Ausgabe wird ebenfalls in dieser Sprache erzeugt (außer Arbeitszeugnis-Decoder, der bleibt deutsch).",
     "ollama": "Ollama Verbindung",
     "connected": "Verbunden",
     "starting": "Startet...",

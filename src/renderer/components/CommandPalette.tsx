@@ -211,7 +211,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
                   onClose()
                 }}
                 onMouseEnter={() => setSelectedIndex(idx)}
-                className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors ${
+                className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-start transition-colors ${
                   idx === selectedIndex
                     ? 'bg-brand-cyan/10 text-brand-cyan'
                     : 'text-brand-text hover:bg-brand-card-hover'

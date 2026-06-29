@@ -1,4 +1,5 @@
 import type { PromptPair } from './prompt-builder'
+import { withLanguageDirective } from './language-directive'
 
 export function buildFormulationPrompt(text: string, language: string): PromptPair {
   const isGerman = language === 'de'
@@ -176,5 +177,5 @@ Use salutation, structure, content signals to classify.
     ? `Bitte analysiere und verbessere den folgenden Text:\n\n---\n${text}\n---`
     : `Please analyze and improve the following text:\n\n---\n${text}\n---`
 
-  return { system, user }
+  return { system: withLanguageDirective(system, language), user }
 }

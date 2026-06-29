@@ -1,4 +1,5 @@
 import type { PromptPair } from './prompt-builder'
+import { withLanguageDirective } from './language-directive'
 
 export function buildFreeformPrompt(
   text: string,
@@ -90,5 +91,5 @@ Inline: According to the document, "X" is the case.`
     ? `Hier ist das Dokument:\n\n---\n${text}\n---\n\nFrage: ${question}`
     : `Here is the document:\n\n---\n${text}\n---\n\nQuestion: ${question}`
 
-  return { system, user }
+  return { system: withLanguageDirective(system, language), user }
 }

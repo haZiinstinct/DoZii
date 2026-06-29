@@ -30,8 +30,10 @@ import type {
   ThemeMode,
   UpdateStatus
 } from '@shared/types'
+import { SUPPORTED_LANGUAGES } from '@shared/languages'
 import { useOllamaStatus } from '@/hooks/useOllamaStatus'
 import { useTheme } from '@/hooks/useTheme'
+import { applyLanguageDirection } from '@/hooks/useLanguageDirection'
 
 // budgetLaptopFriendly: runs on 8 GB RAM CPU-only, ~30-90s per Arbeitszeugnis.
 const cpuModels: SuggestedModel[] = [
@@ -171,6 +173,7 @@ export function SettingsPage() {
 
   const handleSetLanguage = async (language: AppSettings['language']) => {
     i18n.changeLanguage(language)
+    applyLanguageDirection(language)
     const next = await window.api.settings.update({ language })
     setSettings(next)
   }
@@ -283,7 +286,7 @@ export function SettingsPage() {
             </span>
           ) : null}
 
-          <div className="ml-auto flex items-center gap-2">
+          <div className="ms-auto flex items-center gap-2">
             {updateStatus.state === 'available' && (
               <button
                 onClick={() => window.api.update.download()}
@@ -330,7 +333,7 @@ export function SettingsPage() {
           >
             <span
               className={`absolute top-0.5 h-5 w-5 rounded-full bg-brand-dark transition-all ${
-                (settings?.autoUpdateCheck ?? true) ? 'left-[22px]' : 'left-0.5'
+                (settings?.autoUpdateCheck ?? true) ? 'start-[22px]' : 'start-0.5'
               }`}
             />
           </button>
@@ -343,25 +346,26 @@ export function SettingsPage() {
           {t('settings.language')}
         </h2>
         <p className="mb-4 text-xs text-brand-text-dim">{t('settings.languageHint')}</p>
-        <div role="tablist" aria-label={t('settings.language')} className="flex gap-2">
-          {[
-            { value: 'de' as const, label: 'Deutsch' },
-            { value: 'en' as const, label: 'English' }
-          ].map(({ value, label }) => {
-            const active = (settings?.language ?? 'de') === value
+        <div
+          role="tablist"
+          aria-label={t('settings.language')}
+          className="grid grid-cols-2 gap-2 sm:grid-cols-3"
+        >
+          {SUPPORTED_LANGUAGES.map(({ code, nativeName }) => {
+            const active = (settings?.language ?? 'de') === code
             return (
               <button
-                key={value}
+                key={code}
                 role="tab"
                 aria-selected={active}
-                onClick={() => handleSetLanguage(value)}
-                className={`flex flex-1 items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-medium transition-all ${
+                onClick={() => handleSetLanguage(code)}
+                className={`flex items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-medium transition-all ${
                   active
                     ? 'border-brand-cyan/30 bg-brand-cyan/10 text-brand-cyan'
                     : 'border-brand-border text-brand-text-dim hover:border-brand-border-hover'
                 }`}
               >
-                {label}
+                {nativeName}
               </button>
             )
           })}
@@ -441,7 +445,7 @@ export function SettingsPage() {
             </button>
           )}
 
-          <span className="ml-auto font-mono text-sm text-brand-text-dim">localhost:11434</span>
+          <span className="ms-auto font-mono text-sm text-brand-text-dim">localhost:11434</span>
         </div>
 
         {stopError && (
@@ -522,7 +526,7 @@ export function SettingsPage() {
                   <button
                     onClick={() => handleSelectModel(m.name)}
                     disabled={isDeleting}
-                    className={`flex flex-1 items-center gap-3 rounded-xl border px-4 py-3 text-left text-sm transition-all disabled:opacity-50 ${
+                    className={`flex flex-1 items-center gap-3 rounded-xl border px-4 py-3 text-start text-sm transition-all disabled:opacity-50 ${
                       selectedModel === m.name
                         ? 'border-brand-cyan/30 bg-brand-cyan/5 text-brand-cyan'
                         : 'border-brand-border text-brand-text hover:border-brand-border-hover'
@@ -530,7 +534,7 @@ export function SettingsPage() {
                   >
                     {selectedModel === m.name && <Check size={14} aria-hidden="true" />}
                     <span className="font-mono">{m.name}</span>
-                    <span className="ml-auto text-xs text-brand-text-dim">
+                    <span className="ms-auto text-xs text-brand-text-dim">
                       {(m.size / (1024 * 1024 * 1024)).toFixed(1)} GB
                     </span>
                   </button>

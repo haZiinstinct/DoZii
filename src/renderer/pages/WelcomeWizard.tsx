@@ -107,14 +107,14 @@ export function WelcomeWizard() {
                   <div className="flex items-center gap-3">
                     <Cpu size={16} className="text-brand-cyan" />
                     <span className="text-sm text-brand-text">{hardware.cpu.model}</span>
-                    <span className="ml-auto text-xs text-brand-text-dim">
+                    <span className="ms-auto text-xs text-brand-text-dim">
                       {hardware.cpu.threads} Threads
                     </span>
                   </div>
                   <div className="flex items-center gap-3">
                     <HardDrive size={16} className="text-brand-cyan" />
                     <span className="text-sm text-brand-text">{hardware.ram.totalGb} GB RAM</span>
-                    <span className="ml-auto text-xs text-brand-text-dim">
+                    <span className="ms-auto text-xs text-brand-text-dim">
                       {hardware.ram.freeGb} GB frei
                     </span>
                   </div>
@@ -122,7 +122,7 @@ export function WelcomeWizard() {
                     <div className="flex items-center gap-3">
                       <Monitor size={16} className="text-brand-cyan" />
                       <span className="text-sm text-brand-text">{hardware.gpu.name}</span>
-                      <span className="ml-auto text-xs text-brand-text-dim">
+                      <span className="ms-auto text-xs text-brand-text-dim">
                         {Math.round(hardware.gpu.vramMb / 1024)} GB VRAM
                       </span>
                     </div>
@@ -207,7 +207,7 @@ export function WelcomeWizard() {
             className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand-cyan px-8 py-4 text-lg font-semibold text-brand-dark transition-all duration-200 hover:bg-brand-cyan-dim hover:shadow-[0_0_40px_rgba(0,212,255,0.3)] disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {t('welcome.continue')}
-            <ArrowRight size={18} aria-hidden="true" />
+            <ArrowRight size={18} className="rtl-flip" aria-hidden="true" />
           </button>
         </div>
       </div>

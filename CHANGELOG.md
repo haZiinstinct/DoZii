@@ -3,6 +3,29 @@
 Alle nennenswerten Änderungen an DoZii werden in dieser Datei dokumentiert.
 Das Format orientiert sich an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [1.2.0] – 2026-06-29
+
+Mehrsprachigkeit: DoZii spricht jetzt 9 Sprachen – Oberfläche und KI-Ausgabe.
+
+### Hinzugefügt
+
+- **9 Sprachen** statt bisher 2: Deutsch, English, Español, Français, Português, Русский, العربية, 日本語, 中文. Übersetzt sind sowohl die **Oberfläche** als auch die **KI-Analyse-Ausgabe** (Grammatik, Formulierungen, Zusammenfassung, Freie Frage)
+- **Globus-Sprachumschalter** in der Titelleiste (native Sprachnamen); die Wahl wird gespeichert. Die Sprachauswahl in den Einstellungen umfasst jetzt alle 9 Sprachen
+- **Arabisch mit vollem RTL-Layout** (rechts-nach-links): das gesamte Interface spiegelt, Richtungs-Icons inklusive
+
+### Geändert / Verbessert
+
+- Die **Analyse-Ausgabe folgt jetzt der gewählten UI-Sprache** (vorher: der Dokumentsprache). Beispiel: UI auf Spanisch → die Analyse antwortet auf Spanisch, unabhängig von der Dokumentsprache
+- Layout durchgehend auf logische CSS-Eigenschaften umgestellt, damit RTL automatisch greift
+
+### Hinweise
+
+- Der **Arbeitszeugnis-Decoder bleibt deutsch** – das Konzept stammt aus dem deutschen Arbeitsrecht
+- Die neuen Übersetzungen sind KI-gestützt erstellt und können von Muttersprachlern noch verfeinert werden
+- OCR (Texterkennung aus Scans/Fotos) deckt weiterhin Deutsch + Englisch ab; Text-PDFs/DOCX funktionieren sprachunabhängig
+- Bei sehr kleinen Modellen kann die strukturierte Karten-Ansicht gelegentlich auf einfaches Markdown zurückfallen – der Inhalt bleibt in der gewählten Sprache
+- Keine Breaking Changes; Auto-Update verteilt v1.2.0 an v1.1-Installationen
+
 ## [1.1.0] – 2026-06-24
 
 Full-Stack-Überarbeitung nach komplettem Audit – schlanker, schneller, schöner, zweisprachig.
