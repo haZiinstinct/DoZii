@@ -258,6 +258,23 @@ export function SettingsPage() {
         <div className="flex flex-wrap items-center gap-3">
           <span className="font-mono text-sm text-brand-text">DoZii {appVersion || '–'}</span>
 
+          <a
+            href="https://hazii.org"
+            onClick={(e) => {
+              e.preventDefault()
+              window.open('https://hazii.org', '_blank')
+            }}
+            dir="ltr"
+            aria-label="Code von haZii.org"
+            className="whitespace-nowrap font-mono text-sm transition-opacity hover:opacity-80"
+          >
+            <span className="text-brand-text-dim">{'// code: '}</span>
+            <span className="font-bold tracking-tight text-brand-cyan">
+              ha<span className="text-brand-text-bright">Z</span>ii
+              <span className="text-brand-cyan-dim">.org</span>
+            </span>
+          </a>
+
           {updateStatus.state === 'checking' ? (
             <span className="flex items-center gap-1.5 text-xs text-brand-text-dim">
               <Loader2 size={12} className="animate-spin" aria-hidden="true" />{' '}

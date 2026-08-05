@@ -144,4 +144,4 @@ Issues und Pull Requests sind willkommen — Details in [CONTRIBUTING.md](CONTRI
 [MIT](LICENSE) — © haZii. Gebündelte Open-Source-Komponenten sind in
 [THIRD_PARTY_LICENSES.md](THIRD_PARTY_LICENSES.md) aufgeführt.
 
-<div align="center"><sub>Built by <a href="https://hazii.org">haZii</a> · <code>// webdesign: haZii.org</code></sub></div>
+<div align="center"><sub>Built by <a href="https://hazii.org">haZii</a> · <code>// code: haZii.org</code></sub></div>
