@@ -1,0 +1,49 @@
+name: Release
+
+# Baut den Windows-Installer bei einem Versions-Tag (vX.Y.Z) und erstellt das
+# GitHub-Release mit Setup, Blockmap und latest.yml (Update-Feed fuer
+# electron-updater). Ersetzt den lokalen Build aus docs/RELEASE_CHECKLIST.md.
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Version guard (Tag == package.json)
+        run: |
+          $v = node -p "require('./package.json').version"
+          if ("v$v" -ne "${{ github.ref_name }}") {
+            throw "Tag ${{ github.ref_name }} passt nicht zu package.json v$v"
+          }
+
+      - name: Build Windows installer
+        run: npm run build:win -- --publish never
+
+      - name: Extract release notes from CHANGELOG
+        run: |
+          $md = Get-Content CHANGELOG.md -Raw
+          $sec = [regex]::Match($md, '(?s)## \[[\d\.]+\][^\n]*\n(.*?)(?=\n## \[|\z)').Groups[1].Value.Trim()
+          Set-Content -Path dist/notes.md -Value $sec -Encoding utf8
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag = "${{ github.ref_name }}"
+          $title = "DoZii " + $tag.TrimStart('v')
+          gh release create $tag dist/DoZii-Setup.exe dist/DoZii-Setup.exe.blockmap dist/latest.yml --title $title --notes-file dist/notes.md
