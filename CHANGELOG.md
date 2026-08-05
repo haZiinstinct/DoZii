@@ -3,6 +3,22 @@
 Alle nennenswerten Änderungen an DoZii werden in dieser Datei dokumentiert.
 Das Format orientiert sich an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [1.2.1] – 2026-08-05
+
+Kleines Wartungs-Release.
+
+### Hinzugefügt
+
+- **haZii-Credit-Badge** `// code: haZii.org` in den Einstellungen neben der Versionsanzeige – klickbarer Link auf [hazii.org](https://hazii.org), folgt dem Dark/Light-Theme und bleibt im RTL-Layout korrekt
+
+### Geändert / Verbessert
+
+- README-Credit von der Webdesign- auf die Tool-Variante `// code:` umgestellt
+
+### Hinweise
+
+- Keine Breaking Changes; Auto-Update verteilt v1.2.1 an bestehende Installationen
+
 ## [1.2.0] – 2026-06-29
 
 Mehrsprachigkeit: DoZii spricht jetzt 9 Sprachen – Oberfläche und KI-Ausgabe.
