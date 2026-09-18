@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   Settings,
   Cpu,
@@ -18,12 +18,17 @@ import {
   Laptop,
   Square,
   Flag,
-  RefreshCw
+  RefreshCw,
+  Accessibility,
+  Workflow,
+  ScanText,
+  Save
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import i18n from 'i18next'
 import type {
   AppSettings,
+  FontScale,
   HardwareInfo,
   OllamaModel,
   SuggestedModel,
@@ -33,6 +38,7 @@ import type {
 import { SUPPORTED_LANGUAGES } from '@shared/languages'
 import { useOllamaStatus } from '@/hooks/useOllamaStatus'
 import { useTheme } from '@/hooks/useTheme'
+import { useAppearance } from '@/hooks/useAppearance'
 import { applyLanguageDirection } from '@/hooks/useLanguageDirection'
 
 // budgetLaptopFriendly: runs on 8 GB RAM CPU-only, ~30-90s per Arbeitszeugnis.
@@ -112,6 +118,93 @@ const gpuModels: SuggestedModel[] = [
   }
 ]
 
+/** Nur diese beiden Sprachdaten sind gebuendelt - Reihenfolge = Reihenfolge fuer Tesseract. */
+const OCR_LANGUAGES = ['deu', 'eng'] as const
+type OcrLanguage = (typeof OCR_LANGUAGES)[number]
+
+/** Boolesche Einstellungen, die der Ablauf-Abschnitt direkt umschaltet. */
+type BooleanSettingKey = 'autoAnalyze' | 'redactOnExport' | 'autoContextWindow'
+
+/**
+ * Beschreibung links, Schalter rechts - dasselbe Muster wie beim
+ * Auto-Update-Toggle, nur ausgelagert, weil es jetzt mehrfach vorkommt.
+ */
+function ToggleRow({
+  label,
+  hint,
+  checked,
+  onChange
+}: {
+  label: string
+  hint: string
+  checked: boolean
+  onChange: () => void
+}) {
+  return (
+    <div className="flex flex-wrap items-start justify-between gap-4">
+      <div className="min-w-[14rem] flex-1">
+        <p className="text-sm text-brand-text">{label}</p>
+        <p className="mt-1 text-xs text-brand-text-dim">{hint}</p>
+      </div>
+      <button
+        onClick={onChange}
+        role="switch"
+        aria-label={label}
+        aria-checked={checked}
+        className={`relative h-6 w-11 flex-shrink-0 rounded-full transition-colors ${
+          checked ? 'bg-brand-cyan' : 'bg-brand-border'
+        }`}
+      >
+        <span
+          className={`absolute top-0.5 h-5 w-5 rounded-full bg-brand-dark transition-all ${
+            checked ? 'start-[22px]' : 'start-0.5'
+          }`}
+        />
+      </button>
+    </div>
+  )
+}
+
+/**
+ * Umschalter im Stil des Theme-Schalters. Die Schalter duerfen umbrechen,
+ * damit sie bei Schriftgroesse "xlarge" nicht ineinanderlaufen.
+ */
+function SegmentedChoice<T extends string>({
+  label,
+  value,
+  options,
+  onChange
+}: {
+  label: string
+  value: T
+  options: { value: T; label: string }[]
+  onChange: (next: T) => void
+}) {
+  return (
+    <div role="tablist" aria-label={label} className="flex flex-wrap gap-2">
+      {options.map((option) => {
+        const active = option.value === value
+        return (
+          <button
+            key={option.value}
+            role="tab"
+            aria-selected={active}
+            onClick={() => onChange(option.value)}
+            className={`flex min-w-[7rem] flex-1 items-center justify-center gap-2 rounded-xl border px-4 py-3 text-center text-sm font-medium transition-all ${
+              active
+                ? 'border-brand-cyan/30 bg-brand-cyan/10 text-brand-cyan'
+                : 'border-brand-border text-brand-text-dim hover:border-brand-border-hover'
+            }`}
+          >
+            {active && <Check size={14} aria-hidden="true" />}
+            {option.label}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
 export function SettingsPage() {
   const { t } = useTranslation()
   const [hardware, setHardware] = useState<HardwareInfo | null>(null)
@@ -126,6 +219,12 @@ export function SettingsPage() {
   const [modelTab, setModelTab] = useState<'cpu' | 'gpu'>('cpu')
   const [appVersion, setAppVersion] = useState('')
   const [updateStatus, setUpdateStatus] = useState<UpdateStatus>({ state: 'idle' })
+  const [ollamaUrlDraft, setOllamaUrlDraft] = useState('')
+  const [ollamaUrlInvalid, setOllamaUrlInvalid] = useState(false)
+  const [ollamaUrlSaved, setOllamaUrlSaved] = useState(false)
+  // Zuletzt gespeicherte Adresse - verhindert doppeltes Speichern, wenn der
+  // Klick auf "Speichern" zuerst ein Blur im Textfeld ausloest.
+  const persistedOllamaUrl = useRef('')
   const {
     connected,
     installed,
@@ -138,6 +237,8 @@ export function SettingsPage() {
     stopOllama
   } = useOllamaStatus()
   const { mode: themeMode, setMode: setThemeMode } = useTheme()
+  // Schreibt selbst in die Settings und setzt die data-Attribute am <html>.
+  const { fontScale, highContrast, setFontScale, setHighContrast } = useAppearance()
 
   const loadModels = async () => {
     const m = await window.api.ollama.listModels()
@@ -155,6 +256,8 @@ export function SettingsPage() {
     window.api.settings.get().then((s) => {
       setSettings(s)
       setSelectedModel(s.selectedModel)
+      setOllamaUrlDraft(s.ollamaUrl)
+      persistedOllamaUrl.current = s.ollamaUrl
     })
     loadModels()
     window.api.update.getState().then(({ appVersion: v, status }) => {
@@ -168,6 +271,57 @@ export function SettingsPage() {
   const handleToggleAutoUpdate = async () => {
     if (!settings) return
     const next = await window.api.settings.update({ autoUpdateCheck: !settings.autoUpdateCheck })
+    setSettings(next)
+  }
+
+  const handleToggleSetting = async (key: BooleanSettingKey) => {
+    if (!settings) return
+    const patch: Partial<AppSettings> = {}
+    patch[key] = !settings[key]
+    const next = await window.api.settings.update(patch)
+    setSettings(next)
+  }
+
+  const handleSaveOllamaUrl = async () => {
+    const value = ollamaUrlDraft.trim()
+    if (value === persistedOllamaUrl.current) return
+
+    let protocol: string
+    try {
+      protocol = new URL(value).protocol
+    } catch {
+      setOllamaUrlInvalid(true)
+      return
+    }
+    if (protocol !== 'http:' && protocol !== 'https:') {
+      setOllamaUrlInvalid(true)
+      return
+    }
+
+    setOllamaUrlInvalid(false)
+    persistedOllamaUrl.current = value
+    const next = await window.api.settings.update({ ollamaUrl: value })
+    setSettings(next)
+    setOllamaUrlDraft(next.ollamaUrl)
+    persistedOllamaUrl.current = next.ollamaUrl
+    setOllamaUrlSaved(true)
+    setTimeout(() => setOllamaUrlSaved(false), 3000)
+  }
+
+  const handleToggleOcrLanguage = async (lang: OcrLanguage) => {
+    if (!settings) return
+    const active = settings.ocrLanguages.includes(lang)
+    // Ohne Sprache kann Tesseract nichts lesen - die letzte bleibt stehen.
+    if (active && settings.ocrLanguages.length <= 1) return
+    const ocrLanguages = OCR_LANGUAGES.filter((code) =>
+      code === lang ? !active : settings.ocrLanguages.includes(code)
+    )
+    const next = await window.api.settings.update({ ocrLanguages })
+    setSettings(next)
+  }
+
+  const handleSetOcrQuality = async (ocrQuality: AppSettings['ocrQuality']) => {
+    const next = await window.api.settings.update({ ocrQuality })
     setSettings(next)
   }
 
@@ -418,12 +572,71 @@ export function SettingsPage() {
         </div>
       </section>
 
+      {/* Darstellung & Barrierefreiheit */}
+      <section className="rounded-2xl border border-brand-border bg-brand-card/60 p-6">
+        <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-brand-text-dim">
+          <Accessibility size={12} aria-hidden="true" />
+          {t('settings.accessibility')}
+        </h2>
+
+        <p className="mb-2 text-sm text-brand-text">{t('settings.fontScale')}</p>
+        <SegmentedChoice<FontScale>
+          label={t('settings.fontScale')}
+          value={fontScale}
+          options={[
+            { value: 'normal', label: t('settings.fontScaleNormal') },
+            { value: 'large', label: t('settings.fontScaleLarge') },
+            { value: 'xlarge', label: t('settings.fontScaleXlarge') }
+          ]}
+          onChange={setFontScale}
+        />
+
+        <div className="mt-4 border-t border-brand-border pt-4">
+          <ToggleRow
+            label={t('settings.highContrast')}
+            hint={t('settings.highContrastHint')}
+            checked={highContrast}
+            onChange={() => setHighContrast(!highContrast)}
+          />
+        </div>
+      </section>
+
+      {/* Ablauf */}
+      <section className="rounded-2xl border border-brand-border bg-brand-card/60 p-6">
+        <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-brand-text-dim">
+          <Workflow size={12} aria-hidden="true" />
+          {t('settings.workflow')}
+        </h2>
+        <ToggleRow
+          label={t('settings.autoAnalyze')}
+          hint={t('settings.autoAnalyzeHint')}
+          checked={settings?.autoAnalyze ?? true}
+          onChange={() => handleToggleSetting('autoAnalyze')}
+        />
+        <div className="mt-4 border-t border-brand-border pt-4">
+          <ToggleRow
+            label={t('settings.redactOnExport')}
+            hint={t('settings.redactOnExportHint')}
+            checked={settings?.redactOnExport ?? false}
+            onChange={() => handleToggleSetting('redactOnExport')}
+          />
+        </div>
+        <div className="mt-4 border-t border-brand-border pt-4">
+          <ToggleRow
+            label={t('settings.autoContextWindow')}
+            hint={t('settings.autoContextWindowHint')}
+            checked={settings?.autoContextWindow ?? true}
+            onChange={() => handleToggleSetting('autoContextWindow')}
+          />
+        </div>
+      </section>
+
       {/* Ollama Connection */}
       <section className="rounded-2xl border border-brand-border bg-brand-card/60 p-6">
         <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-brand-text-dim">
           {t('settings.ollama')}
         </h2>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <Circle
             size={10}
             className={
@@ -462,7 +675,9 @@ export function SettingsPage() {
             </button>
           )}
 
-          <span className="ms-auto font-mono text-sm text-brand-text-dim">localhost:11434</span>
+          <span dir="ltr" className="ms-auto break-all font-mono text-sm text-brand-text-dim">
+            {settings?.ollamaUrl ?? ''}
+          </span>
         </div>
 
         {stopError && (
@@ -523,6 +738,60 @@ export function SettingsPage() {
             <p className="text-xs text-brand-red">{startError}</p>
           </div>
         )}
+
+        <div className="mt-4 border-t border-brand-border pt-4">
+          <label htmlFor="ollama-url" className="text-sm text-brand-text">
+            {t('settings.ollamaUrl')}
+          </label>
+          <p id="ollama-url-hint" className="mt-1 text-xs text-brand-text-dim">
+            {t('settings.ollamaUrlHint')}
+          </p>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <input
+              id="ollama-url"
+              type="text"
+              dir="ltr"
+              spellCheck={false}
+              value={ollamaUrlDraft}
+              onChange={(e) => {
+                setOllamaUrlDraft(e.target.value)
+                setOllamaUrlInvalid(false)
+                setOllamaUrlSaved(false)
+              }}
+              onBlur={handleSaveOllamaUrl}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') e.currentTarget.blur()
+              }}
+              placeholder="http://localhost:11434"
+              aria-invalid={ollamaUrlInvalid}
+              aria-describedby={ollamaUrlInvalid ? 'ollama-url-error' : 'ollama-url-hint'}
+              className={`min-w-[14rem] flex-1 rounded-xl border bg-brand-dark/80 px-4 py-3 font-mono text-sm text-brand-text placeholder:text-brand-text-dim/70 focus:outline-none focus:ring-1 ${
+                ollamaUrlInvalid
+                  ? 'border-brand-red/50 focus:border-brand-red/50 focus:ring-brand-red/20'
+                  : 'border-brand-border focus:border-brand-cyan/50 focus:ring-brand-cyan/20'
+              }`}
+            />
+            <button
+              onClick={handleSaveOllamaUrl}
+              aria-label={t('settings.ollamaUrl')}
+              title={t('settings.ollamaUrl')}
+              className="flex items-center justify-center rounded-xl border border-brand-border px-4 py-3 text-brand-text-dim transition-all hover:border-brand-cyan/30 hover:text-brand-cyan"
+            >
+              <Save size={16} aria-hidden="true" />
+            </button>
+          </div>
+          {ollamaUrlInvalid && (
+            <p id="ollama-url-error" role="alert" className="mt-2 text-xs text-brand-red">
+              {t('settings.ollamaUrlInvalid')}
+            </p>
+          )}
+          {ollamaUrlSaved && !ollamaUrlInvalid && (
+            <p role="status" className="mt-2 flex items-center gap-1.5 text-xs text-brand-green">
+              <Check size={12} aria-hidden="true" />
+              {t('settings.ollamaUrlSaved')}
+            </p>
+          )}
+        </div>
       </section>
 
       {/* Models */}
@@ -729,6 +998,70 @@ export function SettingsPage() {
               </div>
             )
           })}
+        </div>
+      </section>
+
+      {/* Texterkennung (OCR) */}
+      <section className="rounded-2xl border border-brand-border bg-brand-card/60 p-6">
+        <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-brand-text-dim">
+          <ScanText size={12} aria-hidden="true" />
+          {t('settings.ocr')}
+        </h2>
+
+        <p className="text-sm text-brand-text">{t('settings.ocrLanguages')}</p>
+        <p className="mt-1 text-xs text-brand-text-dim">{t('settings.ocrLanguagesHint')}</p>
+        <ul className="mt-3 flex flex-wrap gap-2">
+          {(
+            [
+              { code: 'deu', label: t('settings.ocrLangDeu') },
+              { code: 'eng', label: t('settings.ocrLangEng') }
+            ] as { code: OcrLanguage; label: string }[]
+          ).map(({ code, label }) => {
+            const active = settings?.ocrLanguages.includes(code) ?? false
+            // Die letzte aktive Sprache bleibt gesperrt, sonst liest OCR gar nichts mehr.
+            const isLastActive = active && (settings?.ocrLanguages.length ?? 0) <= 1
+            return (
+              <li key={code} className="flex-1">
+                <div
+                  className={`flex min-w-[10rem] items-center gap-3 rounded-xl border px-4 py-3 ${
+                    active
+                      ? 'border-brand-cyan/30 bg-brand-cyan/5'
+                      : 'border-brand-border bg-transparent'
+                  }`}
+                >
+                  <input
+                    id={`ocr-lang-${code}`}
+                    type="checkbox"
+                    checked={active}
+                    disabled={!settings || isLastActive}
+                    onChange={() => handleToggleOcrLanguage(code)}
+                    className="h-4 w-4 flex-shrink-0 accent-brand-cyan disabled:opacity-50"
+                  />
+                  <label
+                    htmlFor={`ocr-lang-${code}`}
+                    className={`text-sm ${active ? 'text-brand-cyan' : 'text-brand-text-dim'}`}
+                  >
+                    {label}
+                  </label>
+                </div>
+              </li>
+            )
+          })}
+        </ul>
+
+        <div className="mt-4 border-t border-brand-border pt-4">
+          <p className="text-sm text-brand-text">{t('settings.ocrQuality')}</p>
+          <p className="mb-3 mt-1 text-xs text-brand-text-dim">{t('settings.ocrQualityHint')}</p>
+          <SegmentedChoice<AppSettings['ocrQuality']>
+            label={t('settings.ocrQuality')}
+            value={settings?.ocrQuality ?? 'balanced'}
+            options={[
+              { value: 'fast', label: t('settings.ocrQualityFast') },
+              { value: 'balanced', label: t('settings.ocrQualityBalanced') },
+              { value: 'best', label: t('settings.ocrQualityBest') }
+            ]}
+            onChange={handleSetOcrQuality}
+          />
         </div>
       </section>
 

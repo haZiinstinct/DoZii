@@ -1,6 +1,6 @@
 {
   "name": "dozii",
-  "version": "1.2.1",
+  "version": "1.3.0",
   "description": "Lokale, 100% offline Dokumentenanalyse mit KI",
   "author": {
     "name": "haZii",
@@ -22,13 +22,16 @@
     "preview": "electron-vite preview",
     "postinstall": "electron-builder install-app-deps",
     "build:win": "npm run build && electron-builder --win",
+    "build:mac": "npm run build && electron-builder --mac",
+    "build:linux": "npm run build && electron-builder --linux",
     "typecheck:node": "tsc --noEmit -p tsconfig.node.json --composite false",
     "typecheck:web": "tsc --noEmit -p tsconfig.web.json --composite false",
     "typecheck": "npm run typecheck:node && npm run typecheck:web",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "vitest run"
+    "test": "vitest run",
+    "eval": "vitest run --config vitest.eval.config.ts"
   },
   "dependencies": {
     "better-sqlite3": "^12.8.0",

@@ -269,7 +269,8 @@
     "pasteTitlePlaceholder": "z.B. Bescheid Jobcenter März",
     "pasteEmpty": "Bitte erst Text einfügen.",
     "pasteTooShort": "Der Text ist sehr kurz - das reicht für eine Analyse vermutlich nicht.",
-    "pasteTooLong": "Der Text ist zu lang. Bitte kürzen oder als Datei importieren."
+    "pasteTooLong": "Der Text ist zu lang. Bitte kürzen oder als Datei importieren.",
+    "ocrProgress": "Seite {{current}} von {{total}} wird gelesen..."
   },
   "history": {
     "title": "Historie",
@@ -422,7 +423,10 @@
       "unverifiedBadge": "ohne Textbeleg",
       "unverifiedNote": "Für diese Punkte konnte DoZii keine wörtliche Stelle im Dokument finden. Behandle sie als Vermutung.",
       "forSide": "Bewertet aus Sicht: {{side}}",
-      "showInText": "Im Dokument zeigen"
+      "showInText": "Im Dokument zeigen",
+      "verdict": "Klartext-Fazit",
+      "detailsShow": "Details anzeigen",
+      "detailsHide": "Details verbergen"
     },
     "letter": {
       "title": "Briefentwurf",
@@ -457,7 +461,17 @@
         "kuendigung": "Vertrag zum nächstmöglichen Zeitpunkt kündigen.",
         "fristverlaengerung": "Mehr Zeit erbitten, wenn du die Frist nicht schaffst.",
         "allgemein": "Sachliche Antwort auf ein Schreiben."
-      }
+      },
+      "notesCount": "{{chars}} von {{max}} Zeichen",
+      "placeholders": "Platzhalter ausfüllen",
+      "placeholdersHint": "Trag deine Angaben ein - sie stehen sofort im Brief.",
+      "placeholdersDone": "Alle Platzhalter sind ausgefüllt.",
+      "checklistDone": "{{done}} von {{total}} erledigt"
+    },
+    "evidence": {
+      "regionLabel": "Originaltext mit markierten Belegstellen",
+      "markTitle": "Belegstelle ({{severity}})",
+      "markLabel": "Belegstelle ({{severity}}): {{text}}"
     }
   },
   "deadlines": {

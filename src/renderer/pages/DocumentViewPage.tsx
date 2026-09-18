@@ -1,24 +1,56 @@
-import { useEffect, useState, useMemo } from 'react'
+import { useCallback, useEffect, useState, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   FileText,
   ArrowLeft,
   Languages,
   Hash,
-  FileSearch,
   Trash2,
   RefreshCw,
   AlertTriangle,
   Loader2,
   Sparkles,
   X,
-  ArrowRight
+  ArrowRight,
+  ScanText,
+  BookOpen,
+  SpellCheck,
+  PenLine,
+  Award,
+  ScrollText,
+  AlignLeft,
+  MessageCircleQuestion
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import type { DoziiDocument, FirstImpression } from '@shared/types'
+import { ANALYSIS_MODES } from '@shared/types'
+import type { AnalysisMode, Deadline, DoziiDocument, FirstImpression } from '@shared/types'
 import { isLikelyGarbled } from '@shared/text-validators'
+import { DeadlineList } from '@/components/DeadlineList'
 
-const ANALYSIS_MODES = ['grammar', 'formulation', 'arbeitszeugnis', 'summary', 'freeform'] as const
+/** Modi, die hier zur Auswahl stehen - 'letter' gehoert bewusst nicht dazu. */
+type PickableMode = (typeof ANALYSIS_MODES)[number]
+
+const MODE_ICONS: Record<PickableMode, React.ReactNode> = {
+  plain: <BookOpen size={16} aria-hidden="true" />,
+  grammar: <SpellCheck size={16} aria-hidden="true" />,
+  formulation: <PenLine size={16} aria-hidden="true" />,
+  arbeitszeugnis: <Award size={16} aria-hidden="true" />,
+  contract: <ScrollText size={16} aria-hidden="true" />,
+  summary: <AlignLeft size={16} aria-hidden="true" />,
+  freeform: <MessageCircleQuestion size={16} aria-hidden="true" />
+}
+
+function isPickableMode(mode: AnalysisMode): mode is PickableMode {
+  return (ANALYSIS_MODES as readonly AnalysisMode[]).includes(mode)
+}
+
+/** Heutiges Datum als 'YYYY-MM-DD' in lokaler Zeit - toISOString waere UTC. */
+function todayIsoLocal(): string {
+  const now = new Date()
+  const month = `${now.getMonth() + 1}`.padStart(2, '0')
+  const day = `${now.getDate()}`.padStart(2, '0')
+  return `${now.getFullYear()}-${month}-${day}`
+}
 
 export function DocumentViewPage() {
   const { id } = useParams<{ id: string }>()
@@ -34,6 +66,12 @@ export function DocumentViewPage() {
   // Heuristik kann falsch-positiv sein (z.B. exotische Encodings) - Nutzer
   // kann die Warnung wegklicken und normal weiterarbeiten.
   const [garbledDismissed, setGarbledDismissed] = useState(false)
+  const [deadlines, setDeadlines] = useState<Deadline[]>([])
+  const [deadlinesLoading, setDeadlinesLoading] = useState(false)
+  const [icsError, setIcsError] = useState<string | null>(null)
+  const [icsSavedPath, setIcsSavedPath] = useState<string | null>(null)
+
+  const todayIso = useMemo(() => todayIsoLocal(), [])
 
   useEffect(() => {
     if (!id) return
@@ -52,6 +90,30 @@ export function DocumentViewPage() {
     })
     return () => {
       cancelled = true
+    }
+  }, [id])
+
+  // Fristen laden und aktuell halten: die Fristensuche laeuft nach einer
+  // Analyse im Hintergrund weiter und meldet sich ueber `onUpdated`.
+  useEffect(() => {
+    if (!id) return
+    let cancelled = false
+    const load = (): void => {
+      window.api.deadlines.forDocument(id).then((found) => {
+        if (cancelled) return
+        setDeadlines(found)
+      })
+    }
+    setIcsError(null)
+    setIcsSavedPath(null)
+    load()
+    const unsubscribe = window.api.deadlines.onUpdated(({ documentId }) => {
+      if (documentId !== id) return
+      load()
+    })
+    return () => {
+      cancelled = true
+      unsubscribe()
     }
   }, [id])
 
@@ -92,9 +154,45 @@ export function DocumentViewPage() {
     }
   }
 
-  const handleAnalyze = (mode: string) => {
+  const handleAnalyze = (mode: AnalysisMode) => {
     navigate(`/analysis?doc=${id}&mode=${mode}`)
   }
+
+  const handleScanDeadlines = useCallback(async () => {
+    if (!id) return
+    setDeadlinesLoading(true)
+    try {
+      const found = await window.api.deadlines.scan(id)
+      setDeadlines(found)
+    } finally {
+      setDeadlinesLoading(false)
+    }
+  }, [id])
+
+  // Die .ics enthaelt alle Fristen des Dokuments - welche Karte den Klick
+  // ausgeloest hat, spielt darum keine Rolle.
+  const handleAddToCalendar = useCallback(async () => {
+    if (!id) return
+    setIcsError(null)
+    setIcsSavedPath(null)
+    const result = await window.api.deadlines.exportIcs(id)
+    if (result.ok) {
+      setIcsSavedPath(result.path ?? null)
+    } else {
+      setIcsError(result.error ?? '')
+    }
+  }, [id])
+
+  const recommendedMode = useMemo(() => {
+    const mode = firstImpression?.recommendedMode
+    return mode && isPickableMode(mode) ? mode : null
+  }, [firstImpression])
+
+  // Empfohlener Modus nach oben - sonst bleibt die feste UI-Reihenfolge.
+  const orderedModes = useMemo<readonly PickableMode[]>(() => {
+    if (!recommendedMode) return ANALYSIS_MODES
+    return [recommendedMode, ...ANALYSIS_MODES.filter((mode) => mode !== recommendedMode)]
+  }, [recommendedMode])
 
   if (loading) {
     return (
@@ -121,7 +219,7 @@ export function DocumentViewPage() {
       : `${(doc.fileSize / 1024).toFixed(0)} KB`
 
   return (
-    <div className="flex h-full flex-col gap-4">
+    <div className="flex h-full flex-col gap-4 overflow-y-auto">
       {/* Header */}
       <div className="flex items-center gap-3">
         <button
@@ -158,6 +256,18 @@ export function DocumentViewPage() {
           <Trash2 size={16} aria-hidden="true" />
         </button>
       </div>
+
+      {/* Scan-Hinweis: OCR verwechselt Ziffern, bei einem Bescheid haengt daran viel Geld. */}
+      {doc.ocrUsed && (
+        <div className="flex items-start gap-3 rounded-xl border border-brand-amber/30 bg-brand-amber/5 p-4">
+          <ScanText
+            size={16}
+            className="mt-0.5 flex-shrink-0 text-brand-amber"
+            aria-hidden="true"
+          />
+          <p className="text-sm leading-relaxed text-brand-text">{t('document.ocrUsed')}</p>
+        </div>
+      )}
 
       {/* Garbage-warning banner */}
       {isGarbled && (
@@ -289,22 +399,74 @@ export function DocumentViewPage() {
         )}
       </div>
 
-      {/* Analyze buttons */}
-      <div className="flex flex-wrap gap-2">
-        {ANALYSIS_MODES.map((mode) => (
-          <button
-            key={mode}
-            onClick={() => handleAnalyze(mode)}
-            className="inline-flex items-center gap-2 rounded-xl border border-brand-border px-4 py-2 text-sm text-brand-text-dim transition-all hover:border-brand-cyan/30 hover:bg-brand-cyan/5 hover:text-brand-cyan"
-          >
-            <FileSearch size={14} aria-hidden="true" />
-            {t(`analysis.modesShort.${mode}`)}
-          </button>
-        ))}
-      </div>
+      {/* Modus-Auswahl: Titel plus Beschreibung, damit die Wahl ohne Vorwissen klappt. */}
+      <section className="space-y-3">
+        <h2 className="text-sm font-semibold uppercase tracking-wider text-brand-text-dim">
+          {t('document.modePickerTitle')}
+        </h2>
+        <ul className="grid gap-3 sm:grid-cols-2">
+          {orderedModes.map((mode) => {
+            const isRecommended = mode === recommendedMode
+            return (
+              <li key={mode}>
+                <button
+                  type="button"
+                  onClick={() => handleAnalyze(mode)}
+                  className={`flex h-full w-full items-start gap-3 rounded-2xl border p-4 text-start transition-all ${
+                    isRecommended
+                      ? 'border-brand-cyan/50 bg-brand-cyan/10 hover:bg-brand-cyan/20'
+                      : 'border-brand-border bg-brand-card/40 hover:border-brand-cyan/30 hover:bg-brand-cyan/5'
+                  }`}
+                >
+                  <span
+                    className={`mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg ${
+                      isRecommended
+                        ? 'bg-brand-cyan/20 text-brand-cyan'
+                        : 'bg-brand-darker/60 text-brand-text-dim'
+                    }`}
+                  >
+                    {MODE_ICONS[mode]}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="flex flex-wrap items-center gap-2">
+                      <span className="text-sm font-semibold text-brand-text-bright">
+                        {t(`analysis.modes.${mode}`)}
+                      </span>
+                      {isRecommended && (
+                        <span className="rounded-md border border-brand-cyan/40 bg-brand-cyan/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-brand-cyan">
+                          {t('document.modeRecommended')}
+                        </span>
+                      )}
+                    </span>
+                    <span className="mt-1 block text-xs leading-relaxed text-brand-text-dim">
+                      {t(`analysis.modeDesc.${mode}`)}
+                    </span>
+                  </span>
+                </button>
+              </li>
+            )
+          })}
+        </ul>
+      </section>
+
+      {/* Fristen */}
+      <DeadlineList
+        deadlines={deadlines}
+        todayIso={todayIso}
+        loading={deadlinesLoading}
+        onScan={handleScanDeadlines}
+        onAddToCalendar={handleAddToCalendar}
+      />
+
+      {icsSavedPath && (
+        <p className="text-xs text-brand-green">
+          {t('analysis.exportDone', { path: icsSavedPath })}
+        </p>
+      )}
+      {icsError && <p className="text-xs text-brand-red">{icsError}</p>}
 
       {/* Extracted text */}
-      <div className="flex-1 overflow-y-auto rounded-2xl border border-brand-border bg-brand-card/40 p-6">
+      <div className="max-h-[60vh] overflow-y-auto rounded-2xl border border-brand-border bg-brand-card/40 p-6">
         <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-brand-text-dim">
           {t('document.extractedText')}
         </p>

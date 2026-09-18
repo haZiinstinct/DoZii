@@ -76,7 +76,9 @@ export const api = {
       ipcRenderer.invoke('documents:getById', id),
     delete: (id: string): Promise<void> => ipcRenderer.invoke('documents:delete', id),
     /** Fortschritt der Texterkennung waehrend eines Imports (nur bei Scans). */
-    onImportProgress: subscribe<{ page: number; total: number }>('documents:importProgress')
+    onImportProgress: subscribe<{ page: number; total: number }>('documents:importProgress'),
+    /** Der Ersteindruck wird nach dem Import im Hintergrund erzeugt. */
+    onFirstImpression: subscribe<FirstImpression>('documents:firstImpression')
   },
 
   // Analysis
