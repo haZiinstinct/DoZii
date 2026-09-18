@@ -53,6 +53,25 @@ export const firstImpressions = sqliteTable('first_impressions', {
   createdAt: text('created_at').notNull()
 })
 
+// Berechnete Fristen pro Dokument (Fristen-Radar). Das Enddatum wird
+// deterministisch in TypeScript gerechnet, nicht vom Modell geliefert.
+export const deadlines = sqliteTable('deadlines', {
+  id: text('id').primaryKey(),
+  documentId: text('document_id')
+    .notNull()
+    .references(() => documents.id, { onDelete: 'cascade' }),
+  kind: text('kind').notNull(),
+  label: text('label').notNull(),
+  dueDate: text('due_date').notNull(), // ISO YYYY-MM-DD
+  startDate: text('start_date'),
+  periodText: text('period_text'),
+  quote: text('quote').notNull(),
+  confidence: text('confidence').notNull(), // high | medium | low
+  source: text('source').notNull(), // explicit | computed
+  note: text('note'),
+  createdAt: text('created_at').notNull()
+})
+
 export type Document = typeof documents.$inferSelect
 export type NewDocument = typeof documents.$inferInsert
 export type Analysis = typeof analyses.$inferSelect
@@ -61,3 +80,5 @@ export type ChatMessage = typeof chatMessages.$inferSelect
 export type NewChatMessage = typeof chatMessages.$inferInsert
 export type FirstImpressionRow = typeof firstImpressions.$inferSelect
 export type NewFirstImpressionRow = typeof firstImpressions.$inferInsert
+export type DeadlineRow = typeof deadlines.$inferSelect
+export type NewDeadlineRow = typeof deadlines.$inferInsert

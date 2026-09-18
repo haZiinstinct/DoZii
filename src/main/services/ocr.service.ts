@@ -1,7 +1,7 @@
 import type { Worker } from 'tesseract.js'
 import { join } from 'path'
 import { app } from 'electron'
-import { preprocessImage } from './image-preprocessor.service'
+import { preprocessImage, type OcrQuality } from './image-preprocessor.service'
 import { logger } from './logger.service'
 
 // Determine path to bundled traineddata files
@@ -44,11 +44,13 @@ async function getWorker(langStr: string): Promise<Worker> {
 }
 
 export async function recognizeImage(
-  filePath: string,
-  languages: string[] = ['deu', 'eng']
+  filePath: string | Buffer,
+  languages: string[] = ['deu', 'eng'],
+  quality: OcrQuality = 'balanced'
 ): Promise<OcrResult> {
-  const langStr = languages.join('+')
-  const imageBuffer = await preprocessImage(filePath)
+  // Leere/unbekannte Sprachliste darf den Worker nicht mit "" starten lassen.
+  const langStr = languages.length > 0 ? languages.join('+') : 'deu+eng'
+  const imageBuffer = await preprocessImage(filePath, quality)
   const worker = await getWorker(langStr)
 
   const {

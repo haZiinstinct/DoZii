@@ -88,6 +88,36 @@ describe('runMigrations', () => {
     db.close()
   })
 
+  it('v2: Fristen-Tabelle existiert und haengt am Dokument', () => {
+    const db = createLegacyDb()
+    runMigrations(db)
+
+    expect(tableNames(db)).toContain('deadlines')
+    db.exec(`
+      INSERT INTO deadlines (id, document_id, kind, label, due_date, quote, confidence, source, created_at)
+      VALUES ('d-1', 'doc-1', 'widerspruch', 'Widerspruch', '2026-04-15', 'innerhalb eines Monats', 'high', 'computed', '2026-03-16')
+    `)
+    const row = db.prepare("SELECT due_date FROM deadlines WHERE id = 'd-1'").get() as {
+      due_date: string
+    }
+    expect(row.due_date).toBe('2026-04-15')
+    db.close()
+  })
+
+  it('v2 laeuft auch auf einer DB, die schon auf v1 stand', () => {
+    const db = new DatabaseSync(':memory:')
+    db.exec('PRAGMA user_version = 1')
+    // Baseline von Hand, wie sie v1 hinterlassen haette
+    MIGRATIONS[0].up(db)
+
+    const result = runMigrations(db)
+
+    expect(result.from).toBe(1)
+    expect(result.to).toBe(2)
+    expect(tableNames(db)).toContain('deadlines')
+    db.close()
+  })
+
   it('MIGRATIONS sind aufsteigend und lückenlos versioniert', () => {
     MIGRATIONS.forEach((m, i) => {
       expect(m.version).toBe(i + 1)

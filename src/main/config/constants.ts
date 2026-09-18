@@ -27,3 +27,45 @@ export const MAX_CHAT_MESSAGE_CHARS = 10_000
 export const MAX_HISTORY_CHARS = 8_000
 /** Token-Budget fuer den Dokumenttext im Chat-System-Prompt. */
 export const DOC_TOKEN_BUDGET = 3_500
+
+// --- Dynamisches Kontextfenster (context-window.service) ---
+/** Untergrenze: nie kleiner als der bisherige Festwert. */
+export const MIN_NUM_CTX = 8192
+/**
+ * Obergrenze fuer die automatische Vergroesserung. Hoehere Werte kosten
+ * linear RAM/VRAM; 32k deckt auch lange Vertraege ab, ohne 8-GB-Rechner
+ * in den Swap zu treiben.
+ */
+export const MAX_AUTO_NUM_CTX = 32_768
+/**
+ * Grobe Schaetzung: wie viele Kontext-Tokens pro GB freiem RAM vertretbar
+ * sind (KV-Cache waechst ~linear mit num_ctx). Konservativ angesetzt.
+ */
+export const CTX_TOKENS_PER_FREE_GB = 4096
+
+// --- Gescannte PDFs / OCR-Fallback ---
+/**
+ * Unter so vielen Zeichen pro Seite gilt ein PDF als Scan ohne Textebene -
+ * dann greift der OCR-Fallback. Reine Textseiten haben 1500-3000 Zeichen.
+ */
+export const SCANNED_PDF_MIN_CHARS_PER_PAGE = 120
+/** Sicherheitsnetz: so viele Seiten werden maximal per OCR nachgezogen. */
+export const OCR_MAX_PAGES = 40
+/** Kleinere Bilder als das sind Logos/Signaturen, kein Seitenscan. */
+export const OCR_MIN_IMAGE_PIXELS = 200_000
+
+// --- Chunking / Map-Reduce fuer lange Dokumente ---
+/** Ueberlappung zwischen zwei Chunks, damit Saetze an der Naht nicht verloren gehen. */
+export const CHUNK_OVERLAP_TOKENS = 200
+/** Mehr Chunks als das werden nicht analysiert (Laufzeitschutz). */
+export const MAX_CHUNKS = 12
+
+// --- Text-Import (Einfuegen aus der Zwischenablage) ---
+/** Maximale Laenge eines eingefuegten Textes. */
+export const MAX_TEXT_IMPORT_CHARS = 1_000_000
+
+// --- Suche ---
+/** Maximale Trefferzahl der Dokumentsuche. */
+export const MAX_SEARCH_RESULTS = 200
+/** Laenge des Vorschau-Snippets in der Dokumentliste. */
+export const SNIPPET_CHARS = 200

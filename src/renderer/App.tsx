@@ -4,6 +4,7 @@ import { Loader2 } from 'lucide-react'
 import i18n from 'i18next'
 import { MainLayout } from './components/layout/MainLayout'
 import { applyLanguageDirection } from './hooks/useLanguageDirection'
+import { applyAppearance } from './hooks/useAppearance'
 import './i18n'
 
 // Route-basiertes Code-Splitting: jede Seite wird erst beim Navigieren geladen,
@@ -43,6 +44,7 @@ export function App() {
       .then((s) => {
         if (s.language && s.language !== i18n.language) i18n.changeLanguage(s.language)
         if (s.language) applyLanguageDirection(s.language)
+        applyAppearance(s.fontScale, s.highContrast)
       })
       .catch(() => {
         /* Default-Sprache bleibt aktiv */

@@ -1,10 +1,17 @@
 import { contextBridge, ipcRenderer, webUtils } from 'electron'
 import type {
+  AnalysisExtra,
   AnalysisMode,
+  AnalysisPhaseEvent,
   AnalysisRunResult,
   AppSettings,
   ChatMessage,
+  Deadline,
+  DeadlineWithDocument,
+  DocumentSummary,
   DoziiDocument,
+  ExportRequest,
+  ExportResult,
   FirstImpression,
   HardwareInfo,
   LogLevel,
@@ -14,6 +21,7 @@ import type {
   OllamaStartResult,
   PullProgress,
   SystemMetrics,
+  TextImportPayload,
   UpdateStatus
 } from '@shared/types'
 
@@ -47,6 +55,9 @@ export const api = {
       ipcRenderer.invoke('documents:openDirectoryDialog'),
     import: (filePath: string): Promise<DoziiDocument> =>
       ipcRenderer.invoke('documents:import', filePath),
+    /** Direkt eingefuegter Text (Zwischenablage) statt einer Datei. */
+    importText: (payload: TextImportPayload): Promise<DoziiDocument> =>
+      ipcRenderer.invoke('documents:importText', payload),
     reImport: (
       id: string
     ): Promise<{ ok: true; doc: DoziiDocument } | { ok: false; error: string }> =>
@@ -56,7 +67,11 @@ export const api = {
     generateFirstImpression: (id: string): Promise<FirstImpression | null> =>
       ipcRenderer.invoke('documents:generateFirstImpression', id),
     getFilePath: (file: File): string => webUtils.getPathForFile(file),
-    getAll: (): Promise<DoziiDocument[]> => ipcRenderer.invoke('documents:getAll'),
+    /** Liste ohne Volltext - der Volltext bleibt im Main-Prozess. */
+    getAll: (): Promise<DocumentSummary[]> => ipcRenderer.invoke('documents:getAll'),
+    /** Volltextsuche in SQLite (Dateiname + Inhalt). */
+    search: (query: string): Promise<DocumentSummary[]> =>
+      ipcRenderer.invoke('documents:search', query),
     getById: (id: string): Promise<DoziiDocument | undefined> =>
       ipcRenderer.invoke('documents:getById', id),
     delete: (id: string): Promise<void> => ipcRenderer.invoke('documents:delete', id)
@@ -67,12 +82,13 @@ export const api = {
     run: (
       docId: string,
       mode: AnalysisMode,
-      userQuestion?: string
+      userQuestion?: string,
+      extra?: AnalysisExtra
     ): Promise<AnalysisRunResult | null> =>
-      ipcRenderer.invoke('analysis:run', docId, mode, userQuestion),
+      ipcRenderer.invoke('analysis:run', docId, mode, userQuestion, extra),
     abort: (): Promise<void> => ipcRenderer.invoke('analysis:abort'),
     onChunk: subscribe<string>('analysis:chunk'),
-    onPhase: subscribe<'analyzing' | 'verifying'>('analysis:phase'),
+    onPhase: subscribe<AnalysisPhaseEvent>('analysis:phase'),
     onComplete: subscribe<AnalysisRunResult>('analysis:complete'),
     onError: subscribe<string>('analysis:error'),
     getHistory: (docId: string) => ipcRenderer.invoke('analysis:getHistory', docId),
@@ -128,10 +144,28 @@ export const api = {
     getCurrentFile: (): Promise<string | null> => ipcRenderer.invoke('logs:getCurrentFile')
   },
 
+  // Fristen-Radar
+  deadlines: {
+    /** Gespeicherte Fristen eines Dokuments. */
+    forDocument: (documentId: string): Promise<Deadline[]> =>
+      ipcRenderer.invoke('deadlines:forDocument', documentId),
+    /** Alle noch offenen Fristen, nach Faelligkeit sortiert - fuer die Sidebar. */
+    upcoming: (): Promise<DeadlineWithDocument[]> => ipcRenderer.invoke('deadlines:upcoming'),
+    /** Dokument erneut nach Fristen durchsuchen (ein kleiner Modell-Durchlauf). */
+    scan: (documentId: string): Promise<Deadline[]> =>
+      ipcRenderer.invoke('deadlines:scan', documentId),
+    /** Fristen als Kalenderdatei speichern. documentId weglassen = alle offenen. */
+    exportIcs: (documentId?: string): Promise<ExportResult> =>
+      ipcRenderer.invoke('deadlines:exportIcs', documentId)
+  },
+
   // Export
   exporter: {
     analysisAsPdf: (analysisId: string): Promise<{ ok: boolean; path?: string; error?: string }> =>
-      ipcRenderer.invoke('exporter:analysisAsPdf', analysisId)
+      ipcRenderer.invoke('exporter:analysisAsPdf', analysisId),
+    /** Export in PDF, Markdown, Text oder Word-kompatibles RTF, optional geschwaerzt. */
+    analysis: (request: ExportRequest): Promise<ExportResult> =>
+      ipcRenderer.invoke('exporter:analysis', request)
   },
 
   // System metrics (live hardware + runtime info for the Sidebar indicator)

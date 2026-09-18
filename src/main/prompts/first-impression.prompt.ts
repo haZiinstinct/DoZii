@@ -26,13 +26,14 @@ export function buildFirstImpressionPrompt(
   const langName = englishNameFor(language)
   const system = `Du klassifizierst Dokumente. Antworte NUR mit JSON:
 
-{"documentType":"arbeitszeugnis|vertrag|brief|rechnung|bescheid|bewerbung|sonstiges","recommendedMode":"grammar|formulation|arbeitszeugnis|summary|freeform","firstImpression":"<1 short sentence written in ${langName}, max 120 chars>"}
+{"documentType":"arbeitszeugnis|vertrag|brief|rechnung|bescheid|bewerbung|sonstiges","recommendedMode":"plain|arbeitszeugnis|contract|summary|formulation|grammar|freeform","firstImpression":"<1 short sentence written in ${langName}, max 120 chars>"}
 
 Regeln:
 - Arbeitszeugnis ("zu unserer Zufriedenheit", "Verhalten gegenueber") -> mode: arbeitszeugnis
-- Vertrag/Rechnung/Bescheid -> mode: summary
-- Brief/Bewerbung -> mode: formulation
-- Unklar -> mode: freeform
+- Vertrag, AGB, Police, Darlehen, Mietvertrag ("Vertragsparteien", "Laufzeit", "Kuendigungsfrist") -> mode: contract
+- Bescheid, Amtspost, Mahnung, Rechnung, Brief einer Behoerde oder Firma -> mode: plain
+- Eigener Entwurf, Bewerbung, Anschreiben, das der Nutzer selbst verfasst hat -> mode: formulation
+- Unklar -> mode: plain
 - Das Feld "firstImpression" MUSS in ${langName} geschrieben sein.
 - NUR JSON, keine Erklaerung davor oder danach.`
 

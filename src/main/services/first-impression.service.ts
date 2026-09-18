@@ -4,20 +4,20 @@ import { getDb, schema } from '../db'
 import { buildFirstImpressionPrompt } from '../prompts/first-impression.prompt'
 import { extractJsonObject } from '../lib/extract-json'
 import { getSettings } from './settings.service'
+import { getOllamaUrl } from './ollama-client.service'
 import { logger } from './logger.service'
-import type { FirstImpression, AnalysisMode } from '@shared/types'
+import { ANALYSIS_MODES, type FirstImpression, type AnalysisMode } from '@shared/types'
 
-const ALLOWED_MODES = new Set<AnalysisMode>([
-  'grammar',
-  'formulation',
-  'arbeitszeugnis',
-  'summary',
-  'freeform'
-])
+const ALLOWED_MODES = new Set<AnalysisMode>(ANALYSIS_MODES)
 
 let client: Ollama | null = null
+let clientHost = ''
 function getClient(): Ollama {
-  if (!client) client = new Ollama({ host: 'http://localhost:11434' })
+  const host = getOllamaUrl()
+  if (!client || clientHost !== host) {
+    client = new Ollama({ host })
+    clientHost = host
+  }
   return client
 }
 

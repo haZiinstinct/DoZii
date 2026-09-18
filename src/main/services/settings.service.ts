@@ -1,5 +1,5 @@
 import Store from 'electron-store'
-import { DEFAULT_SETTINGS, type AppSettings, type ThemeMode } from '@shared/types'
+import { DEFAULT_SETTINGS, type AppSettings, type FontScale, type ThemeMode } from '@shared/types'
 import { LANGUAGE_CODES } from '@shared/languages'
 import { logger } from './logger.service'
 
@@ -22,6 +22,25 @@ function getStore(): Store<StoreSchema> {
 const THEMES: ThemeMode[] = ['dark', 'light', 'system']
 const LANGUAGES: AppSettings['language'][] = LANGUAGE_CODES
 const OCR_QUALITIES: AppSettings['ocrQuality'][] = ['fast', 'balanced', 'best']
+const FONT_SCALES: FontScale[] = ['normal', 'large', 'xlarge']
+
+/** Gebundelte Tesseract-Sprachdaten (resources/tesseract). Mehr gibt es offline nicht. */
+export const AVAILABLE_OCR_LANGUAGES = ['deu', 'eng'] as const
+
+/**
+ * Akzeptiert nur http(s)-URLs mit Host. Verhindert, dass eine vertippte oder
+ * manipulierte Einstellung die App auf ein fremdes Ziel zeigen laesst -
+ * DoZii verspricht, ausser Ollama nichts zu kontaktieren.
+ */
+export function isValidOllamaUrl(value: unknown): value is string {
+  if (typeof value !== 'string' || value.length === 0 || value.length > 300) return false
+  try {
+    const url = new URL(value)
+    return (url.protocol === 'http:' || url.protocol === 'https:') && url.hostname.length > 0
+  } catch {
+    return false
+  }
+}
 
 /**
  * Validiert geladene Settings feldweise gegen erwartete Typen/Enums. Korrupte
@@ -41,7 +60,7 @@ export function sanitizeSettings(raw: unknown): AppSettings {
   }
 
   const result: AppSettings = {
-    ollamaUrl: pick('ollamaUrl', typeof r.ollamaUrl === 'string', r.ollamaUrl as string),
+    ollamaUrl: pick('ollamaUrl', isValidOllamaUrl(r.ollamaUrl), r.ollamaUrl as string),
     selectedModel: pick(
       'selectedModel',
       typeof r.selectedModel === 'string',
@@ -55,7 +74,11 @@ export function sanitizeSettings(raw: unknown): AppSettings {
     theme: pick('theme', THEMES.includes(r.theme as ThemeMode), r.theme as ThemeMode),
     ocrLanguages: pick(
       'ocrLanguages',
-      Array.isArray(r.ocrLanguages) && r.ocrLanguages.every((l) => typeof l === 'string'),
+      Array.isArray(r.ocrLanguages) &&
+        r.ocrLanguages.length > 0 &&
+        r.ocrLanguages.every(
+          (l) => typeof l === 'string' && (AVAILABLE_OCR_LANGUAGES as readonly string[]).includes(l)
+        ),
       r.ocrLanguages as string[]
     ),
     ocrQuality: pick(
@@ -72,6 +95,27 @@ export function sanitizeSettings(raw: unknown): AppSettings {
       'autoUpdateCheck',
       typeof r.autoUpdateCheck === 'boolean',
       r.autoUpdateCheck as boolean
+    ),
+    autoAnalyze: pick('autoAnalyze', typeof r.autoAnalyze === 'boolean', r.autoAnalyze as boolean),
+    fontScale: pick(
+      'fontScale',
+      FONT_SCALES.includes(r.fontScale as FontScale),
+      r.fontScale as FontScale
+    ),
+    highContrast: pick(
+      'highContrast',
+      typeof r.highContrast === 'boolean',
+      r.highContrast as boolean
+    ),
+    redactOnExport: pick(
+      'redactOnExport',
+      typeof r.redactOnExport === 'boolean',
+      r.redactOnExport as boolean
+    ),
+    autoContextWindow: pick(
+      'autoContextWindow',
+      typeof r.autoContextWindow === 'boolean',
+      r.autoContextWindow as boolean
     )
   }
 

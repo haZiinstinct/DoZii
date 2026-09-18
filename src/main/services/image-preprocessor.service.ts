@@ -1,32 +1,65 @@
 import sharp from 'sharp'
+import type { AppSettings } from '@shared/types'
 
-// Schutz vor OOM bei Riesen-Scans: Bilder oberhalb dieser Kantenlänge werden
-// vor dem OCR proportional verkleinert. 4000px reicht für 300-dpi-A4-Scans.
-const MAX_DIMENSION_PX = 4000
+export type OcrQuality = AppSettings['ocrQuality']
+
+/**
+ * Profile hinter der Einstellung "OCR-Qualität". Die Einstellung war bislang
+ * gespeichert, aber wirkungslos - hier bekommt sie Bedeutung.
+ *
+ * - fast: kleinere Kantenlänge, kein Schärfen. Für viel Text auf sauberen Scans.
+ * - balanced: bisheriges Verhalten (4000px, schärfen).
+ * - best: höhere Auflösung und Hochskalieren kleiner Handy-Fotos. Tesseract
+ *   braucht ~300 dpi; ein 1000px-Foto einer A4-Seite liegt deutlich darunter.
+ */
+const QUALITY_PROFILES: Record<
+  OcrQuality,
+  { maxDimension: number; minDimension: number; sharpen: boolean }
+> = {
+  fast: { maxDimension: 2200, minDimension: 0, sharpen: false },
+  balanced: { maxDimension: 4000, minDimension: 0, sharpen: true },
+  best: { maxDimension: 6000, minDimension: 2200, sharpen: true }
+}
 
 /**
  * Preprocess an image for better OCR results:
- * - Downscale oversized images (OOM-Schutz)
+ * - Downscale oversized images (OOM-Schutz), bei 'best' kleine Bilder hochskalieren
  * - Convert to grayscale
- * - Increase contrast
- * - Normalize
+ * - Increase contrast / Normalize
  * Returns a buffer ready for Tesseract
  */
-export async function preprocessImage(filePath: string): Promise<Buffer> {
+export async function preprocessImage(
+  filePath: string | Buffer,
+  quality: OcrQuality = 'balanced'
+): Promise<Buffer> {
+  const profile = QUALITY_PROFILES[quality] ?? QUALITY_PROFILES.balanced
   try {
-    const processed = await sharp(filePath, { limitInputPixels: 100_000_000 })
+    const input = sharp(filePath, { limitInputPixels: 100_000_000 })
+
+    // Nur bei 'best': zu kleine Vorlagen (Handy-Foto) vor dem OCR hochziehen.
+    let targetWidth = profile.maxDimension
+    let withoutEnlargement = true
+    if (profile.minDimension > 0) {
+      const meta = await input.metadata()
+      const longestEdge = Math.max(meta.width ?? 0, meta.height ?? 0)
+      if (longestEdge > 0 && longestEdge < profile.minDimension) {
+        targetWidth = profile.minDimension
+        withoutEnlargement = false
+      }
+    }
+
+    let pipeline = input
       .resize({
-        width: MAX_DIMENSION_PX,
-        height: MAX_DIMENSION_PX,
+        width: targetWidth,
+        height: targetWidth,
         fit: 'inside',
-        withoutEnlargement: true
+        withoutEnlargement
       })
       .grayscale()
       .normalize()
-      .sharpen()
-      .toBuffer()
+    if (profile.sharpen) pipeline = pipeline.sharpen()
 
-    return processed
+    return await pipeline.toBuffer()
   } catch (err) {
     const raw = err instanceof Error ? err.message : String(err)
     if (/pixel limit|limitInputPixels/i.test(raw)) {

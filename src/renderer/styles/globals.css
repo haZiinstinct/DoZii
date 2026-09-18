@@ -205,3 +205,102 @@ html[data-theme='light'] ::-webkit-scrollbar-thumb:hover {
 html[dir='rtl'] .rtl-flip {
   transform: scaleX(-1);
 }
+
+/*
+ * Schriftgroesse (Barrierefreiheit). Tailwind rechnet Abstaende und
+ * Schriftgroessen in rem - eine groessere Wurzel skaliert das gesamte
+ * Interface proportional, nicht nur den Text.
+ */
+html[data-font-scale='large'] {
+  font-size: 18px;
+}
+
+html[data-font-scale='xlarge'] {
+  font-size: 20px;
+}
+
+/*
+ * Erhoehter Kontrast. Ueberschreibt nur die Tokens, nicht das Layout -
+ * dadurch wirkt es automatisch in jeder Komponente.
+ */
+html[data-contrast='high'] {
+  --color-brand-text: #ffffff;
+  --color-brand-text-dim: #cbd5e1;
+  --color-brand-text-bright: #ffffff;
+  --color-brand-border: rgba(255, 255, 255, 0.28);
+  --color-brand-border-hover: rgba(0, 212, 255, 0.6);
+  --color-brand-card: #16161f;
+}
+
+html[data-contrast='high'][data-theme='light'] {
+  --color-brand-text: #0f172a;
+  --color-brand-text-dim: #334155;
+  --color-brand-text-bright: #000000;
+  --color-brand-border: rgba(15, 23, 42, 0.35);
+  --color-brand-border-hover: rgba(8, 145, 178, 0.6);
+  --color-brand-card: #ffffff;
+}
+
+html[data-contrast='high'] :focus-visible {
+  outline-width: 3px;
+}
+
+/* Bewegung reduzieren, wenn das Betriebssystem das verlangt. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/*
+ * Glossar: erklaerte Fachbegriffe im Fliesstext. Gepunktete Unterstreichung
+ * statt Farbe allein - Farbe darf nie der einzige Traeger einer Information sein.
+ */
+.glossary-term {
+  border-bottom: 1px dotted var(--color-brand-cyan);
+  cursor: help;
+  text-underline-offset: 2px;
+}
+
+.glossary-term:hover,
+.glossary-term:focus-visible {
+  background-color: var(--color-brand-cyan-glow);
+  border-radius: 2px;
+}
+
+/*
+ * Belegstellen im Originaltext (Zeugnis-Decoder, Vertrags-Check).
+ * Zusaetzlich zur Farbe eine Unterstreichung, damit die Markierung auch bei
+ * Farbfehlsichtigkeit erkennbar bleibt.
+ */
+.evidence-mark {
+  border-radius: 3px;
+  padding: 0 2px;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.evidence-mark[data-severity='red'] {
+  background-color: rgba(239, 68, 68, 0.22);
+  border-bottom: 2px solid var(--color-brand-red);
+}
+
+.evidence-mark[data-severity='yellow'] {
+  background-color: rgba(245, 158, 11, 0.22);
+  border-bottom: 2px solid var(--color-brand-amber);
+}
+
+.evidence-mark[data-severity='green'] {
+  background-color: rgba(34, 197, 94, 0.2);
+  border-bottom: 2px solid var(--color-brand-green);
+}
+
+.evidence-mark[data-active='true'] {
+  outline: 2px solid var(--color-brand-cyan);
+  outline-offset: 1px;
+}

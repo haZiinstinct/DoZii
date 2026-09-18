@@ -3,7 +3,9 @@ import { readdir, stat } from 'fs/promises'
 import { join, extname, resolve } from 'path'
 import {
   importDocument,
-  getAllDocuments,
+  importTextDocument,
+  listDocumentSummaries,
+  searchDocuments,
   getDocumentById,
   deleteDocument,
   reImportDocument
@@ -12,7 +14,9 @@ import { generateFirstImpression, getFirstImpression } from '../services/first-i
 import { getSelectedModel } from './analysis.ipc'
 import { logger } from '../services/logger.service'
 import { SUPPORTED_EXTENSION_SET, DIALOG_EXTENSIONS } from '@shared/file-types'
+import { MAX_TEXT_IMPORT_CHARS } from '../config/constants'
 import { isValidId } from './_validators'
+import type { TextImportPayload } from '@shared/types'
 
 export function registerDocumentsIpc(): void {
   ipcMain.handle('documents:openDialog', async (event) => {
@@ -88,8 +92,33 @@ export function registerDocumentsIpc(): void {
     }
   })
 
+  // Direkt eingefuegter Text - fuer alles, was aus einem Portal oder einer
+  // Mail kopiert wurde und gar nicht erst als Datei existiert.
+  ipcMain.handle('documents:importText', async (_event, payload: TextImportPayload) => {
+    if (!payload || typeof payload !== 'object') {
+      throw new Error('Ungueltige Eingabe: kein Text uebergeben.')
+    }
+    const text = typeof payload.text === 'string' ? payload.text : ''
+    if (text.trim().length === 0) {
+      throw new Error('Der eingefuegte Text ist leer.')
+    }
+    if (text.length > MAX_TEXT_IMPORT_CHARS) {
+      throw new Error(
+        `Der Text ist zu lang (${text.length} Zeichen, erlaubt sind ${MAX_TEXT_IMPORT_CHARS}). ` +
+          'Bitte kuerzen oder als Datei importieren.'
+      )
+    }
+    const title = typeof payload.title === 'string' ? payload.title.slice(0, 200) : undefined
+    return importTextDocument({ text, title })
+  })
+
   ipcMain.handle('documents:getAll', () => {
-    return getAllDocuments()
+    return listDocumentSummaries()
+  })
+
+  ipcMain.handle('documents:search', (_event, query: string) => {
+    if (typeof query !== 'string') return listDocumentSummaries()
+    return searchDocuments(query.slice(0, 200))
   })
 
   ipcMain.handle('documents:getById', (_event, id: string) => {

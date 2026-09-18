@@ -74,15 +74,39 @@ const BASELINE_SQL = `
   CREATE INDEX IF NOT EXISTS idx_documents_created ON documents(created_at);
 `
 
+// v2: Fristen-Radar. Pro Dokument berechnete Fristen mit Beleg-Zitat.
+const DEADLINES_SQL = `
+  CREATE TABLE IF NOT EXISTS deadlines (
+    id TEXT PRIMARY KEY,
+    document_id TEXT NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
+    kind TEXT NOT NULL,
+    label TEXT NOT NULL,
+    due_date TEXT NOT NULL,
+    start_date TEXT,
+    period_text TEXT,
+    quote TEXT NOT NULL,
+    confidence TEXT NOT NULL,
+    source TEXT NOT NULL,
+    note TEXT,
+    created_at TEXT NOT NULL
+  );
+  CREATE INDEX IF NOT EXISTS idx_deadlines_document ON deadlines(document_id);
+  CREATE INDEX IF NOT EXISTS idx_deadlines_due ON deadlines(due_date);
+`
+
 export const MIGRATIONS: Migration[] = [
   {
     version: 1,
     up: (db) => {
       db.exec(BASELINE_SQL)
     }
+  },
+  {
+    version: 2,
+    up: (db) => {
+      db.exec(DEADLINES_SQL)
+    }
   }
-  // Zukünftige Migrationen hier anhängen, z.B.:
-  // { version: 2, up: (db) => { db.exec('ALTER TABLE documents ADD COLUMN ...') } }
 ]
 
 export interface MigrationResult {
