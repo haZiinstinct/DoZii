@@ -3,6 +3,74 @@
 Alle nennenswerten Änderungen an DoZii werden in dieser Datei dokumentiert.
 Das Format orientiert sich an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [1.3.0] – 2026-09-18
+
+Das große Verständlichkeits-Release. DoZii erklärt Behördenpost jetzt nicht nur, es sagt
+auch, bis wann du reagieren musst – und schreibt die Antwort auf Wunsch gleich mit.
+
+### Hinzugefügt
+
+- **Modus „Einfach erklärt"** – Amtsdeutsch in normale Sprache: Worum geht es, was will man
+  von dir, was passiert wenn du nichts tust, was kannst du tun. Mit Dringlichkeits-Ampel,
+  abhakbarer Schrittliste und dem Wichtigsten in einem Satz ganz oben
+- **Fristen-Radar** – erkennt Fristen im Dokument und rechnet das Enddatum **im Code** aus:
+  §§ 187/188 BGB (Ereignistag zählt nicht, Monatsende-Regel), § 193 BGB (Verschiebung auf
+  den nächsten Werktag), bundesweite Feiertage über die Osterformel. Mit Countdown,
+  Anzeige in der Seitenleiste und Export als `.ics`
+- **Vertrags-Check** – Klausel-Ampel mit Zitat, Klartext-Erklärung, „das wäre üblich" und
+  einem Formulierungsvorschlag für die Verhandlung. Erkennt auch, was fehlt
+- **Antwort-Generator** – fertige Briefentwürfe: Widerspruch, Einspruch, Antwort auf eine
+  Mahnung, Kündigung, Fristverlängerung, Arbeitszeugnis-Nachbesserung. Platzhalter werden
+  direkt im Brief ausgefüllt, Export als Word-kompatibles RTF
+- **Behörden-Glossar** – 120+ Begriffe, per Klick im Text erklärt. Rein lokale Daten,
+  kein Modellaufruf
+- **OCR für gescannte PDFs** – bisher der häufigste Totalausfall: ein eingescannter
+  Bescheid hat keine Textebene und landete leer in der App. Jetzt wird der Scan erkannt
+  und seitenweise per Texterkennung gelesen, mit Fortschrittsanzeige
+- **Text einfügen** statt nur Datei-Import – für alles, was aus einem Portal oder einer
+  E-Mail kopiert wurde. Dazu neue Dateitypen `.txt`, `.md` und `.eml`
+- **Ein-Klick-Ablauf** – DoZii erkennt beim Import die Dokumentart und startet den
+  passenden Modus von selbst (abschaltbar)
+- **Belegstellen im Original** – ein Klick auf einen Befund markiert die Stelle im
+  Dokumenttext. Unbelegte Befunde stehen nicht mehr gleichberechtigt neben belegten,
+  sondern getrennt und gekennzeichnet
+- **Schwärzen vor dem Export** – IBAN (mit Prüfsumme), Steuer-ID, Sozialversicherungs-
+  nummer, Aktenzeichen, Telefon, E-Mail, Kreditkarte (Luhn) und eigene Begriffe
+- **Weitere Export-Formate** – Word-kompatibles RTF, Markdown und Text neben PDF
+- **Barrierefreiheit** – Vorlesen über die Systemstimmen (offline), drei Schriftgrößen,
+  höherer Kontrast, Rücksicht auf „Bewegung reduzieren"
+- **Eval-Harness** (`npm run eval`) – 17 erfundene Beispieldokumente laufen durch die
+  echten Prompts und Parser; gemessen werden Notenabweichung, Belegquote,
+  Halluzinationsrate und Fristen-Genauigkeit. Damit ist eine Prompt-Änderung kein
+  Blindflug mehr
+- **macOS-, Linux- und Portable-Builds** – unsigniert und ohne Auto-Update, aber vorhanden
+
+### Geändert / Verbessert
+
+- **Kontextfenster** wird aus dem Modell ausgelesen statt fest auf 8192 zu stehen –
+  lange Verträge und Bescheide werden dadurch nicht mehr unnötig gekürzt
+- **Zu lange Dokumente** werden abschnittsweise analysiert und zusammengeführt, statt am
+  Ende abgeschnitten zu werden. Genau dort stehen Kündigungsfristen und Klauseln
+- **Fortschritt** ist jetzt sichtbar: „Abschnitt 3 von 7", „Fasse zusammen", „Suche Fristen"
+  statt minutenlang „Analysiere…"
+- **Historie und Befehlspalette** suchen im Hauptprozess (SQLite) statt den Volltext aller
+  Dokumente in die Oberfläche zu laden
+- **Modus-Auswahl** erklärt jetzt, was jeder Modus tut, und hebt die Empfehlung hervor
+- Drei bisher wirkungslose Einstellungen tun endlich etwas: **Ollama-Adresse**,
+  **OCR-Sprachen** und **OCR-Qualität** (drei echte Profile, „Beste" skaliert unscharfe
+  Handy-Fotos hoch)
+- Der **Ersteindruck** wird nach dem Import automatisch erzeugt statt erst auf Knopfdruck
+- Datums- und Zahlenformate folgen der gewählten Sprache statt fest `de-DE`
+
+### Hinweise
+
+- Datenbank-Migration auf Version 3 (neue Fristen-Tabelle, Merker für OCR-Herkunft);
+  vor der Migration wird automatisch eine Sicherung angelegt
+- Der **Arbeitszeugnis-Decoder** und die **Briefentwürfe** bleiben deutsch – beides stammt
+  aus dem deutschen Recht
+- **Keine Rechtsberatung.** Fristen und Beträge gehören am Originaldokument geprüft
+- Keine Breaking Changes; Auto-Update verteilt v1.3.0 an bestehende Installationen
+
 ## [1.2.1] – 2026-08-05
 
 Kleines Wartungs-Release.

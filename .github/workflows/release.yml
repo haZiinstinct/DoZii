@@ -1,8 +1,11 @@
 name: Release
 
-# Baut den Windows-Installer bei einem Versions-Tag (vX.Y.Z) und erstellt das
-# GitHub-Release mit Setup, Blockmap und latest.yml (Update-Feed fuer
-# electron-updater). Ersetzt den lokalen Build aus docs/RELEASE_CHECKLIST.md.
+# Baut bei einem Versions-Tag (vX.Y.Z) die Installer und erstellt das GitHub-Release
+# mit Setup, Blockmap und latest.yml (Update-Feed fuer electron-updater).
+#
+# Windows ist der verbindliche Teil: schlaegt er fehl, gibt es kein Release.
+# macOS und Linux werden mitgebaut, duerfen aber scheitern, ohne das Release zu
+# blockieren - sie sind (noch) nicht signiert und haben keinen Update-Feed.
 on:
   push:
     tags: ['v*']
@@ -11,8 +14,26 @@ permissions:
   contents: write
 
 jobs:
-  release:
-    runs-on: windows-latest
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            script: build:win
+            name: windows
+            required: true
+          - os: macos-latest
+            script: build:mac
+            name: macos
+            required: false
+          - os: ubuntu-latest
+            script: build:linux
+            name: linux
+            required: false
+    runs-on: ${{ matrix.os }}
+    # Nur Windows darf das Release kippen.
+    continue-on-error: ${{ !matrix.required }}
     steps:
       - uses: actions/checkout@v4
 
@@ -25,25 +46,68 @@ jobs:
         run: npm ci
 
       - name: Version guard (Tag == package.json)
+        shell: bash
         run: |
-          $v = node -p "require('./package.json').version"
-          if ("v$v" -ne "${{ github.ref_name }}") {
-            throw "Tag ${{ github.ref_name }} passt nicht zu package.json v$v"
-          }
+          v=$(node -p "require('./package.json').version")
+          if [ "v$v" != "${{ github.ref_name }}" ]; then
+            echo "Tag ${{ github.ref_name }} passt nicht zu package.json v$v"
+            exit 1
+          fi
 
-      - name: Build Windows installer
-        run: npm run build:win -- --publish never
+      - name: Build
+        run: npm run ${{ matrix.script }} -- --publish never
+
+      - name: Collect artifacts
+        shell: bash
+        run: |
+          mkdir -p upload
+          # Nur die Dateien, die ins Release gehoeren - nicht der ganze dist-Ordner
+          # (der enthaelt auch die entpackte App, mehrere hundert Megabyte).
+          for f in dist/*.exe dist/*.blockmap dist/latest*.yml dist/*.dmg dist/*.zip \
+                   dist/*.AppImage dist/*.deb; do
+            [ -e "$f" ] && cp "$f" upload/ || true
+          done
+          ls -la upload/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dozii-${{ matrix.name }}
+          path: upload/
+          if-no-files-found: error
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Flatten artifacts
+        run: |
+          mkdir -p dist
+          find artifacts -type f -exec cp {} dist/ \;
+          ls -la dist/
 
       - name: Extract release notes from CHANGELOG
         run: |
-          $md = Get-Content CHANGELOG.md -Raw
-          $sec = [regex]::Match($md, '(?s)## \[[\d\.]+\][^\n]*\n(.*?)(?=\n## \[|\z)').Groups[1].Value.Trim()
-          Set-Content -Path dist/notes.md -Value $sec -Encoding utf8
+          node -e "
+            const fs = require('fs');
+            const md = fs.readFileSync('CHANGELOG.md', 'utf8');
+            const m = md.match(/## \[[\d.]+\][^\n]*\n([\s\S]*?)(?=\n## \[|$)/);
+            fs.writeFileSync('dist/notes.md', (m ? m[1] : '').trim() + '\n');
+          "
+          cat dist/notes.md
 
       - name: Create GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          $tag = "${{ github.ref_name }}"
-          $title = "DoZii " + $tag.TrimStart('v')
-          gh release create $tag dist/DoZii-Setup.exe dist/DoZii-Setup.exe.blockmap dist/latest.yml --title $title --notes-file dist/notes.md
+          tag="${{ github.ref_name }}"
+          title="DoZii ${tag#v}"
+          # Windows-Installer ist Pflicht - fehlt er, ist der Build durchgefallen.
+          test -f dist/DoZii-Setup.exe
+          files=$(find dist -maxdepth 1 -type f ! -name notes.md | sort)
+          gh release create "$tag" $files --title "$title" --notes-file dist/notes.md

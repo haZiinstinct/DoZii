@@ -34,3 +34,9 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      # Der Eval-Harness braucht ein laufendes Ollama und wird deshalb in CI
+      # nicht ausgefuehrt. Hier wird nur geprueft, dass er sich sauber laedt und
+      # sich ohne Ollama selbst ueberspringt, statt rot zu werden.
+      - name: Eval-Harness laedt (ohne Ollama = uebersprungen)
+        run: npm run eval

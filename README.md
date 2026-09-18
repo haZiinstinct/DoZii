@@ -14,7 +14,7 @@ deinem Rechner. Keine Cloud, keine Telemetrie, kein CDN.</p>
 
 <p>
   <a href="https://github.com/haZiinstinct/DoZii/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/haZiinstinct/DoZii/actions/workflows/ci.yml/badge.svg" /></a>
-  <img alt="Version" src="https://img.shields.io/badge/version-1.2.0-00d4ff?labelColor=0a0a0f" />
+  <img alt="Version" src="https://img.shields.io/badge/version-1.3.0-00d4ff?labelColor=0a0a0f" />
   <img alt="License MIT" src="https://img.shields.io/badge/license-MIT-00d4ff?labelColor=0a0a0f" />
   <img alt="Electron 33" src="https://img.shields.io/badge/Electron-33-00d4ff?labelColor=0a0a0f&logo=electron&logoColor=white" />
   <img alt="React 19" src="https://img.shields.io/badge/React-19-00d4ff?labelColor=0a0a0f&logo=react&logoColor=white" />
@@ -28,9 +28,9 @@ deinem Rechner. Keine Cloud, keine Telemetrie, kein CDN.</p>
 
 ---
 
-DoZii liest deine Dokumente und erklärt sie dir — auf Wunsch als Rechtschreibprüfung,
-als Umformulierung, als Zusammenfassung, als **Arbeitszeugnis-Decoder** oder als freie
-Frage im Chat. Die KI läuft dabei über ein **lokales** [Ollama](https://ollama.com) auf
+DoZii liest deine Dokumente und erklärt sie dir — den Bescheid vom Amt in normaler
+Sprache, den Vertrag Klausel für Klausel, das Arbeitszeugnis mit Note. Auf Wunsch schreibt
+es dir auch gleich den Widerspruch. Die KI läuft dabei über ein **lokales** [Ollama](https://ollama.com) auf
 deinem eigenen Rechner: Sensible Unterlagen wie Verträge, Zeugnisse oder Amtsbescheide
 verlassen deinen Computer **nie**.
 
@@ -40,17 +40,38 @@ offline.
 
 ## ✨ Highlights
 
-- 📄 **5 Analyse-Modi** — Rechtschreibung & Grammatik, Formulierungen, Arbeitszeugnis-Decoder, Zusammenfassung, Freie Frage
-- 🕵️ **Arbeitszeugnis-Decoder** — der Star: **Dual-Grading** (Inhalts- *und* Struktur-Note), **80+ versteckte Codes** der deutschen Zeugnissprache, evidenzbasierte Befunde mit **2-Pass-Verifizierung** gegen Halluzinationen
-- 🌍 **9 Sprachen — UI *und* KI-Ausgabe** — Deutsch, English, Español, Français, Português, Русский, العربية (mit RTL-Layout), 日本語, 中文; die Analyse folgt deiner Oberflächensprache, nicht der Dokumentsprache
-- 📎 **Alle wichtigen Formate** — PDF, DOCX, XLSX und Bilder/Scans per **OCR** (Tesseract, Deutsch + Englisch, lokal gebündelt)
-- 💬 **Persistenter Chat pro Dokument** — nach der Analyse einfach weiter mit der KI diskutieren, Verlauf wird gespeichert
-- ⚡ **Auto-Ersteindruck** — beim Import erkennt DoZii, worum es geht, und schlägt den passenden Analyse-Modus vor
-- 🧠 **Hardware-aware** — erkennt CPU/RAM/GPU und empfiehlt ein passendes Modell (von `qwen2.5:3b` bis `mistral-small:24b`)
+- 🗣️ **Einfach erklärt** — Amtsdeutsch in normale Sprache: Was will man von dir? Was passiert,
+  wenn du nichts tust? Bis wann musst du reagieren? Mit Dringlichkeits-Ampel und
+  abhakbarer Schritt-für-Schritt-Liste
+- ⏰ **Fristen-Radar** — erkennt Fristen, rechnet das Enddatum **selbst** aus (§§ 187/188/193 BGB
+  inkl. Feiertagen und Werktagsregel — nicht die KI, sondern echter Code), zeigt einen
+  Countdown und exportiert in deinen Kalender
+- 🕵️ **Arbeitszeugnis-Decoder** — **Dual-Grading** (Inhalts- *und* Struktur-Note), **80+ versteckte
+  Codes** der deutschen Zeugnissprache, evidenzbasierte Befunde mit **2-Pass-Verifizierung**
+- 📜 **Vertrags-Check** — jede Klausel mit Zitat, Ampel und Klartext-Erklärung; dazu, was
+  üblich wäre und wie du es ändern lassen kannst
+- ✍️ **Antwort-Generator** — fertiger Briefentwurf: Widerspruch, Einspruch, Antwort auf eine
+  Mahnung, Zeugnis-Nachbesserung. Platzhalter füllst du direkt im Brief aus
+- 📖 **Behörden-Glossar** — 120+ Begriffe von „Bestandskraft" bis „Vorfälligkeitsentschädigung",
+  erklärt per Klick im Text. Komplett lokal, kein Modellaufruf
+- 📎 **Auch Scans** — gescannte PDFs werden automatisch per **OCR** gelesen; dazu PDF, DOCX,
+  XLSX, Bilder, `.txt`/`.md`/`.eml` — oder Text einfach **einfügen**
+- 🌍 **9 Sprachen — UI *und* KI-Ausgabe** — Deutsch, English, Español, Français, Português,
+  Русский, العربية (mit RTL-Layout), 日本語, 中文
+- 🔍 **Belege statt Behauptungen** — jeder Befund wird gegen das Original geprüft; was sich
+  nicht belegen lässt, steht getrennt und ist als unbelegt gekennzeichnet. Ein Klick
+  markiert die Fundstelle im Originaltext
+- ♿ **Für alle lesbar** — Vorlesen über die Systemstimmen, größere Schrift, höherer Kontrast
+- 🔒 **Schwärzen vor dem Export** — IBAN, Aktenzeichen, Telefonnummer und mehr werden
+  unkenntlich, bevor du die Analyse weitergibst
+- 📤 **Export** — PDF, Word-kompatibles RTF, Markdown, Text; Fristen als `.ics`
+- 🧠 **Hardware-aware** — erkennt CPU/RAM/GPU, empfiehlt ein Modell und nutzt automatisch das
+  volle Kontextfenster; zu lange Dokumente werden abschnittsweise analysiert statt gekürzt
 - 🔌 **Ollama-Lifecycle in der App** — Start/Stop/Status direkt per Button, kein Terminal nötig
-- 🔒 **100&nbsp;% offline** — strikte CSP blockiert alle externen Requests, keine Telemetrie; Fonts, Icons und OCR-Daten sind lokal gebündelt
-- 🔄 **Auto-Update** — optional über GitHub Releases, überträgt nur die Versionsnummer, abschaltbar
-- ✅ **Produktionsreif** — v1.2.0 mit Installer, Auto-Update, CI (Typecheck · Lint · Format · Tests · Build) auf jeden Push
+- 📏 **Messbar statt geraten** — `npm run eval` misst Notenabweichung, Belegquote und
+  Halluzinationsrate gegen ein festes Set von Beispieldokumenten
+- 🔐 **100 % offline** — strikte CSP, keine Telemetrie; Fonts, Icons und OCR-Daten sind lokal
+  gebündelt
 
 ## 🖼️ Screenshots
 
@@ -67,15 +88,21 @@ offline.
 </div>
 -->
 
-## 📋 Die 5 Analyse-Modi
+## 📋 Die Analyse-Modi
 
 | Modus | Was er macht |
 | --- | --- |
+| 🗣️ **Einfach erklärt** | Übersetzt Amtsdeutsch in normale Sprache: Worum geht es, was will man von dir, was passiert ohne Reaktion, was kannst du tun — mit Fristen und Dringlichkeits-Ampel |
+| 🕵️ **Arbeitszeugnis-Decoder** | Dekodiert 80+ versteckte Codes, vergibt eine Inhalts- **und** eine Struktur-Note und verifiziert jeden Befund in einem zweiten Durchgang |
+| 📜 **Vertrags-Check** | Prüft Klausel für Klausel mit Ampel: Laufzeit, automatische Verlängerung, Preisanpassung, Kaution, Wettbewerbsverbot, Gerichtsstand … |
 | ✍️ **Rechtschreibung & Grammatik** | Findet echte Fehler nach Duden-Standard und filtert bloße Stilmeinungen heraus — mit Zitat und Korrekturvorschlag |
 | 💬 **Formulierungen** | Verbessert Wortwahl und Satzfluss, ohne den Sinn zu verändern |
-| 🕵️ **Arbeitszeugnis-Decoder** | Dekodiert 80+ versteckte Codes, vergibt eine Inhalts- **und** eine Struktur-Note und verifiziert jeden Befund in einem zweiten Durchgang |
-| 📝 **Zusammenfassung** | Bringt lange Dokumente auf ihre Kernaussagen |
+| 📝 **Zusammenfassung** | Bringt lange Dokumente auf ihre Kernaussagen, mit Eckdaten und Handlungsbedarf |
 | ❓ **Freie Frage** | Stell eine beliebige Frage zum Dokument — und chatte anschließend weiter |
+| 📨 **Antwort schreiben** | Kein eigener Modus, sondern ein Knopf an jedem Ergebnis: macht daraus einen fertigen Briefentwurf |
+
+> Du musst dich nicht entscheiden: DoZii erkennt beim Import, worum es geht, und startet
+> den passenden Modus von selbst. Abschaltbar in den Einstellungen.
 
 ## 🚀 Loslegen
 
@@ -93,13 +120,15 @@ offline.
 
 **Voraussetzungen**
 
-- Windows 10/11 (64-bit)
+- Windows 10/11 (64-bit) — es gibt auch eine **Portable-Version** ohne Installation.
+  macOS- und Linux-Builds (dmg/zip, AppImage/deb) werden mitgebaut, sind aber nicht
+  signiert und bekommen keine automatischen Updates
 - [Ollama](https://ollama.com/download) installiert (DoZii hilft beim Einrichten)
 - Mind. 8&nbsp;GB RAM; 16&nbsp;GB+ oder eine GPU mit 8&nbsp;GB+ VRAM für stärkere Modelle
 
 ## 🔒 Datenschutz & Datenablage
 
-- Alle Dokumente, Analysen, Chats und Einstellungen liegen lokal unter `%APPDATA%\DoZii`
+- Alle Dokumente, Analysen, Fristen, Chats und Einstellungen liegen lokal unter `%APPDATA%\DoZii`
 - Logs (14 Tage, **ohne** Dokumentinhalte) ebenfalls dort unter `logs\`
 - Einziger Netzwerkzugriff neben Ollama (`localhost:11434`): der **optionale** Update-Check gegen GitHub — in den Einstellungen abschaltbar
 - Bei der Deinstallation fragt der Uninstaller, ob deine Nutzerdaten mitgelöscht werden sollen
@@ -107,8 +136,12 @@ offline.
 ## 🛠️ Entwicklung
 
 Electron 33 · electron-vite · React 19 · TypeScript (strict) · Tailwind CSS v4 ·
-better-sqlite3 + Drizzle ORM · Ollama · unpdf / mammoth / xlsx / tesseract.js.
+better-sqlite3 + Drizzle ORM · Ollama · unpdf / mammoth / xlsx / tesseract.js / sharp.
 Qualität gesichert durch CI (Typecheck · Lint · Format · Tests · Build) auf jeden Push.
+
+Alles, worauf sich ein Nutzer verlässt — Fristberechnung, Schwärzen, Belegzuordnung,
+Textaufteilung, Glossar-Treffer — liegt als reine, getestete Funktion in `src/shared/`
+und kommt **nicht** vom Sprachmodell.
 
 ```bash
 npm install
@@ -116,9 +149,17 @@ npm run dev          # Dev-Server mit Hot-Reload (Ollama muss laufen)
 npm run typecheck    # TypeScript (main + renderer)
 npm run lint         # ESLint
 npm test             # Vitest (nutzt node:sqlite, benötigt Node >= 24)
+npm run eval         # Eval-Harness gegen ein laufendes Ollama (ohne Ollama: übersprungen)
 npm run build        # Production-Build
-npm run build:win    # Windows-Installer (.exe)
+npm run build:win    # Windows-Installer (.exe) + Portable
+npm run build:mac    # macOS (dmg/zip, unsigniert)
+npm run build:linux  # Linux (AppImage/deb)
 ```
+
+**Qualität messen statt hoffen:** `npm run eval` schickt feste Beispieldokumente (erfunden,
+keine echten Daten) durch die echten Prompts und Parser und rechnet aus, wie weit das
+Ergebnis von der erwarteten Antwort abweicht — Notenabweichung, Belegquote,
+Halluzinationsrate, Fristen-Genauigkeit. Details in [`eval/README.md`](eval/README.md).
 
 Voraussetzungen: Node.js >= 24, laufendes Ollama mit mindestens einem Modell. Der
 Release-Prozess ist in [`docs/RELEASE_CHECKLIST.md`](docs/RELEASE_CHECKLIST.md)
@@ -130,10 +171,23 @@ dokumentiert; der Installer heißt bewusst versionslos `DoZii-Setup.exe`, damit 
 
 Ehrlich ist besser als überverkauft:
 
-- **Windows-only** — aktuell nur ein NSIS-Installer für Windows 10/11, kein macOS/Linux
-- **Installer nicht signiert** — SmartScreen warnt beim ersten Start (siehe oben); kein Sicherheitsproblem, aber eine Hürde
-- **Ollama ist separat** — muss einmal installiert und ein Modell geladen werden (die App hilft dabei)
-- **i18n KI-gestützt** — die 9 Übersetzungen sind maschinell erstellt; Verbesserungen von Muttersprachlern sind als PR willkommen
+- **Keine Rechtsberatung** — DoZii erklärt und entwirft, es entscheidet nicht. Fristen und
+  Beträge gehören immer am Originaldokument geprüft; bei echtem Ärger hilft eine
+  Beratungsstelle, ein Mieterverein oder ein Beratungshilfeschein beim Amtsgericht
+- **Die KI kann irren** — deshalb wird jeder Befund gegen den Originaltext geprüft und
+  unbelegtes getrennt ausgewiesen. Die Fristberechnung läuft bewusst im Code, nicht im Modell
+- **Texterkennung verwechselt Ziffern** — bei gescannten Dokumenten weist DoZii darauf hin;
+  Beträge und Aktenzeichen bitte am Original gegenlesen
+- **Installer nicht signiert** — SmartScreen warnt beim ersten Start (siehe oben); kein
+  Sicherheitsproblem, aber eine Hürde. macOS-Builds brauchen beim ersten Start
+  Rechtsklick → Öffnen
+- **Ollama ist separat** — muss einmal installiert und ein Modell geladen werden (die App
+  hilft dabei)
+- **Kleine Modelle, schwächere Ergebnisse** — unter ~7B werden Zeugnis-Decoder und
+  Vertrags-Check ungenau. DoZii warnt, blockiert aber nicht
+- **i18n KI-gestützt** — die 9 Übersetzungen sind maschinell erstellt; Verbesserungen von
+  Muttersprachlern sind als PR willkommen. Arbeitszeugnis-Decoder und Briefe bleiben
+  deutsch — beides stammt aus dem deutschen Recht
 
 ## 🤝 Mitmachen
 
