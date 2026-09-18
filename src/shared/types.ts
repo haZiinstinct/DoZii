@@ -119,6 +119,12 @@ export interface DoziiDocument {
   detectedLanguage: string | null
   extractedText: string
   thumbnailPath: string | null
+  /**
+   * Text stammt aus der Texterkennung (Scan oder Foto). Die UI warnt dann,
+   * dass Zahlen und Namen am Original geprueft werden sollten - OCR
+   * verwechselt Ziffern, und bei einem Bescheid haengt daran viel.
+   */
+  ocrUsed: boolean
   createdAt: string
   updatedAt: string
 }
@@ -137,6 +143,7 @@ export interface DocumentSummary {
   pageCount: number | null
   wordCount: number | null
   detectedLanguage: string | null
+  ocrUsed: boolean
   createdAt: string
   updatedAt: string
   /** Erste ~200 Zeichen des extrahierten Textes, fuer die Vorschau in der Liste. */

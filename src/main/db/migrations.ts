@@ -94,6 +94,13 @@ const DEADLINES_SQL = `
   CREATE INDEX IF NOT EXISTS idx_deadlines_due ON deadlines(due_date);
 `
 
+// v3: Merkt sich, ob der Text per Texterkennung entstanden ist. Wichtig fuer
+// die Warnung in der UI - OCR verwechselt Ziffern, und bei einem Bescheid
+// haengt an einer Ziffer viel.
+const OCR_FLAG_SQL = `
+  ALTER TABLE documents ADD COLUMN ocr_used INTEGER NOT NULL DEFAULT 0;
+`
+
 export const MIGRATIONS: Migration[] = [
   {
     version: 1,
@@ -105,6 +112,12 @@ export const MIGRATIONS: Migration[] = [
     version: 2,
     up: (db) => {
       db.exec(DEADLINES_SQL)
+    }
+  },
+  {
+    version: 3,
+    up: (db) => {
+      db.exec(OCR_FLAG_SQL)
     }
   }
 ]

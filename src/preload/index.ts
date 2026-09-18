@@ -74,7 +74,9 @@ export const api = {
       ipcRenderer.invoke('documents:search', query),
     getById: (id: string): Promise<DoziiDocument | undefined> =>
       ipcRenderer.invoke('documents:getById', id),
-    delete: (id: string): Promise<void> => ipcRenderer.invoke('documents:delete', id)
+    delete: (id: string): Promise<void> => ipcRenderer.invoke('documents:delete', id),
+    /** Fortschritt der Texterkennung waehrend eines Imports (nur bei Scans). */
+    onImportProgress: subscribe<{ page: number; total: number }>('documents:importProgress')
   },
 
   // Analysis
@@ -156,7 +158,9 @@ export const api = {
       ipcRenderer.invoke('deadlines:scan', documentId),
     /** Fristen als Kalenderdatei speichern. documentId weglassen = alle offenen. */
     exportIcs: (documentId?: string): Promise<ExportResult> =>
-      ipcRenderer.invoke('deadlines:exportIcs', documentId)
+      ipcRenderer.invoke('deadlines:exportIcs', documentId),
+    /** Feuert, wenn die Hintergrundsuche nach einer Analyse Fristen gefunden hat. */
+    onUpdated: subscribe<{ documentId: string; count: number }>('deadlines:updated')
   },
 
   // Export

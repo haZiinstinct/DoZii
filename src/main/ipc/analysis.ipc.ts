@@ -9,7 +9,7 @@ import {
 import { logger } from '../services/logger.service'
 import { friendlyError } from './_error-mapping'
 import { MAX_USER_QUESTION_CHARS } from '../config/constants'
-import { isValidAnalysisMode, isValidId } from './_validators'
+import { isValidAnalysisMode, isValidId, sanitizeAnalysisExtra } from './_validators'
 
 // Re-export for backwards compatibility (other IPC modules import these)
 export function setSelectedModel(model: string): void {
@@ -23,7 +23,7 @@ export function getSelectedModel(): string {
 export function registerAnalysisIpc(): void {
   ipcMain.handle(
     'analysis:run',
-    async (event, docId: string, mode: string, userQuestion?: string) => {
+    async (event, docId: string, mode: string, userQuestion?: string, rawExtra?: unknown) => {
       const win = BrowserWindow.fromWebContents(event.sender)
       if (!win) throw new Error('No window found')
 
@@ -41,6 +41,11 @@ export function registerAnalysisIpc(): void {
           return null
         }
       }
+      const extra = sanitizeAnalysisExtra(rawExtra, MAX_USER_QUESTION_CHARS)
+      if (mode === 'letter' && !extra.letterKind) {
+        win.webContents.send('analysis:error', 'Es wurde keine Briefart ausgewählt.')
+        return null
+      }
 
       // Resolve active model with precise error messages
       const resolution = await resolveActiveModel()
@@ -57,7 +62,7 @@ export function registerAnalysisIpc(): void {
       logger.info('analysis.ipc', 'Running analysis', { docId, mode, model })
 
       try {
-        const result = await runAnalysis(docId, mode, win, model, userQuestion)
+        const result = await runAnalysis(docId, mode, win, model, userQuestion, extra)
         logger.info('analysis.ipc', 'Analysis completed', {
           docId,
           mode,

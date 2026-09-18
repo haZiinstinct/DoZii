@@ -45,10 +45,11 @@ export const CTX_TOKENS_PER_FREE_GB = 4096
 
 // --- Gescannte PDFs / OCR-Fallback ---
 /**
- * Unter so vielen Zeichen pro Seite gilt ein PDF als Scan ohne Textebene -
- * dann greift der OCR-Fallback. Reine Textseiten haben 1500-3000 Zeichen.
+ * Unter so vielen Zeichen pro Seite gilt ein PDF als Scan ohne Textebene.
+ * Der Wert lebt in @shared/scan-detect (dort wird er auch getestet) und wird
+ * hier nur re-exportiert, damit es genau eine Quelle gibt.
  */
-export const SCANNED_PDF_MIN_CHARS_PER_PAGE = 120
+export { SCANNED_PDF_MIN_CHARS_PER_PAGE } from '@shared/scan-detect'
 /** Sicherheitsnetz: so viele Seiten werden maximal per OCR nachgezogen. */
 export const OCR_MAX_PAGES = 40
 /** Kleinere Bilder als das sind Logos/Signaturen, kein Seitenscan. */

@@ -135,6 +135,42 @@ export async function showModel(model: string): Promise<unknown> {
   return ollama.show({ model })
 }
 
+/**
+ * Ein Durchlauf ohne Streaming - fuer kurze Hilfs-Aufrufe (Fristen-Extraktion,
+ * Chunk-Zusammenfassung), deren Zwischenergebnis der Nutzer nicht sehen soll.
+ * Wirft bei Fehlern; der Aufrufer entscheidet, ob das fatal ist.
+ */
+export async function chatOnce(options: {
+  model: string
+  system: string
+  prompt: string
+  temperature?: number
+  numCtx?: number
+}): Promise<string> {
+  const ollama = getClient()
+  const modelOptions: Record<string, number> = {}
+  if (options.temperature !== undefined) modelOptions.temperature = options.temperature
+  if (options.numCtx !== undefined) modelOptions.num_ctx = options.numCtx
+
+  incrementActiveStreams()
+  try {
+    const response = await withTransientRetry('chatOnce', () =>
+      ollama.chat({
+        model: options.model,
+        messages: [
+          { role: 'system', content: options.system },
+          { role: 'user', content: options.prompt }
+        ],
+        stream: false,
+        options: modelOptions
+      })
+    )
+    return response.message?.content ?? ''
+  } finally {
+    decrementActiveStreams()
+  }
+}
+
 export async function listModels(): Promise<{ name: string; size: number; modifiedAt: string }[]> {
   try {
     const ollama = getClient()

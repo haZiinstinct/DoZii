@@ -60,7 +60,7 @@ export function registerDocumentsIpc(): void {
     }
   })
 
-  ipcMain.handle('documents:import', async (_event, filePath: string) => {
+  ipcMain.handle('documents:import', async (event, filePath: string) => {
     if (typeof filePath !== 'string' || filePath.length === 0) {
       throw new Error('Ungültiger Dateipfad')
     }
@@ -73,8 +73,16 @@ export function registerDocumentsIpc(): void {
     }
 
     logger.info('documents.ipc', 'Importing document', { filePath: normalizedPath })
+    // Bei gescannten PDFs laeuft OCR ueber viele Seiten - der Renderer bekommt
+    // Zwischenstaende, damit der Import nicht wie ein Haenger aussieht.
+    const win = BrowserWindow.fromWebContents(event.sender)
+    const onProgress = (page: number, total: number): void => {
+      if (win && !win.isDestroyed()) {
+        win.webContents.send('documents:importProgress', { page, total })
+      }
+    }
     try {
-      const doc = await importDocument(normalizedPath)
+      const doc = await importDocument(normalizedPath, onProgress)
 
       logger.info('documents.ipc', 'Document imported', {
         id: doc.id,

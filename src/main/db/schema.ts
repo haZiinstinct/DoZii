@@ -11,6 +11,8 @@ export const documents = sqliteTable('documents', {
   detectedLanguage: text('detected_language'),
   extractedText: text('extracted_text').notNull().default(''),
   thumbnailPath: text('thumbnail_path'),
+  // 0/1 - SQLite kennt kein boolean. true = Text kam aus der Texterkennung.
+  ocrUsed: integer('ocr_used').notNull().default(0),
   createdAt: text('created_at').notNull(),
   updatedAt: text('updated_at').notNull()
 })

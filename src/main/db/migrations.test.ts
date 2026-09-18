@@ -104,7 +104,7 @@ describe('runMigrations', () => {
     db.close()
   })
 
-  it('v2 laeuft auch auf einer DB, die schon auf v1 stand', () => {
+  it('spaetere Migrationen laufen auch auf einer DB, die schon auf v1 stand', () => {
     const db = new DatabaseSync(':memory:')
     db.exec('PRAGMA user_version = 1')
     // Baseline von Hand, wie sie v1 hinterlassen haette
@@ -113,8 +113,26 @@ describe('runMigrations', () => {
     const result = runMigrations(db)
 
     expect(result.from).toBe(1)
-    expect(result.to).toBe(2)
+    expect(result.to).toBe(MIGRATIONS[MIGRATIONS.length - 1].version)
     expect(tableNames(db)).toContain('deadlines')
+    db.close()
+  })
+
+  it('v3: Dokumente merken sich, ob der Text aus OCR stammt', () => {
+    const db = createLegacyDb()
+    runMigrations(db)
+
+    const columns = db
+      .prepare('PRAGMA table_info(documents)')
+      .all()
+      .map((r) => (r as { name: string }).name)
+    expect(columns).toContain('ocr_used')
+
+    // Bestandsdokumente bekommen den Default 0 (kein OCR).
+    const row = db.prepare("SELECT ocr_used FROM documents WHERE id = 'doc-1'").get() as {
+      ocr_used: number
+    }
+    expect(row.ocr_used).toBe(0)
     db.close()
   })
 

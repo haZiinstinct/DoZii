@@ -10,6 +10,7 @@ import { registerAnalysisIpc } from './ipc/analysis.ipc'
 import { registerChatIpc } from './ipc/chat.ipc'
 import { registerLogsIpc } from './ipc/logs.ipc'
 import { registerExporterIpc } from './ipc/exporter.ipc'
+import { registerDeadlinesIpc } from './ipc/deadlines.ipc'
 import { registerSystemIpc } from './ipc/system.ipc'
 import { registerUpdateIpc } from './ipc/update.ipc'
 import { initUpdater } from './services/updater.service'
@@ -144,6 +145,7 @@ app.whenReady().then(() => {
   registerChatIpc()
   registerLogsIpc()
   registerExporterIpc()
+  registerDeadlinesIpc()
   registerSystemIpc()
   registerUpdateIpc()
   initUpdater()
