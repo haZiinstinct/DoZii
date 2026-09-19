@@ -83,9 +83,21 @@ export function determineProfile(input: ProfileInput, sizes: ProfileModelSizes):
     // Die Karte ist zu klein fuer jedes Modell - dann entscheidet der RAM.
   }
 
-  // Reiner CPU-Betrieb. Mehr Arbeitsspeicher macht ein grosses Modell nicht
-  // schnell, nur ladbar - deshalb hoechstens 'medium'.
-  if (ramGb >= 32) return 'medium'
+  /*
+   * Reiner CPU-Betrieb. Mehr Arbeitsspeicher macht ein grosses Modell nicht
+   * schnell, nur ladbar - deshalb ist hier bei 'light' Schluss.
+   *
+   * Die Grenze ist gemessen, nicht geschaetzt. Auf derselben Maschine:
+   *
+   *   granite4.1:3b   CPU  11,9 Token/s Ausgabe,  113 Token/s Prompt
+   *   granite4.1:8b   CPU   5,1 Token/s Ausgabe,   49 Token/s Prompt
+   *
+   * Ein Arbeitszeugnis sind rund 4000 Token hinein und - mit dem zweiten
+   * Pruefdurchlauf - gut 5000 hinaus. Das 3B braucht dafuer auf der CPU etwa
+   * eine Minute, das 8B rund neunzehn; ein Vertrag entsprechend eine halbe
+   * Stunde. Vorher bekam ein Rechner mit 32 GB RAM und ohne Grafikkarte
+   * genau dieses 8B empfohlen.
+   */
   if (ramGb >= 8) return 'light'
   return 'minimal'
 }

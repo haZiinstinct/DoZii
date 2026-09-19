@@ -15,7 +15,7 @@ describe('determineProfile mit GPU', () => {
 
   it('eine Karte, die kein Modell traegt, faellt auf den RAM zurueck', () => {
     // 2,5 GB VRAM reichen samt Puffer fuer kein einziges Modell.
-    expect(determineProfile({ ramGb: 32, vramGb: 2.5 }, SIZES)).toBe('medium')
+    expect(determineProfile({ ramGb: 32, vramGb: 2.5 }, SIZES)).toBe('light')
     expect(determineProfile({ ramGb: 6, vramGb: 2.5 }, SIZES)).toBe('minimal')
   })
 
@@ -46,17 +46,19 @@ describe('determineProfile mit GPU', () => {
 
   it('eine zu kleine GPU faellt auf die RAM-Einstufung zurueck', () => {
     // 1 GB VRAM traegt nicht einmal das kleinste Modell samt Puffer.
-    expect(determineProfile({ ramGb: 32, vramGb: 1 }, SIZES)).toBe('medium')
+    expect(determineProfile({ ramGb: 32, vramGb: 1 }, SIZES)).toBe('light')
     expect(determineProfile({ ramGb: 8, vramGb: 1 }, SIZES)).toBe('light')
   })
 })
 
 describe('determineProfile ohne GPU', () => {
-  it('empfiehlt auch bei viel RAM hoechstens die mittlere Stufe', () => {
-    // 64 GB RAM ohne Grafikkarte ergaben frueher "power" und damit ein
-    // 70B-Modell, das auf der CPU unbenutzbar ist.
-    expect(determineProfile({ ramGb: 64, vramGb: 0 }, SIZES)).toBe('medium')
-    expect(determineProfile({ ramGb: 128, vramGb: 0 }, SIZES)).toBe('medium')
+  it('empfiehlt auch bei viel RAM hoechstens die leichte Stufe', () => {
+    // Gemessen auf derselben Maschine: das 8B schafft auf der CPU 5,1 Token
+    // pro Sekunde, das 3B 11,9. Ein Arbeitszeugnis dauert damit neunzehn
+    // Minuten statt einer. Viel RAM macht ein grosses Modell ladbar, nicht
+    // benutzbar - vorher bekam genau dieser Rechner das 8B empfohlen.
+    expect(determineProfile({ ramGb: 64, vramGb: 0 }, SIZES)).toBe('light')
+    expect(determineProfile({ ramGb: 128, vramGb: 0 }, SIZES)).toBe('light')
   })
 
   it('stuft kleinere Rechner nach RAM ein', () => {
@@ -98,7 +100,7 @@ describe('usableVramGb', () => {
     // "16 GB VRAM" - und der Buero-Laptop bekam das groesste Modell empfohlen.
     const igpu = { name: 'Intel(R) Iris(R) Xe Graphics', vramMb: 16384, vendor: 'intel' } as const
     expect(usableVramGb(igpu)).toBe(0)
-    expect(determineProfile({ ramGb: 32, vramGb: usableVramGb(igpu) }, SIZES)).toBe('medium')
+    expect(determineProfile({ ramGb: 32, vramGb: usableVramGb(igpu) }, SIZES)).toBe('light')
   })
 
   it('zaehlt unerkannte Adapter nicht mit', () => {
