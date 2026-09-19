@@ -1,4 +1,5 @@
 import os from 'os'
+import path from 'path'
 import { execFile } from 'child_process'
 import { promisify } from 'util'
 import type { GpuInfo, HardwareInfo } from '@shared/types'
@@ -14,15 +15,20 @@ const execFileAsync = promisify(execFile)
  * nur im Programmverzeichnis. Ohne diesen zweiten Pfad faellt die Erkennung
  * auf die Registry zurueck, die den Hersteller nur ueber den Namen raet.
  */
-const NVIDIA_SMI_PATHS = [
-  'nvidia-smi',
-  'C:\Windows\System32\nvidia-smi.exe',
-  'C:\Program Files\NVIDIA Corporation\NVSMI\nvidia-smi.exe'
-]
+function nvidiaSmiCandidates(): string[] {
+  const paths = ['nvidia-smi']
+  if (process.platform !== 'win32') return paths
+  const systemRoot = process.env.SystemRoot
+  const programFiles = process.env.ProgramFiles
+  if (systemRoot) paths.push(path.join(systemRoot, 'System32', 'nvidia-smi.exe'))
+  if (programFiles) {
+    paths.push(path.join(programFiles, 'NVIDIA Corporation', 'NVSMI', 'nvidia-smi.exe'))
+  }
+  return paths
+}
 
 async function runNvidiaSmi(): Promise<string | null> {
-  for (const bin of NVIDIA_SMI_PATHS) {
-    if (bin !== 'nvidia-smi' && process.platform !== 'win32') continue
+  for (const bin of nvidiaSmiCandidates()) {
     try {
       const { stdout } = await execFileAsync(
         bin,
