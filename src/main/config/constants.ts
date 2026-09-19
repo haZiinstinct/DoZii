@@ -9,8 +9,26 @@
 // --- Ollama / Kontextfenster ---
 /** num_ctx fuer alle Analyse-Modi. Ollama-Default (2048) wuerde lange Dokumente still abschneiden. */
 export const DEFAULT_NUM_CTX = 8192
-/** Reserve fuer die Modell-Antwort innerhalb von num_ctx (Prompt-Budget = num_ctx - reserve). */
+/**
+ * Reserve fuer die Modell-Antwort innerhalb von num_ctx
+ * (Prompt-Budget = num_ctx - reserve).
+ *
+ * Der Grundwert gilt fuer die Modi, die Fliesstext liefern. Die Modi mit
+ * grossem JSON brauchen ein Vielfaches - siehe responseReserveTokens().
+ */
 export const RESPONSE_RESERVE_TOKENS = 1500
+
+/**
+ * Antwort-Reserve fuer die Modi, die ein vollstaendiges JSON-Objekt bauen.
+ *
+ * Gemessen an echten Durchlaeufen: ein Arbeitszeugnis erzeugt rund 5000 bis
+ * 6000 Ausgabe-Tokens (Ollama zaehlte bei qwen3:4b 5885, granite4.1:8b liegt
+ * aus Laufzeit mal Durchsatz bei etwa 5200). Mit der alten Reserve von 1500
+ * passte die Antwort nicht ins Fenster: Ollama schiebt dann waehrend des
+ * Schreibens den Anfang hinaus - also den System-Prompt - und was hinten
+ * herauskommt, ist abgeschnittenes JSON, das der Parser verwirft.
+ */
+export const JSON_RESPONSE_RESERVE_TOKENS = 6000
 
 // --- Token-Schaetzung ---
 /** Konservative Schaetzung Zeichen/Token fuer deutschen Text (englisch ~4). */

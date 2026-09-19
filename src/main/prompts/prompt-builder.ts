@@ -23,7 +23,11 @@ import { buildPlainLanguagePrompt } from './plain-language.prompt'
 import { buildContractCheckPrompt } from './contract-check.prompt'
 import { buildLetterPrompt } from './letter.prompt'
 import { estimateTokens, fitTextToTokenBudget } from './token-budget'
-import { DEFAULT_NUM_CTX, RESPONSE_RESERVE_TOKENS } from '../config/constants'
+import {
+  DEFAULT_NUM_CTX,
+  JSON_RESPONSE_RESERVE_TOKENS,
+  RESPONSE_RESERVE_TOKENS
+} from '../config/constants'
 
 // Per-mode Ollama parameters. temperature ist modus-spezifisch
 // (niedrig = deterministisch/treu). num_ctx kommt seit v1.3 aus dem Modell
@@ -114,14 +118,14 @@ export function buildPrompt(
   // den Anfang - sprich System-Prompt + Dokumentkopf - verwirft).
   // Der Aufrufer (analysis.service) prueft vorher, ob stattdessen Chunking
   // sinnvoller ist; hier bleibt das Kuerzen als letzte Absicherung.
-  const totalTokens =
-    estimateTokens(pair.system) + estimateTokens(pair.user) + RESPONSE_RESERVE_TOKENS
+  const reserve = responseReserveTokens(mode)
+  const totalTokens = estimateTokens(pair.system) + estimateTokens(pair.user) + reserve
   if (totalTokens > numCtx) {
     // Untergrenze: ohne sie kann das Budget bei grossem Prompt-Geruest null
     // oder negativ werden - das Modell bekaeme dann NUR die Anweisungen und
     // gar kein Dokument und wuerde munter etwas erfinden. Lieber ein kurzer
     // Ausschnitt plus der sichtbare Kuerzungs-Hinweis.
-    const rawBudget = numCtx - RESPONSE_RESERVE_TOKENS - templateOverheadTokens(pair, text)
+    const rawBudget = numCtx - reserve - templateOverheadTokens(pair, text)
     const textBudget = Math.max(MIN_DOCUMENT_TOKENS, rawBudget)
     const fitted = fitTextToTokenBudget(text, textBudget)
     pair = buildPair(mode, fitted.text, language, options)
@@ -129,6 +133,19 @@ export function buildPrompt(
   }
 
   return { ...pair, temperature: params.temperature, numCtx, truncated }
+}
+
+/**
+ * Wie viel Platz die Antwort dieses Modus braucht.
+ *
+ * Zeugnis-Decoder und Vertrags-Check bauen ein vollstaendiges JSON-Objekt mit
+ * Abschnitten, Zitaten und Begruendungen - gemessen 5000 bis 6000 Tokens. Die
+ * uebrigen Modi liefern Fliesstext und kommen mit deutlich weniger aus.
+ */
+export function responseReserveTokens(mode: AnalysisMode): number {
+  return mode === 'arbeitszeugnis' || mode === 'contract'
+    ? JSON_RESPONSE_RESERVE_TOKENS
+    : RESPONSE_RESERVE_TOKENS
 }
 
 /** Tokens, die Prompt-Geruest und Zusatzangaben belegen - also alles ausser dem Dokument. */
@@ -167,6 +184,6 @@ export function documentTokenBudget(
 ): number {
   return Math.max(
     0,
-    numCtx - RESPONSE_RESERVE_TOKENS - promptOverheadTokens(mode, language, options)
+    numCtx - responseReserveTokens(mode) - promptOverheadTokens(mode, language, options)
   )
 }

@@ -36,6 +36,19 @@ export interface NumCtxInput {
   neededTokens: number
   freeRamGb: number
   autoEnabled: boolean
+  /**
+   * Was der Modus mindestens braucht, um ueberhaupt etwas zu liefern:
+   * Prompt-Geruest plus Antwort-Reserve plus ein Mindestmass an Dokument.
+   *
+   * Gilt AUCH bei abgeschalteter Automatik. Der Zeugnis-Prompt misst allein
+   * rund 4300 Tokens, die Antwort braucht gemessen 5000 bis 6000 - bei 8192
+   * bleibt fuer das Dokument nichts uebrig, und das Modell benotet einen
+   * Ausschnitt von drei Zeilen. Der Schalter entscheidet, ob das Fenster fuer
+   * lange Dokumente WAECHST, nicht ob ein Modus arbeiten kann.
+   *
+   * Das Modell-Limit bleibt die harte Grenze - mehr als es kann, geht nicht.
+   */
+  minimumTokens?: number
 }
 
 export interface NumCtxDecision {
@@ -71,19 +84,35 @@ function safeNonNegative(value: number): number {
 export function pickNumCtx(input: NumCtxInput): NumCtxDecision {
   const { modelContextLimit, neededTokens, freeRamGb, autoEnabled } = input
   const needed = safeNonNegative(neededTokens)
+  const limit = modelContextLimit === null ? null : safeNonNegative(modelContextLimit)
+
+  /** Der Festwert, angehoben auf das vom Modus geforderte Minimum. */
+  const floor = (): { numCtx: number; note: string } => {
+    const wanted = ladderStepFor(Math.max(MIN_NUM_CTX, safeNonNegative(input.minimumTokens ?? 0)))
+    if (wanted <= MIN_NUM_CTX) return { numCtx: MIN_NUM_CTX, note: '' }
+    // Mehr als das Modell kann, geht nicht.
+    const allowed = limit === null ? wanted : Math.min(wanted, ladderStepBelow(limit))
+    const numCtx = Math.max(MIN_NUM_CTX, allowed)
+    return {
+      numCtx,
+      note: numCtx > MIN_NUM_CTX ? `; Modus braucht mindestens ${numCtx}` : ''
+    }
+  }
 
   if (!autoEnabled) {
+    const { numCtx, note } = floor()
     return {
-      numCtx: MIN_NUM_CTX,
-      capped: needed > MIN_NUM_CTX,
-      reason: `Automatik aus - fester Kontext ${MIN_NUM_CTX}`
+      numCtx,
+      capped: needed > numCtx,
+      reason: `Automatik aus - fester Kontext ${numCtx}${note}`
     }
   }
   if (modelContextLimit === null) {
+    const { numCtx, note } = floor()
     return {
-      numCtx: MIN_NUM_CTX,
-      capped: needed > MIN_NUM_CTX,
-      reason: `Kontextfenster des Modells unbekannt - Rueckfall auf ${MIN_NUM_CTX}`
+      numCtx,
+      capped: needed > numCtx,
+      reason: `Kontextfenster des Modells unbekannt - Rueckfall auf ${numCtx}${note}`
     }
   }
 
@@ -100,7 +129,7 @@ export function pickNumCtx(input: NumCtxInput): NumCtxDecision {
   ]
   const binding = bounds.reduce((min, b) => (b.value < min.value ? b : min))
 
-  const numCtx = ladderStepBelow(binding.value)
+  const numCtx = Math.max(ladderStepBelow(binding.value), floor().numCtx)
   const capped = numCtx < needed
 
   let reason: string

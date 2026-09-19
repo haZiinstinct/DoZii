@@ -11,6 +11,7 @@ import {
   buildPrompt,
   documentTokenBudget,
   promptOverheadTokens,
+  responseReserveTokens,
   type AnalysisMode,
   type BuildPromptOptions
 } from '../prompts/prompt-builder'
@@ -74,12 +75,17 @@ function isHeavyMode(mode: AnalysisMode): boolean {
  * Ermittelt das Kontextfenster fuer diesen Lauf. Frueher fest 8192 - moderne
  * Modelle koennen ein Vielfaches, und genau davon leben lange Vertraege.
  */
-async function resolveNumCtx(modelName: string, neededTokens: number): Promise<number> {
+async function resolveNumCtx(
+  modelName: string,
+  neededTokens: number,
+  minimumTokens: number
+): Promise<number> {
   const settings = getSettings()
   const modelContextLimit = await getModelContextLimit(modelName, showModel)
   const decision = pickNumCtx({
     modelContextLimit,
     neededTokens,
+    minimumTokens,
     freeRamGb: freemem() / 1024 ** 3,
     autoEnabled: settings.autoContextWindow
   })
@@ -93,6 +99,13 @@ async function resolveNumCtx(modelName: string, neededTokens: number): Promise<n
   })
   return decision.numCtx
 }
+
+/**
+ * Wie viel Dokument mindestens ins Fenster passen muss, damit eine Analyse
+ * sinnvoll ist. Rund zwei Seiten - darunter bewertet das Modell einen
+ * Ausschnitt und nennt das Ergebnis trotzdem eine Note.
+ */
+const MIN_DOCUMENT_TOKENS_FOR_MODE = 1500
 
 /** Grober Aufschlag fuer das Geruest des Zusammenfuehren-Prompts. */
 const REDUCE_OVERHEAD_TOKENS = 900
@@ -318,8 +331,12 @@ export async function runAnalysis(
   // sodass der gemessene Bedarf nie darueber lag und die Automatik das Fenster
   // nie vergroessert hat. Die Funktion war damit wirkungslos.
   const promptOverhead = promptOverheadTokens(mode, language, options)
-  const neededTokens = promptOverhead + estimateTokens(doc.extractedText) + RESPONSE_RESERVE_TOKENS
-  const numCtx = await resolveNumCtx(modelName, neededTokens)
+  const neededTokens =
+    promptOverhead + estimateTokens(doc.extractedText) + responseReserveTokens(mode)
+  // Ohne dieses Minimum bleibt beim Zeugnis-Modus kein Platz fuer das
+  // Dokument - das Modell benotet dann einen Dreizeiler.
+  const minimumTokens = promptOverhead + responseReserveTokens(mode) + MIN_DOCUMENT_TOKENS_FOR_MODE
+  const numCtx = await resolveNumCtx(modelName, neededTokens, minimumTokens)
 
   // Small model on heavy mode: warn but don't block. User may have chosen it intentionally.
   if (isHeavyMode(mode) && !isHeavyModeCapable(modelName)) {

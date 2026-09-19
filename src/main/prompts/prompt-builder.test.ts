@@ -62,11 +62,19 @@ describe('buildPrompt', () => {
   })
 
   it('documentTokenBudget laesst Platz fuer Prompt-Geruest und Antwort', () => {
-    const budget = documentTokenBudget('arbeitszeugnis', 'de', 8192)
+    // Bei 16k passt das Zeugnis-Geruest (~4300 Tokens), die gemessene
+    // Antwort-Reserve (6000) und noch Dokument hinein.
+    const budget = documentTokenBudget('arbeitszeugnis', 'de', 16_384)
     expect(budget).toBeGreaterThan(0)
-    expect(budget).toBeLessThan(8192)
-    // Das Zeugnis-Geruest ist gross (~15 KB Systemprompt) - Budget deutlich kleiner
-    // als bei einem schlanken Modus.
-    expect(budget).toBeLessThan(documentTokenBudget('freeform', 'de', 8192))
+    expect(budget).toBeLessThan(16_384)
+    // Das Zeugnis-Geruest ist gross - Budget deutlich kleiner als bei einem
+    // schlanken Modus, der ausserdem weniger Antwort-Reserve braucht.
+    expect(budget).toBeLessThan(documentTokenBudget('freeform', 'de', 16_384))
+  })
+
+  it('bei 8192 bleibt fuer ein Zeugnis kein Dokument uebrig', () => {
+    // Genau deshalb hebt resolveNumCtx das Fenster fuer diesen Modus an:
+    // Geruest ~4300 plus 6000 Antwort-Reserve sprengen 8192 schon ohne Text.
+    expect(documentTokenBudget('arbeitszeugnis', 'de', 8192)).toBe(0)
   })
 })

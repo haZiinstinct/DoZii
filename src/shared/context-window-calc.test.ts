@@ -141,3 +141,58 @@ describe('pickNumCtx', () => {
     }
   })
 })
+
+describe('Mindestfenster des Modus', () => {
+  const base = { freeRamGb: 32, neededTokens: 3000 }
+
+  it('gilt auch bei abgeschalteter Automatik', () => {
+    // Der Schalter entscheidet, ob das Fenster fuer LANGE Dokumente waechst -
+    // nicht, ob der Zeugnis-Modus ueberhaupt arbeiten kann. Bei 8192 bleibt
+    // dort nach Geruest und Antwort-Reserve kein Dokument uebrig.
+    const d = pickNumCtx({
+      ...base,
+      modelContextLimit: 131_072,
+      autoEnabled: false,
+      minimumTokens: 11_800
+    })
+    expect(d.numCtx).toBe(12_288)
+  })
+
+  it('geht nie ueber das Limit des Modells', () => {
+    const d = pickNumCtx({
+      ...base,
+      modelContextLimit: 8192,
+      autoEnabled: false,
+      minimumTokens: 16_000
+    })
+    expect(d.numCtx).toBe(8192)
+  })
+
+  it('aendert nichts, wenn der Modus wenig braucht', () => {
+    const d = pickNumCtx({
+      ...base,
+      modelContextLimit: 131_072,
+      autoEnabled: false,
+      minimumTokens: 5000
+    })
+    expect(d.numCtx).toBe(MIN_NUM_CTX)
+  })
+
+  it('hebt auch das Ergebnis der Automatik an', () => {
+    // Kurzes Dokument, aber ein Modus mit grosser Antwort: der Bedarf allein
+    // ergaebe die kleinste Stufe.
+    const d = pickNumCtx({
+      freeRamGb: 32,
+      neededTokens: 3000,
+      modelContextLimit: 131_072,
+      autoEnabled: true,
+      minimumTokens: 11_800
+    })
+    expect(d.numCtx).toBe(12_288)
+  })
+
+  it('kommt ohne die Angabe aus', () => {
+    const d = pickNumCtx({ ...base, modelContextLimit: 131_072, autoEnabled: false })
+    expect(d.numCtx).toBe(MIN_NUM_CTX)
+  })
+})
