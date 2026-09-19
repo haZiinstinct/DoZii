@@ -193,6 +193,9 @@ Ehrlich ist besser als überverkauft:
   Muttersprachlern sind als PR willkommen. Arbeitszeugnis-Decoder und Briefe bleiben
   deutsch — beides stammt aus dem deutschen Recht
 
+Bekannte, bewusst offengelassene Punkte aus dem Review zu v1.3.0 stehen in
+[`docs/OFFENE-PUNKTE.md`](docs/OFFENE-PUNKTE.md) — mit Begründung, warum sie noch offen sind.
+
 ## 🤝 Mitmachen
 
 Issues und Pull Requests sind willkommen — Details in [CONTRIBUTING.md](CONTRIBUTING.md).

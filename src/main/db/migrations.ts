@@ -1,4 +1,4 @@
-import { copyFileSync } from 'fs'
+import { copyFileSync, existsSync, unlinkSync } from 'fs'
 
 /**
  * Minimales Migrationssystem auf Basis von PRAGMA user_version.
@@ -159,9 +159,35 @@ function getUserVersion(db: SqliteDb): number {
   return Number(row.user_version)
 }
 
+/**
+ * Sicherung vor einer Migration - aber immer nur EINE.
+ *
+ * Frueher entstand pro Migration eine eigene Vollkopie. Nach vier Migrationen
+ * lagen vier unverschluesselte Kopien saemtlicher Dokumente, Analysen und
+ * Chats im Nutzerverzeichnis, ohne dass das jemand sagt oder aufraeumt. Die
+ * Sicherung soll ein gescheitertes Update auffangen, kein Archiv anlegen.
+ */
 function backupBeforeMigration(db: SqliteDb, dbPath: string, targetVersion: number): void {
   db.exec('PRAGMA wal_checkpoint(TRUNCATE)')
-  copyFileSync(dbPath, `${dbPath}.bak-v${targetVersion}`)
+  const target = `${dbPath}.bak`
+  if (existsSync(target)) {
+    try {
+      unlinkSync(target)
+    } catch {
+      // Laesst sie sich nicht loeschen, wird sie gleich ueberschrieben.
+    }
+  }
+  copyFileSync(dbPath, target)
+  // Alte, versionierte Sicherungen frueherer DoZii-Staende aufraeumen.
+  for (let version = 2; version <= targetVersion; version++) {
+    const legacy = `${dbPath}.bak-v${version}`
+    if (!existsSync(legacy)) continue
+    try {
+      unlinkSync(legacy)
+    } catch {
+      // Nicht kritisch - die Datei bleibt dann eben liegen.
+    }
+  }
 }
 
 /**

@@ -86,8 +86,23 @@ function createWindow(): void {
     if (mainWindow === win) mainWindow = null
   })
 
+  // Analyse-Ergebnisse werden als Markdown gerendert und koennen Links aus dem
+  // Dokument enthalten - also aus einer Quelle, der nicht zu trauen ist. Ohne
+  // Pruefung liesse sich darueber eine beliebige URL oder ein file:-Pfad im
+  // System oeffnen.
   win.webContents.setWindowOpenHandler((details) => {
-    shell.openExternal(details.url)
+    try {
+      const url = new URL(details.url)
+      if (url.protocol === 'http:' || url.protocol === 'https:') {
+        shell.openExternal(details.url)
+      } else {
+        logger.warn('main', 'Link mit unerlaubtem Protokoll blockiert', {
+          protocol: url.protocol
+        })
+      }
+    } catch {
+      logger.warn('main', 'Ungueltige Link-Adresse blockiert')
+    }
     return { action: 'deny' }
   })
 
