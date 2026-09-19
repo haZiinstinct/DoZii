@@ -10,6 +10,7 @@ import { registerAnalysisIpc } from './ipc/analysis.ipc'
 import { registerChatIpc } from './ipc/chat.ipc'
 import { registerLogsIpc } from './ipc/logs.ipc'
 import { registerExporterIpc } from './ipc/exporter.ipc'
+import { registerDeadlinesIpc } from './ipc/deadlines.ipc'
 import { registerSystemIpc } from './ipc/system.ipc'
 import { registerUpdateIpc } from './ipc/update.ipc'
 import { initUpdater } from './services/updater.service'
@@ -85,8 +86,23 @@ function createWindow(): void {
     if (mainWindow === win) mainWindow = null
   })
 
+  // Analyse-Ergebnisse werden als Markdown gerendert und koennen Links aus dem
+  // Dokument enthalten - also aus einer Quelle, der nicht zu trauen ist. Ohne
+  // Pruefung liesse sich darueber eine beliebige URL oder ein file:-Pfad im
+  // System oeffnen.
   win.webContents.setWindowOpenHandler((details) => {
-    shell.openExternal(details.url)
+    try {
+      const url = new URL(details.url)
+      if (url.protocol === 'http:' || url.protocol === 'https:') {
+        shell.openExternal(details.url)
+      } else {
+        logger.warn('main', 'Link mit unerlaubtem Protokoll blockiert', {
+          protocol: url.protocol
+        })
+      }
+    } catch {
+      logger.warn('main', 'Ungueltige Link-Adresse blockiert')
+    }
     return { action: 'deny' }
   })
 
@@ -144,6 +160,7 @@ app.whenReady().then(() => {
   registerChatIpc()
   registerLogsIpc()
   registerExporterIpc()
+  registerDeadlinesIpc()
   registerSystemIpc()
   registerUpdateIpc()
   initUpdater()

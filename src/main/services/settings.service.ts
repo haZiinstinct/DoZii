@@ -1,5 +1,5 @@
 import Store from 'electron-store'
-import { DEFAULT_SETTINGS, type AppSettings, type ThemeMode } from '@shared/types'
+import { DEFAULT_SETTINGS, type AppSettings, type FontScale, type ThemeMode } from '@shared/types'
 import { LANGUAGE_CODES } from '@shared/languages'
 import { logger } from './logger.service'
 
@@ -22,6 +22,38 @@ function getStore(): Store<StoreSchema> {
 const THEMES: ThemeMode[] = ['dark', 'light', 'system']
 const LANGUAGES: AppSettings['language'][] = LANGUAGE_CODES
 const OCR_QUALITIES: AppSettings['ocrQuality'][] = ['fast', 'balanced', 'best']
+const FONT_SCALES: FontScale[] = ['normal', 'large', 'xlarge']
+
+/** Gebundelte Tesseract-Sprachdaten (resources/tesseract). Mehr gibt es offline nicht. */
+export const AVAILABLE_OCR_LANGUAGES = ['deu', 'eng'] as const
+
+/**
+ * Hosts, die als "der eigene Rechner" gelten. Alles andere ist ein fremder
+ * Server - und dorthin gehen die Dokumente nicht.
+ */
+const LOOPBACK_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]', '::1', '0.0.0.0'])
+
+/**
+ * Akzeptiert nur http(s)-URLs auf den eigenen Rechner.
+ *
+ * Das Kernversprechen der App ist, dass Dokumente den Rechner nicht verlassen.
+ * Eine frei setzbare Adresse haette genau das ausgehebelt: wer (versehentlich
+ * oder durch eine manipulierte Einstellungsdatei) einen fremden Host eintraegt,
+ * schickt jeden Bescheid und jedes Arbeitszeugnis dorthin - ohne dass die
+ * Oberflaeche es sagt. Ollama auf einem anderen Rechner im Heimnetz ist ein
+ * nachvollziehbarer Wunsch, aber er gehoert bewusst entschieden und nicht in
+ * ein Textfeld, das auch ein Tippfehler treffen kann.
+ */
+export function isValidOllamaUrl(value: unknown): value is string {
+  if (typeof value !== 'string' || value.length === 0 || value.length > 300) return false
+  try {
+    const url = new URL(value)
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') return false
+    return LOOPBACK_HOSTS.has(url.hostname.toLowerCase())
+  } catch {
+    return false
+  }
+}
 
 /**
  * Validiert geladene Settings feldweise gegen erwartete Typen/Enums. Korrupte
@@ -34,14 +66,23 @@ export function sanitizeSettings(raw: unknown): AppSettings {
   const r = raw as Record<string, unknown>
   let repaired = false
 
+  /**
+   * Ein FEHLENDES Feld ist kein Schaden, sondern der Normalfall nach einem
+   * Update, das neue Einstellungen mitbringt - dafuer gibt es den Default.
+   * Gewarnt wird nur, wenn ein Feld da ist und nicht stimmt.
+   *
+   * Ohne diese Unterscheidung meldete die App nach dem Update auf v1.3.0 bei
+   * JEDEM Lesen der Einstellungen "Korrupte Settings-Felder" - also alle paar
+   * Sekunden, weil die Systemanzeige sie pollt.
+   */
   const pick = <K extends keyof AppSettings>(key: K, valid: boolean, value: AppSettings[K]) => {
     if (valid) return value
-    repaired = true
+    if (r[key] !== undefined) repaired = true
     return DEFAULT_SETTINGS[key]
   }
 
   const result: AppSettings = {
-    ollamaUrl: pick('ollamaUrl', typeof r.ollamaUrl === 'string', r.ollamaUrl as string),
+    ollamaUrl: pick('ollamaUrl', isValidOllamaUrl(r.ollamaUrl), r.ollamaUrl as string),
     selectedModel: pick(
       'selectedModel',
       typeof r.selectedModel === 'string',
@@ -55,7 +96,11 @@ export function sanitizeSettings(raw: unknown): AppSettings {
     theme: pick('theme', THEMES.includes(r.theme as ThemeMode), r.theme as ThemeMode),
     ocrLanguages: pick(
       'ocrLanguages',
-      Array.isArray(r.ocrLanguages) && r.ocrLanguages.every((l) => typeof l === 'string'),
+      Array.isArray(r.ocrLanguages) &&
+        r.ocrLanguages.length > 0 &&
+        r.ocrLanguages.every(
+          (l) => typeof l === 'string' && (AVAILABLE_OCR_LANGUAGES as readonly string[]).includes(l)
+        ),
       r.ocrLanguages as string[]
     ),
     ocrQuality: pick(
@@ -72,6 +117,27 @@ export function sanitizeSettings(raw: unknown): AppSettings {
       'autoUpdateCheck',
       typeof r.autoUpdateCheck === 'boolean',
       r.autoUpdateCheck as boolean
+    ),
+    autoAnalyze: pick('autoAnalyze', typeof r.autoAnalyze === 'boolean', r.autoAnalyze as boolean),
+    fontScale: pick(
+      'fontScale',
+      FONT_SCALES.includes(r.fontScale as FontScale),
+      r.fontScale as FontScale
+    ),
+    highContrast: pick(
+      'highContrast',
+      typeof r.highContrast === 'boolean',
+      r.highContrast as boolean
+    ),
+    redactOnExport: pick(
+      'redactOnExport',
+      typeof r.redactOnExport === 'boolean',
+      r.redactOnExport as boolean
+    ),
+    autoContextWindow: pick(
+      'autoContextWindow',
+      typeof r.autoContextWindow === 'boolean',
+      r.autoContextWindow as boolean
     )
   }
 

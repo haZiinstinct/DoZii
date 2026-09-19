@@ -3,6 +3,13 @@ import { readFile } from 'fs/promises'
 export interface PdfResult {
   text: string
   pageCount: number
+  /**
+   * Text je Seite. Noetig, um gemischte Dokumente zu erkennen: 18 saubere
+   * Textseiten und 2 eingescannte Seiten ergeben im Durchschnitt einen
+   * unauffaelligen Wert - die zwei Scanseiten wuerden stillschweigend leer
+   * bleiben.
+   */
+  pages: string[]
 }
 
 export async function extractPdf(filePath: string): Promise<PdfResult> {
@@ -14,10 +21,12 @@ export async function extractPdf(filePath: string): Promise<PdfResult> {
   // nicht beim App-Start (die meisten Sessions oeffnen kein PDF).
   const { extractText } = await import('unpdf')
   try {
-    const { text, totalPages } = await extractText(uint8)
+    const { text, totalPages } = await extractText(uint8, { mergePages: false })
+    const pages = Array.isArray(text) ? text.map((t) => String(t)) : [String(text)]
     return {
-      text: Array.isArray(text) ? text.join('\n').trim() : String(text).trim(),
-      pageCount: totalPages
+      text: pages.join('\n').trim(),
+      pageCount: totalPages,
+      pages
     }
   } catch (err) {
     const raw = err instanceof Error ? err.message : String(err)

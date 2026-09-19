@@ -88,6 +88,72 @@ describe('runMigrations', () => {
     db.close()
   })
 
+  it('v2: Fristen-Tabelle existiert und haengt am Dokument', () => {
+    const db = createLegacyDb()
+    runMigrations(db)
+
+    expect(tableNames(db)).toContain('deadlines')
+    db.exec(`
+      INSERT INTO deadlines (id, document_id, kind, label, due_date, quote, confidence, source, created_at)
+      VALUES ('d-1', 'doc-1', 'widerspruch', 'Widerspruch', '2026-04-15', 'innerhalb eines Monats', 'high', 'computed', '2026-03-16')
+    `)
+    const row = db.prepare("SELECT due_date FROM deadlines WHERE id = 'd-1'").get() as {
+      due_date: string
+    }
+    expect(row.due_date).toBe('2026-04-15')
+    db.close()
+  })
+
+  it('spaetere Migrationen laufen auch auf einer DB, die schon auf v1 stand', () => {
+    const db = new DatabaseSync(':memory:')
+    db.exec('PRAGMA user_version = 1')
+    // Baseline von Hand, wie sie v1 hinterlassen haette
+    MIGRATIONS[0].up(db)
+
+    const result = runMigrations(db)
+
+    expect(result.from).toBe(1)
+    expect(result.to).toBe(MIGRATIONS[MIGRATIONS.length - 1].version)
+    expect(tableNames(db)).toContain('deadlines')
+    db.close()
+  })
+
+  it('v3: Dokumente merken sich, ob der Text aus OCR stammt', () => {
+    const db = createLegacyDb()
+    runMigrations(db)
+
+    const columns = db
+      .prepare('PRAGMA table_info(documents)')
+      .all()
+      .map((r) => (r as { name: string }).name)
+    expect(columns).toContain('ocr_used')
+
+    // Bestandsdokumente bekommen den Default 0 (kein OCR).
+    const row = db.prepare("SELECT ocr_used FROM documents WHERE id = 'doc-1'").get() as {
+      ocr_used: number
+    }
+    expect(row.ocr_used).toBe(0)
+    db.close()
+  })
+
+  it('v4: Import-Hinweis wird am Dokument gespeichert', () => {
+    const db = createLegacyDb()
+    runMigrations(db)
+
+    const columns = db
+      .prepare('PRAGMA table_info(documents)')
+      .all()
+      .map((r) => (r as { name: string }).name)
+    expect(columns).toContain('import_warning')
+
+    db.exec("UPDATE documents SET import_warning = '3 von 20 Seiten fehlen' WHERE id = 'doc-1'")
+    const row = db.prepare("SELECT import_warning FROM documents WHERE id = 'doc-1'").get() as {
+      import_warning: string
+    }
+    expect(row.import_warning).toBe('3 von 20 Seiten fehlen')
+    db.close()
+  })
+
   it('MIGRATIONS sind aufsteigend und lückenlos versioniert', () => {
     MIGRATIONS.forEach((m, i) => {
       expect(m.version).toBe(i + 1)

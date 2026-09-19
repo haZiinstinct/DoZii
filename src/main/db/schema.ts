@@ -11,6 +11,10 @@ export const documents = sqliteTable('documents', {
   detectedLanguage: text('detected_language'),
   extractedText: text('extracted_text').notNull().default(''),
   thumbnailPath: text('thumbnail_path'),
+  // 0/1 - SQLite kennt kein boolean. true = Text kam aus der Texterkennung.
+  ocrUsed: integer('ocr_used').notNull().default(0),
+  // Hinweis aus dem Import, z.B. uebersprungene Seiten bei der Texterkennung.
+  importWarning: text('import_warning'),
   createdAt: text('created_at').notNull(),
   updatedAt: text('updated_at').notNull()
 })
@@ -26,6 +30,8 @@ export const analyses = sqliteTable('analyses', {
   structuredResult: text('structured_result'), // JSON string
   modelUsed: text('model_used').notNull(),
   durationMs: integer('duration_ms'),
+  // JSON-Vorbehalt zum Ergebnis (AnalysisNotice), z.B. gekuerzt oder gechunkt.
+  notice: text('notice'),
   createdAt: text('created_at').notNull()
 })
 
@@ -53,6 +59,25 @@ export const firstImpressions = sqliteTable('first_impressions', {
   createdAt: text('created_at').notNull()
 })
 
+// Berechnete Fristen pro Dokument (Fristen-Radar). Das Enddatum wird
+// deterministisch in TypeScript gerechnet, nicht vom Modell geliefert.
+export const deadlines = sqliteTable('deadlines', {
+  id: text('id').primaryKey(),
+  documentId: text('document_id')
+    .notNull()
+    .references(() => documents.id, { onDelete: 'cascade' }),
+  kind: text('kind').notNull(),
+  label: text('label').notNull(),
+  dueDate: text('due_date').notNull(), // ISO YYYY-MM-DD
+  startDate: text('start_date'),
+  periodText: text('period_text'),
+  quote: text('quote').notNull(),
+  confidence: text('confidence').notNull(), // high | medium | low
+  source: text('source').notNull(), // explicit | computed
+  note: text('note'),
+  createdAt: text('created_at').notNull()
+})
+
 export type Document = typeof documents.$inferSelect
 export type NewDocument = typeof documents.$inferInsert
 export type Analysis = typeof analyses.$inferSelect
@@ -61,3 +86,5 @@ export type ChatMessage = typeof chatMessages.$inferSelect
 export type NewChatMessage = typeof chatMessages.$inferInsert
 export type FirstImpressionRow = typeof firstImpressions.$inferSelect
 export type NewFirstImpressionRow = typeof firstImpressions.$inferInsert
+export type DeadlineRow = typeof deadlines.$inferSelect
+export type NewDeadlineRow = typeof deadlines.$inferInsert

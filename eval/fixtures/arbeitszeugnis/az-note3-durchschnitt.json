@@ -1,0 +1,13 @@
+{
+  "id": "az-note3-durchschnitt",
+  "title": "Qualifiziertes Zeugnis, Note 3, der klassische Durchschnitt",
+  "rationale": "Codetabelle 1.1: 'zu unserer vollen Zufriedenheit' ohne den Verstärker 'stets' ist Note 3. Sozialverhalten 'war einwandfrei' ohne 'stets' ist Note 3 (1.2), 'gutes Fachwissen' und 'gute Arbeitsergebnisse' sind Note 3 (1.3), 'zuverlässig und gewissenhaft' ist Note 3 (1.5), 'belastbar' und 'zeigte Eigeninitiative' sind Note 3 (1.4). Das entspricht der BAG-Durchschnittsnote (BAG 18.11.2014, 9 AZR 584/13). Schlussformel vorhanden, aber nüchtern: Dank für die gute Zusammenarbeit, Bedauern fehlt. contentGrade 3, craftGrade 2 (formal vollständig, sprachlich sauber, nur die Schlussformel ist knapp).",
+  "text": "Kuhlmann Sanitär- und Heizungstechnik GmbH\nGewerbering 22\n49080 Osnabrück\n\nArbeitszeugnis\n\nHerr Deniz Arslan, geboren am 27. November 1990, war vom 1. April 2018 bis zum 31. Mai 2026 in unserem Betrieb als Anlagenmechaniker für Sanitär-, Heizungs- und Klimatechnik tätig.\n\nUnser Betrieb beschäftigt 28 Mitarbeiter und führt Neuinstallationen, Wartungen und Störungsdienste im Raum Osnabrück aus.\n\nHerr Arslan war mit folgenden Aufgaben betraut:\n\n- Installation von Heizungs- und Sanitäranlagen in Neubauten und im Bestand\n- Wartung und Instandsetzung von Gas- und Ölheizungen\n- Störungsdienst im Rufbereitschaftsplan\n- Aufmaß und Materialdisposition für die eigenen Baustellen\n- Einweisung der Kunden in die installierten Anlagen\n- Betreuung eines Auszubildenden im dritten Lehrjahr\n\nHerr Arslan verfügt über ein gutes Fachwissen, das er in der täglichen Arbeit sachgerecht einsetzte. Er ist belastbar und zeigte Eigeninitiative. Er arbeitete zuverlässig und gewissenhaft und erzielte gute Arbeitsergebnisse. Die ihm übertragenen Baustellen wickelte er termingerecht ab.\n\nHerr Arslan erledigte die ihm übertragenen Aufgaben zu unserer vollen Zufriedenheit.\n\nSein Verhalten gegenüber Vorgesetzten, Kollegen und Kunden war einwandfrei.\n\nDas Arbeitsverhältnis endet zum 31. Mai 2026 auf eigenen Wunsch von Herrn Arslan. Wir danken ihm für die gute Zusammenarbeit und wünschen ihm für seinen weiteren Berufsweg alles Gute und viel Erfolg.\n\nOsnabrück, 31. Mai 2026\n\nKuhlmann Sanitär- und Heizungstechnik GmbH\n\nGerrit Kuhlmann\nGeschäftsführer",
+  "expect": {
+    "contentGrade": 3,
+    "craftGrade": 2,
+    "gradeTolerance": 1,
+    "mustFindPhrases": ["zu unserer vollen Zufriedenheit"],
+    "mustNotClaim": ["bemüht", "vollsten Zufriedenheit", "stets vorbildlich"]
+  }
+}

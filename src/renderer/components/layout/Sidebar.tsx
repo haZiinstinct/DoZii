@@ -1,3 +1,4 @@
+import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import {
   Upload,
@@ -7,9 +8,16 @@ import {
   Circle,
   Play,
   Loader2,
-  Download
+  Download,
+  AlertTriangle,
+  CalendarCheck,
+  CalendarClock,
+  Clock
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { daysUntil } from '@shared/deadline-calc'
+import { toIsoDate } from '@shared/german-holidays'
+import type { DeadlineWithDocument } from '@shared/types'
 import { useOllamaStatus } from '@/hooks/useOllamaStatus'
 import { HardwareIndicator } from './HardwareIndicator'
 
@@ -30,11 +38,161 @@ const navItems: NavItem[] = [
   { path: '/settings', labelKey: 'nav.settings', icon: <Settings size={18} aria-hidden="true" /> }
 ]
 
+/** Ohne 'expired': abgelaufene Fristen zeigt die Sidebar bewusst nicht an. */
+type SidebarUrgency = 'critical' | 'soon' | 'ok'
+
+const urgencyStyles: Record<
+  SidebarUrgency,
+  { button: string; text: string; badge: string; icon: React.ReactNode; labelKey: string }
+> = {
+  critical: {
+    button: 'border-brand-red/30 bg-brand-red/5 hover:bg-brand-red/10',
+    text: 'text-brand-red',
+    badge: 'border-brand-red/30 bg-brand-red/10 text-brand-red',
+    icon: <AlertTriangle size={11} aria-hidden="true" />,
+    labelKey: 'deadlines.urgencyCritical'
+  },
+  soon: {
+    button: 'border-brand-amber/30 bg-brand-amber/5 hover:bg-brand-amber/10',
+    text: 'text-brand-amber',
+    badge: 'border-brand-amber/30 bg-brand-amber/10 text-brand-amber',
+    icon: <Clock size={11} aria-hidden="true" />,
+    labelKey: 'deadlines.urgencySoon'
+  },
+  ok: {
+    button: 'border-brand-border bg-brand-card/40 hover:bg-brand-card',
+    text: 'text-brand-text-bright',
+    badge: 'border-brand-border bg-brand-darker/60 text-brand-text-dim',
+    icon: <CalendarCheck size={11} aria-hidden="true" />,
+    labelKey: 'deadlines.urgencyOk'
+  }
+}
+
+function urgencyFor(daysLeft: number): SidebarUrgency {
+  if (daysLeft <= 3) return 'critical'
+  if (daysLeft <= 10) return 'soon'
+  return 'ok'
+}
+
+/**
+ * Heutiger Tag als ISO-Datum in lokaler Zeit. `toISOString()` waere oestlich
+ * von Greenwich abends schon der Folgetag - und damit eine Frist zu wenig.
+ */
+function localTodayIso(): string {
+  const now = new Date()
+  return toIsoDate(now.getFullYear(), now.getMonth() + 1, now.getDate())
+}
+
+interface NextDeadlineProps {
+  deadline: DeadlineWithDocument
+  todayIso: string
+  /** Weitere offene Fristen ausser dieser. */
+  moreCount: number
+  onOpen: (documentId: string) => void
+}
+
+/** Kompakter Block unten in der Sidebar: was als naechstes ablaeuft. */
+function NextDeadline({
+  deadline,
+  todayIso,
+  moreCount,
+  onOpen
+}: NextDeadlineProps): React.ReactElement {
+  const { t } = useTranslation()
+  const daysLeft = daysUntil(deadline.dueDateIso, todayIso)
+  const style = urgencyStyles[urgencyFor(daysLeft)]
+
+  // Null und Eins bekommen eigene Saetze - "noch 0 Tage" versteht niemand.
+  let countdown: string
+  if (daysLeft === 0) countdown = t('deadlines.today')
+  else if (daysLeft === 1) countdown = t('deadlines.tomorrow')
+  else countdown = t('deadlines.daysLeft', { count: daysLeft })
+
+  return (
+    <div className="border-t border-brand-border p-3">
+      <h2 className="mb-2 flex items-center gap-2 px-1 text-[11px] font-semibold uppercase tracking-wider text-brand-text-dim">
+        <CalendarClock size={12} aria-hidden="true" />
+        {t('deadlines.title')}
+      </h2>
+
+      <ul className="space-y-1">
+        <li>
+          <button
+            type="button"
+            onClick={() => onOpen(deadline.documentId)}
+            title={deadline.filename}
+            className={`w-full rounded-xl border px-3 py-2.5 text-start transition-all duration-200 ${style.button}`}
+          >
+            {/* Dringlichkeit steht zusaetzlich als Text da - Farbe allein reicht nicht. */}
+            <span
+              className={`inline-flex items-center gap-1 rounded-lg border px-1.5 py-0.5 text-[10px] font-semibold ${style.badge}`}
+            >
+              {style.icon}
+              {t(style.labelKey)}
+            </span>
+            <span className={`mt-1.5 block text-sm font-semibold ${style.text}`}>{countdown}</span>
+            <span className="mt-0.5 block truncate text-xs text-brand-text-dim">
+              {deadline.filename}
+            </span>
+          </button>
+        </li>
+
+        {moreCount > 0 && (
+          <li className="px-3 py-1 text-xs text-brand-text-dim">
+            {/* "+2" allein sagt Screenreadern nichts - der Kontext kommt unsichtbar dazu. */}
+            {`+${moreCount}`} <span className="sr-only">{t('deadlines.title')}</span>
+          </li>
+        )}
+      </ul>
+    </div>
+  )
+}
+
 export function Sidebar() {
   const location = useLocation()
   const navigate = useNavigate()
   const { t } = useTranslation()
   const { connected, model, installed, starting, startError, startOllama } = useOllamaStatus()
+  const [deadlines, setDeadlines] = useState<DeadlineWithDocument[]>([])
+  const [todayIso, setTodayIso] = useState<string>(localTodayIso)
+
+  useEffect(() => {
+    let active = true
+
+    const load = async (): Promise<void> => {
+      try {
+        const upcoming = await window.api.deadlines.upcoming()
+        if (!active) return
+        // Bei jedem Laden neu bestimmen, damit die Sidebar ueber Mitternacht
+        // hinweg nicht auf dem gestrigen Tag haengen bleibt.
+        setTodayIso(localTodayIso())
+        setDeadlines(upcoming)
+      } catch {
+        if (active) setDeadlines([])
+      }
+    }
+
+    void load()
+    // Die Fristensuche laeuft im Hintergrund nach einer Analyse - danach neu laden.
+    const unsubscribe = window.api.deadlines.onUpdated(() => {
+      void load()
+    })
+
+    return () => {
+      active = false
+      unsubscribe()
+    }
+  }, [])
+
+  // Der Main-Prozess liefert auch abgelaufene Fristen; hier zaehlt nur, was noch laeuft.
+  const openDeadlines = useMemo(
+    () =>
+      deadlines
+        .filter((d) => d.dueDateIso >= todayIso)
+        .sort((a, b) => a.dueDateIso.localeCompare(b.dueDateIso)),
+    [deadlines, todayIso]
+  )
+  const nextDeadline: DeadlineWithDocument | undefined = openDeadlines[0]
 
   return (
     <aside className="flex w-[260px] flex-col border-e border-brand-border bg-brand-darker">
@@ -58,6 +216,16 @@ export function Sidebar() {
           )
         })}
       </nav>
+
+      {/* Naechste offene Frist - faellt ganz weg, wenn keine laeuft */}
+      {nextDeadline && (
+        <NextDeadline
+          deadline={nextDeadline}
+          todayIso={todayIso}
+          moreCount={openDeadlines.length - 1}
+          onOpen={(documentId) => navigate(`/document/${documentId}`)}
+        />
+      )}
 
       {/* Hardware / Runtime Indicator */}
       <div className="border-t border-brand-border p-3">

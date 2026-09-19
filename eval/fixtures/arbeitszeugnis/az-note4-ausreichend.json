@@ -1,0 +1,13 @@
+{
+  "id": "az-note4-ausreichend",
+  "title": "Qualifiziertes Zeugnis, Note 4, unterdurchschnittlich mit Auslassungen",
+  "rationale": "Codetabelle 1.1: 'zu unserer Zufriedenheit' ohne jeden Verstärker ist Note 4. Sozialverhalten 'im Allgemeinen einwandfrei' ist Note 4 (1.2), 'ausreichendes Fachwissen' und 'brauchbare Ergebnisse' sind Note 4 (1.3), 'im Allgemeinen belastbar' Note 4 (1.4), 'erfüllte Aufgaben zuverlässig' Note 4 (1.5). Dazu kommen Auslassungs-Codes aus Referenz 2 E: kein Dank, kein Bedauern, und die Schlussformel 'für die Zukunft alles Gute' ohne 'Erfolg' ist nach Referenz 2 C negativ. contentGrade 4. craftGrade 3, weil das Zeugnis formal korrekt aufgebaut, aber unvollständig ist (fehlende Dank- und Bedauernsformel).",
+  "text": "Sellhorn Logistik & Lagerhaltung GmbH\nAn der Bahnstrecke 7\n04442 Zwenkau\n\nZeugnis\n\nHerr Tobias Grünewald, geboren am 8. August 1996, war vom 1. Februar 2023 bis zum 31. März 2026 in unserem Unternehmen als Lagerfachkraft beschäftigt.\n\nSellhorn Logistik & Lagerhaltung GmbH betreibt ein Zentrallager mit angeschlossener Kommissionierung für den Lebensmitteleinzelhandel.\n\nHerrn Grünewald oblagen folgende Aufgaben:\n\n- Wareneingangskontrolle und Einlagerung\n- Kommissionierung nach Pickliste\n- Bedienung von Front- und Schubmaststapler\n- Führung der Bestandslisten im Lagerverwaltungssystem\n- Mitwirkung bei der jährlichen Inventur\n\nHerr Grünewald verfügt über ein ausreichendes Fachwissen für seinen Aufgabenbereich. Bei neuen Abläufen benötigte er eine entsprechende Einarbeitung. Er ist im Allgemeinen belastbar. Er erfüllte die ihm übertragenen Aufgaben zuverlässig und erzielte brauchbare Ergebnisse. Anregungen unserer Schichtleitung wurden dankbar aufgenommen.\n\nHerr Grünewald erledigte die ihm übertragenen Arbeiten zu unserer Zufriedenheit.\n\nSein Verhalten gegenüber Vorgesetzten und Kollegen war im Allgemeinen einwandfrei.\n\nDas Arbeitsverhältnis endet im gegenseitigen Einvernehmen zum 31. März 2026. Wir wünschen Herrn Grünewald für die Zukunft alles Gute.\n\nZwenkau, 31. März 2026\n\nSellhorn Logistik & Lagerhaltung GmbH\n\nMarleen Sellhorn\nProkuristin",
+  "expect": {
+    "contentGrade": 4,
+    "craftGrade": 3,
+    "gradeTolerance": 1,
+    "mustFindPhrases": ["zu unserer Zufriedenheit"],
+    "mustNotClaim": ["vollen Zufriedenheit", "vollsten Zufriedenheit", "stets einwandfrei"]
+  }
+}

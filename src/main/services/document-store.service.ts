@@ -1,22 +1,30 @@
 import { app } from 'electron'
 import { randomUUID } from 'crypto'
 import { join, extname, basename } from 'path'
-import { copyFile, mkdir, stat, unlink } from 'fs/promises'
-import { eq, desc } from 'drizzle-orm'
+import { copyFile, mkdir, stat, unlink, writeFile } from 'fs/promises'
+import { eq, desc, or, sql } from 'drizzle-orm'
 import { getDb, schema } from '../db'
 import { extractPdf } from './pdf-extractor.service'
 import { extractDocx } from './docx-extractor.service'
 import { extractXlsx } from './xlsx-extractor.service'
 import { recognizeImage } from './ocr.service'
+import { ocrPdf } from './pdf-ocr.service'
+import { extractEml, extractPlainText } from './text-extractor.service'
+import { getSettings } from './settings.service'
 import { logger } from './logger.service'
+import { MAX_SEARCH_RESULTS, SNIPPET_CHARS } from '../config/constants'
 import {
   SUPPORTED_EXTENSION_SET,
   LEGACY_OFFICE_HINTS,
   getMimeType,
-  isImageExtension
+  isEmailExtension,
+  isImageExtension,
+  isPlainTextExtension
 } from '@shared/file-types'
 import { checkPrintability } from '@shared/text-validators'
-import type { DoziiDocument } from '@shared/types'
+import { detectScannedPages, detectScannedPdf } from '@shared/scan-detect'
+import { escapeLikePattern, LIKE_ESCAPE_CHAR } from '@shared/like-pattern'
+import type { DocumentSummary, DoziiDocument } from '@shared/types'
 
 function getDocumentsDir(): string {
   return join(app.getPath('userData'), 'documents')
@@ -59,30 +67,167 @@ function detectLanguage(text: string): string {
   return ratio > 0.02 ? 'de' : 'en'
 }
 
+/**
+ * SQLite kennt kein boolean - `ocr_used` liegt als 0/1 vor. Der Mapper ist die
+ * einzige Stelle, an der das umgerechnet wird, damit die Domaenentypen sauber
+ * bleiben.
+ */
+type DocumentRow = typeof schema.documents.$inferSelect
+
+function rowToDocument(row: DocumentRow): DoziiDocument {
+  return { ...row, ocrUsed: row.ocrUsed === 1 }
+}
+
+/**
+ * Fortschritt der Texterkennung. 40 Seiten OCR dauern Minuten - ohne Rueckmeldung
+ * wirkt der Import wie ein Haenger.
+ */
+export type OcrProgress = (page: number, total: number) => void
+
+interface ExtractionResult {
+  text: string
+  pageCount: number | null
+  /** true, wenn der Text per Texterkennung entstanden ist (Scan/Foto). */
+  ocrUsed: boolean
+  /** Hinweis, wenn nicht alle Seiten gelesen werden konnten. */
+  ocrWarning?: string
+}
+
+/**
+ * Gescannte PDFs waren bisher der haeufigste Totalausfall: `extractPdf` liest
+ * nur die Textebene, und ein eingescannter Bescheid hat keine. Ergebnis war
+ * ein leeres Dokument und die Fehlermeldung "keine Textinhalte". Jetzt wird
+ * erkannt, dass es ein Scan ist, und die Seiten werden per OCR nachgezogen.
+ */
+async function extractPdfWithOcrFallback(
+  destPath: string,
+  onProgress?: OcrProgress
+): Promise<ExtractionResult> {
+  const settings = getSettings()
+  let text = ''
+  let pageCount: number | null = null
+  let pages: string[] = []
+
+  try {
+    const result = await extractPdf(destPath)
+    text = result.text
+    pageCount = result.pageCount
+    pages = result.pages
+  } catch (err) {
+    // Passwortschutz und kaputte Dateien sind echte Fehler - durchreichen.
+    // Alles andere kann ein PDF sein, dessen Textebene pdf.js nicht mag; dann
+    // lohnt der OCR-Versuch trotzdem.
+    const message = err instanceof Error ? err.message : String(err)
+    if (/passwort|password|beschädigt|kein gültiges/i.test(message)) throw err
+    logger.warn('document-store', 'PDF-Textextraktion fehlgeschlagen, versuche OCR', {
+      error: message
+    })
+  }
+
+  const verdict = detectScannedPdf(text, pageCount)
+
+  // Gemischte Dokumente: ein Vertrag mit 18 Textseiten und 2 eingescannten
+  // Anlagen liegt im Durchschnitt weit ueber der Schwelle - die beiden Anlagen
+  // blieben sonst leer, ohne dass es jemand merkt. Deshalb wird jede Seite
+  // einzeln beurteilt und nur die betroffenen werden nachgezogen.
+  const scannedPages = pages.length > 1 ? detectScannedPages(pages) : []
+  const partialScan =
+    !verdict.isScanned && scannedPages.length > 0 && scannedPages.length < pages.length
+
+  if (partialScan) {
+    logger.info('document-store', 'Einzelne Scanseiten erkannt', {
+      scanseiten: scannedPages.length,
+      seiten: pages.length
+    })
+    const ocr = await ocrPdf(
+      destPath,
+      settings.ocrLanguages,
+      settings.ocrQuality,
+      onProgress,
+      scannedPages
+    )
+    if (ocr.textByPage.size === 0) {
+      return { text, pageCount, ocrUsed: false, ocrWarning: ocr.warning }
+    }
+    // Erkannten Text an der Stelle der leeren Seite einsetzen, damit die
+    // Reihenfolge des Dokuments erhalten bleibt.
+    const merged = pages.map((pageText, index) => ocr.textByPage.get(index + 1) ?? pageText)
+    return {
+      text: merged.join('\n').trim(),
+      pageCount,
+      ocrUsed: true,
+      ocrWarning: ocr.warning
+    }
+  }
+
+  if (!verdict.isScanned) {
+    return { text, pageCount, ocrUsed: false }
+  }
+
+  logger.info('document-store', 'Scan erkannt, starte OCR-Fallback', {
+    reason: verdict.reason,
+    charsPerPage: Math.round(verdict.charsPerPage),
+    pageCount
+  })
+
+  const ocr = await ocrPdf(destPath, settings.ocrLanguages, settings.ocrQuality, onProgress)
+
+  // Bei 'gibberish' ist die vorhandene Textebene Muell (kaputtes Font-Encoding
+  // oder eine misslungene Fremd-OCR). Sie darf dann NICHT gewinnen, nur weil
+  // sie mehr Zeichen hat - genau das waere ein stiller Rueckfall auf Kauderwelsch.
+  const textLayerUsable = verdict.kind !== 'gibberish'
+  if (textLayerUsable && ocr.text.trim().length <= text.trim().length) {
+    return { text, pageCount, ocrUsed: false, ocrWarning: ocr.warning }
+  }
+  if (ocr.text.trim().length === 0) {
+    // OCR hat nichts geliefert - dann lieber die (schlechte) Textebene als nichts,
+    // die Pruefung auf Lesbarkeit weiter unten faengt den Rest ab.
+    return { text, pageCount, ocrUsed: false, ocrWarning: ocr.warning }
+  }
+  return {
+    text: ocr.text,
+    pageCount: pageCount ?? ocr.pagesProcessed,
+    ocrUsed: true,
+    ocrWarning: ocr.warning
+  }
+}
+
 async function extractTextByType(
   destPath: string,
-  ext: string
-): Promise<{ text: string; pageCount: number | null }> {
+  ext: string,
+  onProgress?: OcrProgress
+): Promise<ExtractionResult> {
   if (ext === '.pdf') {
-    const result = await extractPdf(destPath)
-    return { text: result.text, pageCount: result.pageCount }
+    return extractPdfWithOcrFallback(destPath, onProgress)
   }
   if (ext === '.docx') {
     const result = await extractDocx(destPath)
-    return { text: result.text, pageCount: null }
+    return { text: result.text, pageCount: null, ocrUsed: false }
   }
   if (ext === '.xlsx') {
     const result = extractXlsx(destPath)
-    return { text: result.text, pageCount: result.sheetCount }
+    return { text: result.text, pageCount: result.sheetCount, ocrUsed: false }
+  }
+  if (isPlainTextExtension(ext)) {
+    const result = await extractPlainText(destPath)
+    return { text: result.text, pageCount: result.pageCount, ocrUsed: false }
+  }
+  if (isEmailExtension(ext)) {
+    const result = await extractEml(destPath)
+    return { text: result.text, pageCount: result.pageCount, ocrUsed: false }
   }
   if (isImageExtension(ext)) {
-    const result = await recognizeImage(destPath)
-    return { text: result.text, pageCount: 1 }
+    const settings = getSettings()
+    const result = await recognizeImage(destPath, settings.ocrLanguages, settings.ocrQuality)
+    return { text: result.text, pageCount: 1, ocrUsed: true }
   }
   throw new Error(`Nicht unterstützter Dateityp: ${ext}`)
 }
 
-export async function importDocument(filePath: string): Promise<DoziiDocument> {
+export async function importDocument(
+  filePath: string,
+  onProgress?: OcrProgress
+): Promise<DoziiDocument> {
   const ext = extname(filePath).toLowerCase()
   const filename = basename(filePath)
 
@@ -126,11 +271,21 @@ export async function importDocument(filePath: string): Promise<DoziiDocument> {
   // Extract text - if this fails, we must clean up the copied file
   let extractedText: string
   let pageCount: number | null
+  let ocrUsed: boolean
+  let importWarning: string | null
 
   try {
-    const extracted = await extractTextByType(destPath, ext)
+    const extracted = await extractTextByType(destPath, ext, onProgress)
     extractedText = extracted.text.trim()
     pageCount = extracted.pageCount
+    ocrUsed = extracted.ocrUsed
+    importWarning = extracted.ocrWarning ?? null
+    if (importWarning) {
+      logger.warn('document-store', 'Texterkennung unvollstaendig', {
+        filename,
+        warning: importWarning
+      })
+    }
   } catch (err) {
     // Rollback: remove the copied file
     await unlink(destPath).catch((unlinkErr) => {
@@ -207,6 +362,8 @@ export async function importDocument(filePath: string): Promise<DoziiDocument> {
     detectedLanguage,
     extractedText,
     thumbnailPath: null,
+    ocrUsed: ocrUsed ? 1 : 0,
+    importWarning,
     createdAt: now,
     updatedAt: now
   }
@@ -219,7 +376,7 @@ export async function importDocument(filePath: string): Promise<DoziiDocument> {
     pageCount,
     detectedLanguage
   })
-  return doc as DoziiDocument
+  return rowToDocument(doc as DocumentRow)
 }
 
 export function getAllDocuments(): DoziiDocument[] {
@@ -228,14 +385,14 @@ export function getAllDocuments(): DoziiDocument[] {
     .select()
     .from(schema.documents)
     .orderBy(desc(schema.documents.createdAt))
-    .all() as DoziiDocument[]
+    .all()
+    .map(rowToDocument)
 }
 
 export function getDocumentById(id: string): DoziiDocument | undefined {
   const db = getDb()
-  return db.select().from(schema.documents).where(eq(schema.documents.id, id)).get() as
-    | DoziiDocument
-    | undefined
+  const row = db.select().from(schema.documents).where(eq(schema.documents.id, id)).get()
+  return row ? rowToDocument(row) : undefined
 }
 
 /**
@@ -269,10 +426,14 @@ export async function reImportDocument(id: string): Promise<DoziiDocument> {
   // Re-run extraction (same pipeline as fresh import)
   let extractedText: string
   let pageCount: number | null
+  let ocrUsed: boolean
+  let reImportWarning: string | null
   try {
     const extracted = await extractTextByType(doc.originalPath, ext)
     extractedText = extracted.text.trim()
     pageCount = extracted.pageCount
+    ocrUsed = extracted.ocrUsed
+    reImportWarning = extracted.ocrWarning ?? null
   } catch (err) {
     logger.error('document-store', 'Re-import extraction failed', {
       id,
@@ -313,6 +474,8 @@ export async function reImportDocument(id: string): Promise<DoziiDocument> {
   db.update(schema.documents)
     .set({
       extractedText,
+      ocrUsed: ocrUsed ? 1 : 0,
+      importWarning: reImportWarning,
       wordCount,
       detectedLanguage,
       pageCount,
@@ -366,4 +529,159 @@ export async function deleteDocument(id: string): Promise<void> {
 
   db.delete(schema.documents).where(eq(schema.documents.id, id)).run()
   logger.info('document-store', 'Document deleted', { id })
+}
+
+// ============================================================================
+// Listen und Suche (ohne Volltext ueber IPC)
+// ============================================================================
+
+/**
+ * Spaltenauswahl fuer Listenansichten. `extractedText` bleibt bewusst draussen:
+ * die Historie hat frueher jedes Dokument samt Volltext in den Renderer geladen
+ * und dort gefiltert - bei ein paar hundert Dokumenten sind das zweistellige
+ * Megabyte pro Seitenaufruf.
+ */
+const SUMMARY_COLUMNS = {
+  id: schema.documents.id,
+  filename: schema.documents.filename,
+  mimeType: schema.documents.mimeType,
+  fileSize: schema.documents.fileSize,
+  pageCount: schema.documents.pageCount,
+  wordCount: schema.documents.wordCount,
+  detectedLanguage: schema.documents.detectedLanguage,
+  ocrUsed: schema.documents.ocrUsed,
+  createdAt: schema.documents.createdAt,
+  updatedAt: schema.documents.updatedAt,
+  snippet: sql<string>`substr(${schema.documents.extractedText}, 1, ${SNIPPET_CHARS})`
+}
+
+type SummaryRow = Omit<DocumentSummary, 'ocrUsed'> & { ocrUsed: number }
+
+function toSummary(row: SummaryRow): DocumentSummary {
+  return { ...row, ocrUsed: row.ocrUsed === 1 }
+}
+
+export function listDocumentSummaries(): DocumentSummary[] {
+  const db = getDb()
+  return db
+    .select(SUMMARY_COLUMNS)
+    .from(schema.documents)
+    .orderBy(desc(schema.documents.createdAt))
+    .all()
+    .map(toSummary)
+}
+
+/**
+ * Volltextsuche ueber Dateiname und Inhalt - laeuft in SQLite, nicht im
+ * Renderer. LIKE ist bei SQLite nur fuer ASCII case-insensitiv, deshalb
+ * vergleichen wir beide Seiten in Kleinschreibung.
+ */
+export function searchDocuments(query: string): DocumentSummary[] {
+  const needle = query.trim().toLowerCase()
+  if (needle.length === 0) return listDocumentSummaries()
+
+  const db = getDb()
+  const pattern = `%${escapeLikePattern(needle)}%`
+  return db
+    .select(SUMMARY_COLUMNS)
+    .from(schema.documents)
+    .where(
+      or(
+        sql`lower(${schema.documents.filename}) LIKE ${pattern} ESCAPE ${LIKE_ESCAPE_CHAR}`,
+        sql`lower(${schema.documents.extractedText}) LIKE ${pattern} ESCAPE ${LIKE_ESCAPE_CHAR}`
+      )
+    )
+    .orderBy(desc(schema.documents.createdAt))
+    .limit(MAX_SEARCH_RESULTS)
+    .all()
+    .map(toSummary)
+}
+
+// ============================================================================
+// Text-Import (Zwischenablage)
+// ============================================================================
+
+/**
+ * Leitet einen Dateinamen aus der ersten sinnvollen Zeile des Textes ab.
+ * "Bescheid ueber Arbeitslosengeld II" -> "Bescheid ueber Arbeitslosengeld II.txt"
+ */
+/** Zeichen, die Windows in Dateinamen nicht erlaubt (Backslash ueber den Code, um Escaping zu sparen). */
+const FORBIDDEN_FILENAME_CHARS = new Set([
+  '<',
+  '>',
+  ':',
+  '"',
+  '/',
+  '|',
+  '?',
+  '*',
+  String.fromCharCode(92)
+])
+
+function deriveTitle(text: string): string {
+  const firstLine = text
+    .split('\n')
+    .map((l) => l.trim())
+    .find((l) => l.length >= 3)
+  const base = (firstLine ?? 'Eingefuegter Text').slice(0, 60)
+  // Fuer Dateisysteme unzulaessige Zeichen ersetzen. Steuerzeichen sind
+  // bewusst dabei - die kommen aus kaputtem Copy-Paste oder PDF-Extraktion.
+  const cleaned = [...base]
+    .map((char) => {
+      const code = char.codePointAt(0) ?? 0
+      return code < 0x20 || FORBIDDEN_FILENAME_CHARS.has(char) ? ' ' : char
+    })
+    .join('')
+  return cleaned.replace(/\s+/g, ' ').trim()
+}
+
+/**
+ * Importiert direkt eingefuegten Text. Die Zielgruppe kopiert Behoerdenpost
+ * oft aus einem Portal oder einer Mail - dann gibt es gar keine Datei.
+ * Der Text wird trotzdem als .txt in der verwalteten Ablage gespeichert,
+ * damit Re-Import, Export und Loeschen identisch funktionieren.
+ */
+export async function importTextDocument(payload: {
+  text: string
+  title?: string
+}): Promise<DoziiDocument> {
+  const extractedText = payload.text.trim()
+  if (extractedText.length === 0) {
+    throw new Error('Der eingefuegte Text ist leer.')
+  }
+
+  const db = getDb()
+  const docsDir = getDocumentsDir()
+  await mkdir(docsDir, { recursive: true })
+
+  const id = randomUUID()
+  const destPath = join(docsDir, `${id}.txt`)
+  const title = (payload.title?.trim() || deriveTitle(extractedText)) + '.txt'
+
+  await writeFile(destPath, extractedText, 'utf-8')
+
+  const wordCount = extractedText.split(/\s+/).filter(Boolean).length
+  const detectedLanguage = extractedText.length > 50 ? detectLanguage(extractedText) : null
+  const now = new Date().toISOString()
+
+  const doc: typeof schema.documents.$inferInsert = {
+    id,
+    filename: title,
+    originalPath: destPath,
+    mimeType: 'text/plain',
+    fileSize: Buffer.byteLength(extractedText, 'utf-8'),
+    pageCount: null,
+    wordCount,
+    detectedLanguage,
+    extractedText,
+    thumbnailPath: null,
+    ocrUsed: 0,
+    importWarning: null,
+    createdAt: now,
+    updatedAt: now
+  }
+
+  db.insert(schema.documents).values(doc).run()
+  logger.info('document-store', 'Text document imported', { id, wordCount, detectedLanguage })
+  return rowToDocument(doc as DocumentRow)
 }

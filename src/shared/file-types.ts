@@ -12,6 +12,9 @@ export const SUPPORTED_EXTENSIONS = [
   '.pdf',
   '.docx',
   '.xlsx',
+  '.txt',
+  '.md',
+  '.eml',
   '.jpg',
   '.jpeg',
   '.png',
@@ -36,6 +39,9 @@ const MIME_TYPES: Record<string, string> = {
   '.pdf': 'application/pdf',
   '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
   '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  '.txt': 'text/plain',
+  '.md': 'text/markdown',
+  '.eml': 'message/rfc822',
   '.jpg': 'image/jpeg',
   '.jpeg': 'image/jpeg',
   '.png': 'image/png',
@@ -51,4 +57,14 @@ export function getMimeType(ext: string): string {
 
 export function isImageExtension(ext: string): boolean {
   return ['.jpg', '.jpeg', '.png', '.tiff', '.tif', '.bmp', '.webp'].includes(ext.toLowerCase())
+}
+
+/** Reine Textformate, die ohne Parser eingelesen werden koennen. */
+export function isPlainTextExtension(ext: string): boolean {
+  return ['.txt', '.md'].includes(ext.toLowerCase())
+}
+
+/** E-Mail-Datei (RFC 822) - wird von eml-extractor.service gelesen. */
+export function isEmailExtension(ext: string): boolean {
+  return ext.toLowerCase() === '.eml'
 }

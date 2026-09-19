@@ -1,0 +1,13 @@
+{
+  "id": "az-note2-solide",
+  "title": "Qualifiziertes Zeugnis, Note 2, sauber formuliert",
+  "rationale": "Codetabelle 1.1: 'stets zu unserer vollen Zufriedenheit' ist Note 2 ('vollen' statt 'vollsten', aber mit Verstärker 'stets'). Sozialverhalten 'war stets einwandfrei' ist Note 2 (1.2), 'fundiertes Fachwissen' und 'sehr gute Arbeitsergebnisse' sind Note 2 (1.3), 'stets sorgfältig und zuverlässig' ist Note 2 (1.5). Die Reihenfolge Vorgesetzte - Kollegen - Kunden ist die Standardreihenfolge, also kein Code. Schlussformel vollständig, aber ohne Superlative. contentGrade 2, craftGrade 2.",
+  "text": "Brehmer & Tauber Steuerberatungsgesellschaft mbH\nAm Hafenkontor 3\n28195 Bremen\n\nARBEITSZEUGNIS\n\nHerr Milan Sorge, geboren am 2. März 1993, war vom 15. Januar 2021 bis zum 30. Juni 2026 in unserer Kanzlei als Steuerfachangestellter beschäftigt.\n\nUnsere Kanzlei betreut rund 400 kleine und mittlere Mandate aus Handwerk, Gastronomie und Handel. Herr Sorge war dem Team Lohn und Finanzbuchhaltung zugeordnet.\n\nSeine Aufgaben umfassten:\n\n- Laufende Finanzbuchhaltung für etwa 60 Mandanten\n- Lohn- und Gehaltsabrechnung einschließlich Meldewesen\n- Vorbereitung von Jahresabschlüssen und Einnahmenüberschussrechnungen\n- Erstellung von Umsatzsteuervoranmeldungen\n- Korrespondenz mit Finanzämtern und Sozialversicherungsträgern\n- Telefonische Betreuung der Mandanten in Routinefragen\n\nHerr Sorge besitzt ein fundiertes Fachwissen, das er sicher und zielgerichtet anwendete. Neue Vorschriften und Änderungen im Steuerrecht eignete er sich schnell an. Er zeigte eine gute Belastbarkeit, auch in der Abschlussphase und zu Fristterminen, und zeigte oft Eigeninitiative. Seine Arbeitsweise war stets sorgfältig und zuverlässig. Er erzielte sehr gute Arbeitsergebnisse.\n\nHerr Sorge führte die ihm übertragenen Aufgaben stets zu unserer vollen Zufriedenheit aus.\n\nSein Verhalten gegenüber Vorgesetzten, Kollegen und Mandanten war stets einwandfrei.\n\nHerr Sorge verlässt unsere Kanzlei auf eigenen Wunsch zum 30. Juni 2026, um sich beruflich weiterzuentwickeln. Wir bedauern seine Entscheidung. Wir danken ihm für die gute Zusammenarbeit und wünschen ihm für seinen weiteren Berufsweg viel Erfolg.\n\nBremen, 30. Juni 2026\n\nBrehmer & Tauber Steuerberatungsgesellschaft mbH\n\nIlka Brehmer\nSteuerberaterin",
+  "expect": {
+    "contentGrade": 2,
+    "craftGrade": 2,
+    "gradeTolerance": 1,
+    "mustFindPhrases": ["stets zu unserer vollen Zufriedenheit"],
+    "mustNotClaim": ["bemüht", "vollsten Zufriedenheit", "gab zu keiner Klage Anlass"]
+  }
+}

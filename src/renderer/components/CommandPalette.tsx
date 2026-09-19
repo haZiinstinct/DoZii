@@ -9,7 +9,7 @@ import {
   FileSearch
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import type { DoziiDocument } from '@shared/types'
+import type { DocumentSummary } from '@shared/types'
 
 interface CommandItem {
   id: string
@@ -33,24 +33,45 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
   const navigate = useNavigate()
   const { t } = useTranslation()
   const [query, setQuery] = useState('')
-  const [docs, setDocs] = useState<DoziiDocument[]>([])
+  const [docs, setDocs] = useState<DocumentSummary[]>([])
   const [selectedIndex, setSelectedIndex] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  // Load documents when palette opens
+  // Zuruecksetzen und Fokus, wenn die Palette aufgeht
   useEffect(() => {
     if (!open) return
-    window.api.documents
-      .getAll()
-      .then(setDocs)
-      .catch(() => {
-        /* silent */
-      })
     setQuery('')
+    setDocs([])
     setSelectedIndex(0)
     // Focus input after render
     setTimeout(() => inputRef.current?.focus(), 0)
   }, [open])
+
+  // Volltextsuche laeuft im Hauptprozess (SQLite). Frueher wurden ALLE
+  // Dokumente samt Volltext in den Renderer geladen und hier gefiltert.
+  useEffect(() => {
+    if (!open) return
+    const q = query.trim()
+    if (q.length === 0) {
+      setDocs([])
+      return
+    }
+    let cancelled = false
+    const timer = setTimeout(() => {
+      window.api.documents
+        .search(q)
+        .then((results) => {
+          if (!cancelled) setDocs(results)
+        })
+        .catch(() => {
+          /* silent - Suche ist kein kritischer Pfad */
+        })
+    }, 200)
+    return () => {
+      cancelled = true
+      clearTimeout(timer)
+    }
+  }, [open, query])
 
   const navigationItems = useMemo<CommandItem[]>(
     () => [
@@ -91,22 +112,16 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
   )
 
   const documentItems = useMemo<CommandItem[]>(() => {
-    const q = query.toLowerCase().trim()
-    if (!q) return []
-    return docs
-      .filter(
-        (d) => d.filename.toLowerCase().includes(q) || d.extractedText.toLowerCase().includes(q)
-      )
-      .slice(0, 15)
-      .map((d) => ({
-        id: `doc-${d.id}`,
-        label: d.filename,
-        hint: `${d.wordCount ?? 0} ${t('common.words')} · ${
-          d.detectedLanguage === 'de' ? 'DE' : d.detectedLanguage === 'en' ? 'EN' : ''
-        }`,
-        icon: <FileText size={16} aria-hidden="true" />,
-        action: () => navigate(`/document/${d.id}`)
-      }))
+    if (!query.trim()) return []
+    return docs.slice(0, 15).map((d) => ({
+      id: `doc-${d.id}`,
+      label: d.filename,
+      hint: `${d.wordCount ?? 0} ${t('common.words')} · ${
+        d.detectedLanguage === 'de' ? 'DE' : d.detectedLanguage === 'en' ? 'EN' : ''
+      }`,
+      icon: <FileText size={16} aria-hidden="true" />,
+      action: () => navigate(`/document/${d.id}`)
+    }))
   }, [docs, query, navigate, t])
 
   const allItems = useMemo(() => {

@@ -1,0 +1,13 @@
+{
+  "id": "az-note5-bemueht",
+  "title": "Qualifiziertes Zeugnis, Note 5, das klassische Bemueht-Zeugnis",
+  "rationale": "Codetabelle 1.1: 'im Großen und Ganzen zu unserer Zufriedenheit' ist Note 5, ebenso das Wort 'bemüht' ('war bemüht' = ALARM, Note 5-6). Sozialverhalten 'gab zu keiner Klage Anlass' ist Note 5 (1.2) und bedeutet nach Referenz 2 B, dass es Klagen gab. 'zeigte Bereitschaft, sich einzubringen' ist Note 5 (1.4). Dazu Auslassungs-Codes (Referenz 2 E): kein Dank, kein Bedauern, keine Erfolgswünsche, nur 'alles Gute für den weiteren Lebensweg' ohne 'beruflich' (Referenz 2 C: Berufswechsel empfohlen). Note 6 wäre erst 'hat sich bemüht, den Anforderungen gerecht zu werden' als Hauptformel - die steht hier nicht, deshalb contentGrade 5 mit Toleranz 1. craftGrade 4, weil Abschnitte fehlen und die Schlussformel abgehackt ist.",
+  "text": "Pralow Gebäudeservice e.K.\nKurze Reihe 9\n38118 Braunschweig\n\nArbeitszeugnis\n\nHerr Kevin Baumhauer, geboren am 19. Mai 1999, war vom 1. Oktober 2024 bis zum 28. Februar 2026 in unserem Betrieb als Mitarbeiter in der Unterhaltsreinigung beschäftigt.\n\nZu seinen Aufgaben gehörten die Reinigung von Büro- und Sanitärräumen in drei von uns betreuten Objekten, das Auffüllen der Verbrauchsmaterialien sowie die Führung der Reinigungsnachweise.\n\nHerr Baumhauer war mit den Grundlagen der Unterhaltsreinigung vertraut. Er zeigte Bereitschaft, sich einzubringen. Die Einhaltung der vorgegebenen Reinigungspläne war ihm ein Anliegen. Herr Baumhauer war bemüht, die ihm gestellten Aufgaben sorgfältig auszuführen.\n\nHerr Baumhauer erledigte die ihm übertragenen Arbeiten im Großen und Ganzen zu unserer Zufriedenheit.\n\nSein Verhalten gegenüber Vorgesetzten und Kollegen gab zu keiner Klage Anlass.\n\nDas Arbeitsverhältnis endet zum 28. Februar 2026. Wir wünschen Herrn Baumhauer für seinen weiteren Lebensweg alles Gute.\n\nBraunschweig, 28. Februar 2026\n\nPralow Gebäudeservice e.K.\n\nHenning Pralow\nInhaber",
+  "expect": {
+    "contentGrade": 5,
+    "craftGrade": 4,
+    "gradeTolerance": 1,
+    "mustFindPhrases": ["im Großen und Ganzen zu unserer Zufriedenheit"],
+    "mustNotClaim": ["vollen Zufriedenheit", "stets einwandfrei", "vorbildlich"]
+  }
+}

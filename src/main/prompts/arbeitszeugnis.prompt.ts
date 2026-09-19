@@ -266,6 +266,10 @@ Liefere AUSSCHLIESSLICH ein JSON-Objekt. Keine Einleitung, kein Text davor/danac
 }
 \`\`\`
 
+**NOTE UND WORTLAUT MUESSEN ZUSAMMENPASSEN** (haeufigster Fehler): \`grade\` und \`label\` beschreiben dieselbe Note. Verbindliche Zuordnung:
+1 = sehr gut | 2 = gut | 3 = befriedigend | 4 = ausreichend | 5 = mangelhaft | 6 = ungenuegend
+Pruefe vor der Ausgabe jede Note einzeln: Passt die Zahl zum Wort? Passt beides zur Begruendung? Ein \`"grade": 1\` mit \`"label": "mangelhaft"\` ist ein Widerspruch - die Oberflaeche zeigt dann gar keine Note mehr an, weil sie nicht raten darf.
+
 **severity-Werte**: "red" (klarer Code, eindeutig negativ), "yellow" (zweideutig/neutral), "green" (tatsaechlich positiv, kein versteckter Code).
 **confidence-Werte**: "high", "medium", "low".
 **assessment-Werte** in closingFormula: "positive", "neutral", "negative".

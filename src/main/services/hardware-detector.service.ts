@@ -1,27 +1,71 @@
 import os from 'os'
+import path from 'path'
 import { execFile } from 'child_process'
 import { promisify } from 'util'
-import type { GpuInfo, HardwareInfo, HardwareProfile } from '@shared/types'
+import type { GpuInfo, HardwareInfo } from '@shared/types'
+import { determineProfile, usableVramGb } from '@shared/hardware-profile'
+import { modelForProfile, profileModelSizes } from '@shared/model-catalog'
 import { logger } from './logger.service'
 
 const execFileAsync = promisify(execFile)
 
+/**
+ * Wo nvidia-smi zu finden ist. Der Treiber legt es normalerweise nach
+ * System32 und damit in den PATH - bei aelteren Installationen liegt es aber
+ * nur im Programmverzeichnis. Ohne diesen zweiten Pfad faellt die Erkennung
+ * auf die Registry zurueck, die den Hersteller nur ueber den Namen raet.
+ */
+function nvidiaSmiCandidates(): string[] {
+  const paths = ['nvidia-smi']
+  if (process.platform !== 'win32') return paths
+  const systemRoot = process.env.SystemRoot
+  const programFiles = process.env.ProgramFiles
+  if (systemRoot) paths.push(path.join(systemRoot, 'System32', 'nvidia-smi.exe'))
+  if (programFiles) {
+    paths.push(path.join(programFiles, 'NVIDIA Corporation', 'NVSMI', 'nvidia-smi.exe'))
+  }
+  return paths
+}
+
+async function runNvidiaSmi(): Promise<string | null> {
+  for (const bin of nvidiaSmiCandidates()) {
+    try {
+      const { stdout } = await execFileAsync(
+        bin,
+        ['--query-gpu=name,memory.total', '--format=csv,noheader,nounits'],
+        { encoding: 'utf8', timeout: 5000 }
+      )
+      if (stdout.trim()) return stdout.trim()
+    } catch {
+      // Naechsten Pfad probieren; das Ergebnis wird unten protokolliert.
+    }
+  }
+  return null
+}
+
 async function detectNvidiaGpu(): Promise<GpuInfo | null> {
   try {
-    const { stdout } = await execFileAsync(
-      'nvidia-smi',
-      ['--query-gpu=name,memory.total', '--format=csv,noheader,nounits'],
-      { encoding: 'utf8', timeout: 5000 }
-    )
-    const output = stdout.trim()
+    const output = await runNvidiaSmi()
     if (!output) return null
-    const [name, vramStr] = output.split(',').map((s) => s.trim())
-    const gpu: GpuInfo = {
-      name: name || 'NVIDIA GPU',
-      vramMb: parseInt(vramStr || '0', 10),
-      vendor: 'nvidia'
+
+    // nvidia-smi gibt EINE ZEILE PRO GPU aus. Frueher wurde die gesamte
+    // Ausgabe an Kommas zerlegt - bei einem Laptop mit zwei Karten oder einem
+    // Rechner mit zwei GPUs kam dabei die erstbeste heraus, nicht die
+    // staerkste. Ollama nimmt aber die groesste.
+    const candidates: GpuInfo[] = []
+    for (const line of output.split('\n')) {
+      const [name, vramStr] = line.split(',').map((part) => part.trim())
+      const vramMb = Number.parseInt(vramStr ?? '', 10)
+      if (!Number.isFinite(vramMb) || vramMb <= 0) continue
+      candidates.push({ name: name || 'NVIDIA GPU', vramMb, vendor: 'nvidia' })
     }
-    logger.info('hardware-detector', 'nvidia-smi detected GPU', gpu)
+    if (candidates.length === 0) return null
+
+    const gpu = candidates.sort((a, b) => b.vramMb - a.vramMb)[0]
+    logger.info('hardware-detector', 'nvidia-smi detected GPU', {
+      ...gpu,
+      gpuCount: candidates.length
+    })
     return gpu
   } catch (err) {
     logger.debug('hardware-detector', 'nvidia-smi probe failed', {
@@ -43,10 +87,11 @@ async function detectAmdGpu(): Promise<GpuInfo | null> {
     const lines = output.split('\n')
     if (lines.length < 2) return null
     const totalMatch = lines[1]?.match(/(\d+)/)
-    const vramMb = totalMatch ? parseInt(totalMatch[1], 10) / (1024 * 1024) : 0
+    const rawBytes = totalMatch ? Number.parseInt(totalMatch[1], 10) : Number.NaN
+    if (!Number.isFinite(rawBytes) || rawBytes <= 0) return null
     const gpu: GpuInfo = {
       name: 'AMD GPU',
-      vramMb: Math.round(vramMb),
+      vramMb: Math.round(rawBytes / (1024 * 1024)),
       vendor: 'amd'
     }
     logger.info('hardware-detector', 'rocm-smi detected GPU', gpu)
@@ -177,24 +222,6 @@ async function detectGpuCached(): Promise<GpuInfo | null> {
   return cachedGpu
 }
 
-function determineProfile(ramGb: number, gpu: GpuInfo | null): HardwareProfile {
-  const vramGb = gpu ? gpu.vramMb / 1024 : 0
-
-  if (ramGb >= 64 || vramGb >= 24) return 'power'
-  if (ramGb >= 32 || vramGb >= 12) return 'strong'
-  if (ramGb >= 16 || vramGb >= 6) return 'medium'
-  if (ramGb >= 8) return 'light'
-  return 'minimal'
-}
-
-const MODEL_MAP: Record<HardwareProfile, string> = {
-  minimal: 'gemma3:1b',
-  light: 'qwen2.5:3b', // was llama3.2:3b - Qwen is stronger at German + JSON
-  medium: 'qwen2.5:7b', // was llama3.1:8b - Qwen is stronger at German + JSON
-  strong: 'mistral-small:24b',
-  power: 'llama3.1:70b'
-}
-
 export async function detectHardware(): Promise<HardwareInfo> {
   const cpus = os.cpus()
   const totalRam = os.totalmem()
@@ -209,7 +236,10 @@ export async function detectHardware(): Promise<HardwareInfo> {
   const threads = logicalCpus
 
   const gpu = await detectGpuCached()
-  const profile = determineProfile(totalGb, gpu)
+  // Zaehlt nur, was Ollama auch benutzen kann - und nur, wenn die Zahl
+  // ueberhaupt plausibel ist.
+  const vramGb = usableVramGb(gpu)
+  const profile = determineProfile({ ramGb: totalGb, vramGb }, profileModelSizes())
 
   const info: HardwareInfo = {
     cpu: {
@@ -225,12 +255,13 @@ export async function detectHardware(): Promise<HardwareInfo> {
       arch: os.arch()
     },
     profile,
-    recommendedModel: MODEL_MAP[profile]
+    recommendedModel: modelForProfile(profile)
   }
 
   logger.info('hardware-detector', 'Hardware detected', {
     profile,
     ramGb: totalGb,
+    vramGb: Math.round(vramGb * 10) / 10,
     logicalCpus,
     hasGpu: !!gpu,
     gpuVendor: gpu?.vendor

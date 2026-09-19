@@ -10,6 +10,9 @@
  * - JSON-Block scanner for Arbeitszeugnis (finds the valid block, not blindly the last)
  */
 
+import { stripThinking } from '@shared/strip-thinking'
+import { findJson } from '@shared/json-blocks'
+
 // ============================================================================
 // Shared helper functions
 // ============================================================================
@@ -476,6 +479,16 @@ export interface ZeugnisGrade {
   label?: string
   confidence: 'high' | 'medium' | 'low'
   reasoning: string
+  /**
+   * Die Note, die sich aus dem Wortlaut ergibt ("mangelhaft" -> 5). Weicht sie
+   * von `grade` ab, hat das Modell sich widersprochen.
+   */
+  labelGrade?: Grade
+  /**
+   * Zahl und Wortlaut passen nicht zusammen. Kommt vor - dann darf die
+   * Oberflaeche keine der beiden Noten als Tatsache hinstellen.
+   */
+  conflicted: boolean
 }
 
 export interface ArbeitszeugnisResult {
@@ -505,6 +518,31 @@ function isValidGrade(n: unknown): n is Grade {
   return typeof n === 'number' && n >= 1 && n <= 6 && Number.isInteger(n)
 }
 
+/**
+ * Deutsche Notenwoerter -> Zahl. Dient dem Abgleich mit `grade`: Modelle
+ * liefern gelegentlich eine Zahl, die nicht zum Wortlaut passt (beobachtet:
+ * `"grade": 1, "label": "mangelhaft"` mit einer Begruendung, die eindeutig
+ * eine 5 beschreibt).
+ */
+const GRADE_WORDS: ReadonlyArray<[RegExp, Grade]> = [
+  [/sehr\s*gut/i, 1],
+  [/ungenuegend|ungenügend/i, 6],
+  [/mangelhaft/i, 5],
+  [/ausreichend/i, 4],
+  [/befriedigend/i, 3],
+  // "gut" zuletzt und nur als ganzes Wort: sonst greift es auch in
+  // "sehr gut", "ungenuegend" oder "gutachterlich".
+  [/\bgut\b/i, 2]
+]
+
+export function gradeFromLabel(label: string | undefined): Grade | undefined {
+  if (!label) return undefined
+  for (const [pattern, grade] of GRADE_WORDS) {
+    if (pattern.test(label)) return grade
+  }
+  return undefined
+}
+
 function isValidSeverity(s: unknown): s is ZeugnisSeverity {
   return s === 'green' || s === 'yellow' || s === 'red'
 }
@@ -514,35 +552,22 @@ function isValidConfidence(c: unknown): c is 'high' | 'medium' | 'low' {
 }
 
 /**
- * Scan all ```json``` blocks in the markdown and return the first one that
- * has the expected Arbeitszeugnis schema (overallGrade + sections). This is
- * MUCH safer than blindly taking the last block, because the model sometimes
- * embeds example JSON snippets in the prose.
+ * Sucht den JSON-Block mit dem erwarteten Zeugnis-Schema.
+ *
+ * Geprueft wird das Schema, nicht die Position: Modelle zitieren gern das
+ * Beispiel-JSON aus dem Prompt mit, und blind den letzten Block zu nehmen
+ * liefert dann das Beispiel statt der Antwort.
  */
 function findValidArbeitszeugnisJson(markdown: string): Record<string, unknown> | null {
-  const blocks = [...markdown.matchAll(/```json\s*([\s\S]*?)```/gi)]
-  // Iterate from last to first (the real answer is usually at the end)
-  for (let i = blocks.length - 1; i >= 0; i--) {
-    const raw = blocks[i][1].trim()
-    try {
-      const parsed = JSON.parse(raw) as Record<string, unknown>
-      if (
-        parsed &&
-        typeof parsed === 'object' &&
-        Array.isArray(parsed.sections) &&
-        // Accept either the new dual-grade schema (contentGrade) or the legacy
-        // single-grade schema (overallGrade). This preserves backwards compat
-        // so old persisted analyses still render.
-        ((parsed.contentGrade && typeof parsed.contentGrade === 'object') ||
-          (parsed.overallGrade && typeof parsed.overallGrade === 'object'))
-      ) {
-        return parsed
-      }
-    } catch {
-      // Invalid JSON, keep scanning
-    }
-  }
-  return null
+  return findJson(
+    markdown,
+    (parsed) =>
+      Array.isArray(parsed.sections) &&
+      // Neues Schema mit getrennten Noten oder das alte mit einer - sonst
+      // wuerden gespeicherte Altanalysen nicht mehr angezeigt.
+      ((typeof parsed.contentGrade === 'object' && parsed.contentGrade !== null) ||
+        (typeof parsed.overallGrade === 'object' && parsed.overallGrade !== null))
+  )
 }
 
 /**
@@ -553,11 +578,18 @@ function extractGrade(raw: unknown): ZeugnisGrade | null {
   if (typeof raw !== 'object' || raw === null) return null
   const obj = raw as Record<string, unknown>
   if (!isValidGrade(obj.grade)) return null
+  const label = typeof obj.label === 'string' ? obj.label : undefined
+  const labelGrade = gradeFromLabel(label)
+  const conflicted = labelGrade !== undefined && labelGrade !== obj.grade
   return {
     grade: obj.grade,
-    label: typeof obj.label === 'string' ? obj.label : undefined,
+    label,
     confidence: isValidConfidence(obj.confidence) ? obj.confidence : 'medium',
-    reasoning: typeof obj.reasoning === 'string' ? obj.reasoning : ''
+    reasoning: typeof obj.reasoning === 'string' ? obj.reasoning : '',
+    labelGrade,
+    // Ein Widerspruch macht die Angabe unsicher - unabhaengig davon, was das
+    // Modell selbst zu seiner Konfidenz behauptet.
+    conflicted
   }
 }
 
@@ -581,7 +613,9 @@ export function parseArbeitszeugnis(
   documentText?: string
 ): ArbeitszeugnisResult | null {
   try {
-    const parsed = findValidArbeitszeugnisJson(markdown)
+    // Denkmodelle stellen ihrer Antwort einen Gedankengang voran. Bleibt
+    // der stehen, findet die JSON-Suche dahinter nichts mehr.
+    const parsed = findValidArbeitszeugnisJson(stripThinking(markdown))
     if (!parsed) return null
 
     // Dual-grade schema: prefer contentGrade + craftGrade, fall back to overallGrade
@@ -593,7 +627,9 @@ export function parseArbeitszeugnis(
       grade: 3,
       label: 'Nicht separat bewertet',
       confidence: 'low',
-      reasoning: 'Diese Analyse stammt aus einer aelteren Version ohne separate Struktur-Bewertung.'
+      reasoning:
+        'Diese Analyse stammt aus einer aelteren Version ohne separate Struktur-Bewertung.',
+      conflicted: false
     }
 
     // Legacy overallGrade is the same as contentGrade for backwards-compat UI

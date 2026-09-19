@@ -4,7 +4,8 @@ import { Loader2 } from 'lucide-react'
 import i18n from 'i18next'
 import { MainLayout } from './components/layout/MainLayout'
 import { applyLanguageDirection } from './hooks/useLanguageDirection'
-import './i18n'
+import { applyAppearance } from './hooks/useAppearance'
+import { switchLanguage } from './i18n'
 
 // Route-basiertes Code-Splitting: jede Seite wird erst beim Navigieren geladen,
 // statt alles in einen Renderer-Chunk zu packen. Named exports -> default mappen.
@@ -41,8 +42,9 @@ export function App() {
     window.api.settings
       .get()
       .then((s) => {
-        if (s.language && s.language !== i18n.language) i18n.changeLanguage(s.language)
+        if (s.language && s.language !== i18n.language) void switchLanguage(s.language)
         if (s.language) applyLanguageDirection(s.language)
+        applyAppearance(s.fontScale, s.highContrast)
       })
       .catch(() => {
         /* Default-Sprache bleibt aktiv */

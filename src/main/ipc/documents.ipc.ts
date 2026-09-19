@@ -3,16 +3,54 @@ import { readdir, stat } from 'fs/promises'
 import { join, extname, resolve } from 'path'
 import {
   importDocument,
-  getAllDocuments,
+  importTextDocument,
+  listDocumentSummaries,
+  searchDocuments,
   getDocumentById,
   deleteDocument,
   reImportDocument
 } from '../services/document-store.service'
 import { generateFirstImpression, getFirstImpression } from '../services/first-impression.service'
 import { getSelectedModel } from './analysis.ipc'
+import { resolveActiveModel } from '../services/model-resolver.service'
 import { logger } from '../services/logger.service'
 import { SUPPORTED_EXTENSION_SET, DIALOG_EXTENSIONS } from '@shared/file-types'
+import { MAX_TEXT_IMPORT_CHARS } from '../config/constants'
 import { isValidId } from './_validators'
+import type { TextImportPayload } from '@shared/types'
+
+/**
+ * Ersteindruck direkt nach dem Import erzeugen - im Hintergrund, damit der
+ * Import nicht darauf wartet. Er traegt den Ein-Klick-Flow: ohne ihn weiss die
+ * App nicht, welcher Analyse-Modus zum Dokument passt.
+ *
+ * Fehler sind hier nie fatal - im schlimmsten Fall gibt es eben keinen
+ * Ersteindruck und der Nutzer waehlt den Modus selbst.
+ */
+async function generateFirstImpressionInBackground(
+  documentId: string,
+  win: BrowserWindow | null
+): Promise<void> {
+  try {
+    const resolution = await resolveActiveModel()
+    if (resolution.kind !== 'ok') {
+      logger.info('documents.ipc', 'Kein Modell fuer den Ersteindruck verfuegbar', {
+        documentId,
+        reason: resolution.kind
+      })
+      return
+    }
+    const impression = await generateFirstImpression(documentId, resolution.model)
+    if (impression && win && !win.isDestroyed()) {
+      win.webContents.send('documents:firstImpression', impression)
+    }
+  } catch (err) {
+    logger.warn('documents.ipc', 'Ersteindruck fehlgeschlagen', {
+      documentId,
+      error: err instanceof Error ? err.message : String(err)
+    })
+  }
+}
 
 export function registerDocumentsIpc(): void {
   ipcMain.handle('documents:openDialog', async (event) => {
@@ -56,7 +94,7 @@ export function registerDocumentsIpc(): void {
     }
   })
 
-  ipcMain.handle('documents:import', async (_event, filePath: string) => {
+  ipcMain.handle('documents:import', async (event, filePath: string) => {
     if (typeof filePath !== 'string' || filePath.length === 0) {
       throw new Error('Ungültiger Dateipfad')
     }
@@ -69,8 +107,16 @@ export function registerDocumentsIpc(): void {
     }
 
     logger.info('documents.ipc', 'Importing document', { filePath: normalizedPath })
+    // Bei gescannten PDFs laeuft OCR ueber viele Seiten - der Renderer bekommt
+    // Zwischenstaende, damit der Import nicht wie ein Haenger aussieht.
+    const win = BrowserWindow.fromWebContents(event.sender)
+    const onProgress = (page: number, total: number): void => {
+      if (win && !win.isDestroyed()) {
+        win.webContents.send('documents:importProgress', { page, total })
+      }
+    }
     try {
-      const doc = await importDocument(normalizedPath)
+      const doc = await importDocument(normalizedPath, onProgress)
 
       logger.info('documents.ipc', 'Document imported', {
         id: doc.id,
@@ -78,6 +124,7 @@ export function registerDocumentsIpc(): void {
         wordCount: doc.wordCount,
         pageCount: doc.pageCount
       })
+      void generateFirstImpressionInBackground(doc.id, win)
       return doc
     } catch (err) {
       logger.error('documents.ipc', 'Document import failed', {
@@ -88,8 +135,35 @@ export function registerDocumentsIpc(): void {
     }
   })
 
+  // Direkt eingefuegter Text - fuer alles, was aus einem Portal oder einer
+  // Mail kopiert wurde und gar nicht erst als Datei existiert.
+  ipcMain.handle('documents:importText', async (event, payload: TextImportPayload) => {
+    if (!payload || typeof payload !== 'object') {
+      throw new Error('Ungueltige Eingabe: kein Text uebergeben.')
+    }
+    const text = typeof payload.text === 'string' ? payload.text : ''
+    if (text.trim().length === 0) {
+      throw new Error('Der eingefuegte Text ist leer.')
+    }
+    if (text.length > MAX_TEXT_IMPORT_CHARS) {
+      throw new Error(
+        `Der Text ist zu lang (${text.length} Zeichen, erlaubt sind ${MAX_TEXT_IMPORT_CHARS}). ` +
+          'Bitte kuerzen oder als Datei importieren.'
+      )
+    }
+    const title = typeof payload.title === 'string' ? payload.title.slice(0, 200) : undefined
+    const doc = await importTextDocument({ text, title })
+    void generateFirstImpressionInBackground(doc.id, BrowserWindow.fromWebContents(event.sender))
+    return doc
+  })
+
   ipcMain.handle('documents:getAll', () => {
-    return getAllDocuments()
+    return listDocumentSummaries()
+  })
+
+  ipcMain.handle('documents:search', (_event, query: string) => {
+    if (typeof query !== 'string') return listDocumentSummaries()
+    return searchDocuments(query.slice(0, 200))
   })
 
   ipcMain.handle('documents:getById', (_event, id: string) => {

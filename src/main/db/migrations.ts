@@ -1,4 +1,4 @@
-import { copyFileSync } from 'fs'
+import { copyFileSync, existsSync, unlinkSync } from 'fs'
 
 /**
  * Minimales Migrationssystem auf Basis von PRAGMA user_version.
@@ -74,15 +74,79 @@ const BASELINE_SQL = `
   CREATE INDEX IF NOT EXISTS idx_documents_created ON documents(created_at);
 `
 
+// v2: Fristen-Radar. Pro Dokument berechnete Fristen mit Beleg-Zitat.
+const DEADLINES_SQL = `
+  CREATE TABLE IF NOT EXISTS deadlines (
+    id TEXT PRIMARY KEY,
+    document_id TEXT NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
+    kind TEXT NOT NULL,
+    label TEXT NOT NULL,
+    due_date TEXT NOT NULL,
+    start_date TEXT,
+    period_text TEXT,
+    quote TEXT NOT NULL,
+    confidence TEXT NOT NULL,
+    source TEXT NOT NULL,
+    note TEXT,
+    created_at TEXT NOT NULL
+  );
+  CREATE INDEX IF NOT EXISTS idx_deadlines_document ON deadlines(document_id);
+  CREATE INDEX IF NOT EXISTS idx_deadlines_due ON deadlines(due_date);
+`
+
+// v3: Merkt sich, ob der Text per Texterkennung entstanden ist. Wichtig fuer
+// die Warnung in der UI - OCR verwechselt Ziffern, und bei einem Bescheid
+// haengt an einer Ziffer viel.
+const OCR_FLAG_SQL = `
+  ALTER TABLE documents ADD COLUMN ocr_used INTEGER NOT NULL DEFAULT 0;
+`
+
+// v4: Hinweis aus dem Import (z.B. "3 von 20 Seiten konnten nicht erkannt
+// werden"). Stand vorher nur im Logfile - der Nutzer sah ein scheinbar
+// vollstaendiges Dokument, dem in Wahrheit Seiten fehlten.
+const IMPORT_WARNING_SQL = `
+  ALTER TABLE documents ADD COLUMN import_warning TEXT;
+`
+
+// v5: Vorbehalte zum Ergebnis als Daten statt als angehaengter Fliesstext.
+// Der Hinweis "gekuerzt" bzw. "in N Abschnitten analysiert" hing bisher hinten
+// am Markdown - die strukturierten Karten-Ansichten (Zeugnis, Vertrag) zeigen
+// aber gar kein Markdown, dort war der Vorbehalt unsichtbar.
+const ANALYSIS_NOTICE_SQL = `
+  ALTER TABLE analyses ADD COLUMN notice TEXT;
+`
+
 export const MIGRATIONS: Migration[] = [
   {
     version: 1,
     up: (db) => {
       db.exec(BASELINE_SQL)
     }
+  },
+  {
+    version: 2,
+    up: (db) => {
+      db.exec(DEADLINES_SQL)
+    }
+  },
+  {
+    version: 3,
+    up: (db) => {
+      db.exec(OCR_FLAG_SQL)
+    }
+  },
+  {
+    version: 4,
+    up: (db) => {
+      db.exec(IMPORT_WARNING_SQL)
+    }
+  },
+  {
+    version: 5,
+    up: (db) => {
+      db.exec(ANALYSIS_NOTICE_SQL)
+    }
   }
-  // Zukünftige Migrationen hier anhängen, z.B.:
-  // { version: 2, up: (db) => { db.exec('ALTER TABLE documents ADD COLUMN ...') } }
 ]
 
 export interface MigrationResult {
@@ -95,9 +159,35 @@ function getUserVersion(db: SqliteDb): number {
   return Number(row.user_version)
 }
 
+/**
+ * Sicherung vor einer Migration - aber immer nur EINE.
+ *
+ * Frueher entstand pro Migration eine eigene Vollkopie. Nach vier Migrationen
+ * lagen vier unverschluesselte Kopien saemtlicher Dokumente, Analysen und
+ * Chats im Nutzerverzeichnis, ohne dass das jemand sagt oder aufraeumt. Die
+ * Sicherung soll ein gescheitertes Update auffangen, kein Archiv anlegen.
+ */
 function backupBeforeMigration(db: SqliteDb, dbPath: string, targetVersion: number): void {
   db.exec('PRAGMA wal_checkpoint(TRUNCATE)')
-  copyFileSync(dbPath, `${dbPath}.bak-v${targetVersion}`)
+  const target = `${dbPath}.bak`
+  if (existsSync(target)) {
+    try {
+      unlinkSync(target)
+    } catch {
+      // Laesst sie sich nicht loeschen, wird sie gleich ueberschrieben.
+    }
+  }
+  copyFileSync(dbPath, target)
+  // Alte, versionierte Sicherungen frueherer DoZii-Staende aufraeumen.
+  for (let version = 2; version <= targetVersion; version++) {
+    const legacy = `${dbPath}.bak-v${version}`
+    if (!existsSync(legacy)) continue
+    try {
+      unlinkSync(legacy)
+    } catch {
+      // Nicht kritisch - die Datei bleibt dann eben liegen.
+    }
+  }
 }
 
 /**

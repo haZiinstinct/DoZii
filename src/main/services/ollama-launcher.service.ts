@@ -2,6 +2,12 @@ import { spawn, execFileSync } from 'child_process'
 import { existsSync } from 'fs'
 import { homedir } from 'os'
 import { join } from 'path'
+import { getOllamaUrl } from './ollama-client.service'
+
+/** Health-Endpoint der konfigurierten Ollama-Instanz. */
+function tagsUrl(): string {
+  return new URL('/api/tags', getOllamaUrl()).toString()
+}
 
 export interface OllamaInstallation {
   installed: boolean
@@ -162,7 +168,7 @@ async function waitForOllama(timeoutMs: number): Promise<boolean> {
   const start = Date.now()
   while (Date.now() - start < timeoutMs) {
     try {
-      const response = await fetch('http://localhost:11434/api/tags', {
+      const response = await fetch(tagsUrl(), {
         signal: AbortSignal.timeout(1000)
       })
       if (response.ok) return true
@@ -182,7 +188,7 @@ async function waitForOllamaDown(timeoutMs: number): Promise<boolean> {
   const start = Date.now()
   while (Date.now() - start < timeoutMs) {
     try {
-      await fetch('http://localhost:11434/api/tags', {
+      await fetch(tagsUrl(), {
         signal: AbortSignal.timeout(500)
       })
     } catch {

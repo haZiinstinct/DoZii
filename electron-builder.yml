@@ -5,6 +5,12 @@ directories:
 files:
   - '!**/.vscode/*'
   - '!src/*'
+  # Eval-Harness ist Entwicklungswerkzeug: Beispieldokumente und Testlaeufe
+  # haben im Installationspaket nichts verloren.
+  - '!eval/*'
+  - '!vitest.config.ts'
+  - '!vitest.eval.config.ts'
+  - '!eslint.config.mjs'
   - '!electron.vite.config.*'
   - '!{.eslintignore,.eslintrc.cjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md}'
   - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
@@ -15,7 +21,39 @@ win:
   icon: resources/icon.ico
   target:
     - nsis
+    # Portable: laeuft ohne Installation von einem USB-Stick und umgeht damit
+    # einen Teil der SmartScreen-Huerde. Kein Auto-Update.
+    - portable
   signAndEditExecutable: false
+
+portable:
+  artifactName: DoZii-Portable.${ext}
+
+# macOS und Linux werden gebaut, aber nicht signiert/notarisiert. Auf dem Mac
+# muss die App beim ersten Start ueber Rechtsklick -> Oeffnen freigegeben werden.
+mac:
+  category: public.app-category.productivity
+  icon: resources/icon.png
+  target:
+    - dmg
+    - zip
+  # Ohne Apple-Developer-Zertifikat: nicht signieren, nicht notarisieren.
+  identity: null
+  notarize: false
+
+dmg:
+  artifactName: DoZii-${version}-mac-${arch}.${ext}
+
+linux:
+  category: Office
+  icon: resources/icon.png
+  synopsis: Lokale, 100% offline Dokumentenanalyse mit KI
+  target:
+    - AppImage
+    - deb
+
+appImage:
+  artifactName: DoZii-${version}-linux-${arch}.${ext}
 nsis:
   # Stabiler Name ohne Version: hazii.org verlinkt releases/latest/download/DoZii-Setup.exe
   artifactName: DoZii-Setup.${ext}

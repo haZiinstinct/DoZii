@@ -1,12 +1,35 @@
 import { Ollama, type Message } from 'ollama'
 import { BrowserWindow } from 'electron'
 import { logger } from './logger.service'
+import { stripThinking } from '@shared/strip-thinking'
+import { getSettings } from './settings.service'
+
+export const DEFAULT_OLLAMA_URL = 'http://localhost:11434'
 
 let client: Ollama | null = null
+/** Host, mit dem `client` erzeugt wurde - aendert der Nutzer die URL, wird neu verbunden. */
+let clientHost = ''
 
-function getClient(baseUrl = 'http://localhost:11434'): Ollama {
-  if (!client) {
-    client = new Ollama({ host: baseUrl })
+/**
+ * Die in den Einstellungen hinterlegte Ollama-URL. Frueher war der Host hier
+ * hart verdrahtet, waehrend `settings.ollamaUrl` ungenutzt herumlag - wer die
+ * Einstellung aenderte, hat nichts gemerkt.
+ */
+export function getOllamaUrl(): string {
+  try {
+    return getSettings().ollamaUrl || DEFAULT_OLLAMA_URL
+  } catch {
+    // Settings noch nicht initialisiert (sehr frueher Start) - Default nehmen.
+    return DEFAULT_OLLAMA_URL
+  }
+}
+
+function getClient(): Ollama {
+  const host = getOllamaUrl()
+  if (!client || clientHost !== host) {
+    client = new Ollama({ host })
+    clientHost = host
+    logger.info('ollama-client', 'Ollama-Client verbunden', { host })
   }
   return client
 }
@@ -42,8 +65,10 @@ function decrementActiveStreams(): void {
 
 /**
  * Check whether an error is an AbortError caused by the user stopping the stream.
+ * Exportiert, weil auch der Chunking-Pfad in analysis.service den Abbruch vom
+ * echten Fehler unterscheiden muss.
  */
-function isAbortError(err: unknown): boolean {
+export function isAbortError(err: unknown): boolean {
   if (!(err instanceof Error)) return false
   return (
     err.name === 'AbortError' ||
@@ -99,7 +124,54 @@ export async function checkOllamaStatus(): Promise<{ connected: boolean; error?:
     logger.debug('ollama-client', 'Ollama unreachable', {
       error: err instanceof Error ? err.message : String(err)
     })
-    return { connected: false, error: 'Ollama not reachable at localhost:11434' }
+    return { connected: false, error: `Ollama nicht erreichbar unter ${getOllamaUrl()}` }
+  }
+}
+
+/**
+ * Rohes `show`-Ergebnis fuer ein Modell (Metadaten inkl. Kontextfenster).
+ * Wird von context-window.service injiziert bekommen, damit dort keine
+ * zweite Client-Instanz entsteht.
+ */
+export async function showModel(model: string): Promise<unknown> {
+  const ollama = getClient()
+  return ollama.show({ model })
+}
+
+/**
+ * Ein Durchlauf ohne Streaming - fuer kurze Hilfs-Aufrufe (Fristen-Extraktion,
+ * Chunk-Zusammenfassung), deren Zwischenergebnis der Nutzer nicht sehen soll.
+ * Wirft bei Fehlern; der Aufrufer entscheidet, ob das fatal ist.
+ */
+export async function chatOnce(options: {
+  model: string
+  system: string
+  prompt: string
+  temperature?: number
+  numCtx?: number
+}): Promise<string> {
+  const ollama = getClient()
+  const modelOptions: Record<string, number> = {}
+  if (options.temperature !== undefined) modelOptions.temperature = options.temperature
+  if (options.numCtx !== undefined) modelOptions.num_ctx = options.numCtx
+
+  incrementActiveStreams()
+  try {
+    const response = await withTransientRetry('chatOnce', () =>
+      ollama.chat({
+        model: options.model,
+        messages: [
+          { role: 'system', content: options.system },
+          { role: 'user', content: options.prompt }
+        ],
+        stream: false,
+        think: false,
+        options: modelOptions
+      })
+    )
+    return stripThinking(response.message?.content ?? '')
+  } finally {
+    decrementActiveStreams()
   }
 }
 
@@ -299,11 +371,14 @@ async function consumeStream(
       }
     }
     flush()
-    return { text: chunks.join(''), aborted: false }
+    // Der gespeicherte Text darf keinen Gedankengang enthalten. Im Stream
+    // waere er dem Nutzer schon durchgelaufen, in der Datenbank bliebe er
+    // stehen - und alle Modi ausser Zeugnis und Vertrag parsen ihn ungeprueft.
+    return { text: stripThinking(chunks.join('')), aborted: false }
   } catch (err) {
     if (isAbortError(err)) {
       flush() // Teiltext noch zustellen
-      return { text: chunks.join(''), aborted: true }
+      return { text: stripThinking(chunks.join('')), aborted: true }
     }
     throw err
   }
@@ -337,6 +412,7 @@ export async function streamChat(options: StreamOptions): Promise<StreamResult> 
             { role: 'user', content: prompt }
           ],
           stream: true,
+          think: false,
           options: Object.keys(chatOptions).length > 0 ? chatOptions : undefined
         })
 
@@ -401,6 +477,7 @@ export async function streamConversation(
           model,
           messages,
           stream: true,
+          think: false,
           options: Object.keys(chatOptions).length > 0 ? chatOptions : undefined
         })
 

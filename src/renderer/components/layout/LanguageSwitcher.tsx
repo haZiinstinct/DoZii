@@ -3,6 +3,7 @@ import { Globe, Check } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { SUPPORTED_LANGUAGES, type LanguageCode } from '@shared/languages'
 import { applyLanguageDirection } from '../../hooks/useLanguageDirection'
+import { switchLanguage } from '../../i18n'
 
 /**
  * Globus-Dropdown in der Titelleiste: schaltet die UI-Sprache um (alle 9
@@ -36,7 +37,7 @@ export function LanguageSwitcher(): React.JSX.Element {
   const choose = async (code: LanguageCode): Promise<void> => {
     setOpen(false)
     if (code === i18n.language) return
-    await i18n.changeLanguage(code)
+    await switchLanguage(code)
     applyLanguageDirection(code)
     try {
       await window.api.settings.update({ language: code })

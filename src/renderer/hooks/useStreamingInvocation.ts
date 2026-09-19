@@ -15,6 +15,8 @@ export interface StreamChannel<TComplete> {
   onChunk: (cb: (chunk: string) => void) => () => void
   onComplete: (cb: (result: TComplete) => void) => () => void
   onError: (cb: (error: string) => void) => () => void
+  /** Bricht den laufenden Durchgang im Hauptprozess ab. */
+  abort: () => Promise<void>
 }
 
 export interface StreamHandlers<TComplete> {
@@ -26,6 +28,8 @@ export interface StreamHandlers<TComplete> {
 export function useStreamingInvocation<TComplete = unknown>(channel: StreamChannel<TComplete>) {
   // Track removers for the currently-registered listener trio
   const removersRef = useRef<Array<() => void>>([])
+  /** Laeuft gerade ein Durchgang? Entscheidet, ob beim Unmount abgebrochen wird. */
+  const runningRef = useRef(false)
 
   const cleanup = useCallback(() => {
     for (const remove of removersRef.current) {
@@ -47,22 +51,34 @@ export function useStreamingInvocation<TComplete = unknown>(channel: StreamChann
     removersRef.current = []
   }, [])
 
-  // Always clean up listeners on unmount
+  // Beim Unmount nicht nur die Listener entfernen, sondern auch den Lauf im
+  // Hauptprozess abbrechen. Sonst laeuft die alte Analyse weiter, belegt das
+  // Modell und schreibt am Ende ein Ergebnis, das niemand angefordert hat -
+  // startet der Nutzer inzwischen eine neue, konkurrieren beide um Ollama.
   useEffect(() => {
-    return () => cleanup()
-  }, [cleanup])
+    return () => {
+      cleanup()
+      if (runningRef.current) {
+        runningRef.current = false
+        void channel.abort()
+      }
+    }
+  }, [cleanup, channel])
 
   const run = useCallback(
     async (invoke: () => Promise<unknown>, handlers: StreamHandlers<TComplete>) => {
       // Remove any previous listeners before registering new ones
       cleanup()
 
+      runningRef.current = true
       const chunkRemover = channel.onChunk(handlers.onChunk)
       const completeRemover = channel.onComplete((result) => {
+        runningRef.current = false
         handlers.onComplete(result)
         cleanup()
       })
       const errorRemover = channel.onError((err) => {
+        runningRef.current = false
         handlers.onError(err)
         cleanup()
       })
@@ -82,6 +98,7 @@ export function useStreamingInvocation<TComplete = unknown>(channel: StreamChann
           .catch(() => {
             /* non-critical */
           })
+        runningRef.current = false
         try {
           handlers.onError(message)
         } catch {
