@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import {
   Award,
   AlertTriangle,
@@ -15,7 +15,8 @@ import {
   ChevronUp,
   ShieldCheck,
   LogOut,
-  Flag
+  Flag,
+  Ruler
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import type {
@@ -25,9 +26,12 @@ import type {
   ZeugnisCodedPhrase,
   ZeugnisGrade
 } from '@/lib/parse-analysis'
+import { findZeugnisFormeln, type FormelMatch } from '@shared/zeugnis-formel'
 
 interface Props {
   result: ArbeitszeugnisResult
+  /** Originaltext - Grundlage der Gegenprobe ueber die Hauptformel. */
+  documentText?: string
 }
 
 function gradeColor(grade: number): {
@@ -261,7 +265,100 @@ function RedFlagsBlock({ phrases }: { phrases: ZeugnisCodedPhrase[] }): React.Re
   )
 }
 
-export function ArbeitszeugnisDecoder({ result }: Props): React.ReactElement {
+/**
+ * Gegenprobe zur Note aus dem Modell.
+ *
+ * Die Zufriedenheitsformel laesst sich ohne KI auswerten - sie ist eine feste
+ * Tabelle. Die Messung hat gezeigt, dass Modelle die Wendung zwar zitieren,
+ * aber falsch umrechnen: aus "stets zu unserer vollsten Zufriedenheit" wurde
+ * eine Vier. Hier steht deshalb schwarz auf weiss, was im Text tatsaechlich
+ * steht und welche Note das nach ueblicher Lesart ergibt.
+ *
+ * Ueberschrieben wird die Note NICHT: versteckte Codes und fehlende
+ * Abschnitte druecken die Gesamtnote zu Recht unter die Hauptformel. Nur
+ * BESSER als die Hauptformel kann sie nicht sein - das wird gemeldet.
+ */
+function FormelCheck({
+  documentText,
+  contentGrade
+}: {
+  documentText: string
+  contentGrade: number
+}): React.ReactElement | null {
+  const { t } = useTranslation()
+  const formeln = useMemo(() => findZeugnisFormeln(documentText), [documentText])
+
+  if (formeln.ambiguous) {
+    return (
+      <FormelBox tone="amber">
+        <p className="text-xs text-brand-text">{t('results.az.formelAmbiguous')}</p>
+        <FormelQuotes matches={formeln.matches} />
+      </FormelBox>
+    )
+  }
+
+  const hauptformel = formeln.hauptformelGrade
+  if (hauptformel === undefined) return null
+
+  const match = formeln.matches.find((m) => m.kind === 'hauptformel')
+  const tooGood = contentGrade < hauptformel
+
+  return (
+    <FormelBox tone={tooGood ? 'amber' : 'neutral'}>
+      <p className="text-xs text-brand-text">
+        {t('results.az.formelFound', { phrase: match?.text ?? '', grade: hauptformel })}
+      </p>
+      <p className="mt-1 text-xs text-brand-text-dim">
+        {tooGood
+          ? t('results.az.formelBetter', { grade: contentGrade, formel: hauptformel })
+          : contentGrade === hauptformel
+            ? t('results.az.formelAgrees')
+            : t('results.az.formelWorse')}
+      </p>
+      <p className="mt-2 text-[10px] uppercase tracking-wider text-brand-text-dim">
+        {t('results.az.formelHint')}
+      </p>
+    </FormelBox>
+  )
+}
+
+function FormelBox({
+  tone,
+  children
+}: {
+  tone: 'amber' | 'neutral'
+  children: React.ReactNode
+}): React.ReactElement {
+  const { t } = useTranslation()
+  const border = tone === 'amber' ? 'border-brand-amber/40 bg-brand-amber/5' : 'border-brand-border'
+  return (
+    <div className={`rounded-xl border px-4 py-3 ${border}`}>
+      <div className="mb-1 flex items-center gap-2">
+        <Ruler size={12} className="text-brand-text-dim" aria-hidden="true" />
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-brand-text-dim">
+          {t('results.az.formelTitle')}
+        </p>
+      </div>
+      {children}
+    </div>
+  )
+}
+
+function FormelQuotes({ matches }: { matches: FormelMatch[] }): React.ReactElement {
+  return (
+    <ul className="mt-1 space-y-0.5">
+      {matches
+        .filter((m) => m.kind === 'hauptformel')
+        .map((m) => (
+          <li key={m.index} className="font-mono text-[11px] text-brand-text-dim">
+            &bdquo;{m.text}&ldquo; &rarr; {m.grade}
+          </li>
+        ))}
+    </ul>
+  )
+}
+
+export function ArbeitszeugnisDecoder({ result, documentText }: Props): React.ReactElement {
   const { t } = useTranslation()
   // Red phrases start expanded so the worst findings are visible without a click.
   // Keyed by result identity via lazy init so a new analysis resets the state.
@@ -324,6 +421,10 @@ export function ArbeitszeugnisDecoder({ result }: Props): React.ReactElement {
         <GradeHero title={t('results.az.content')} data={result.contentGrade} />
         <GradeHero title={t('results.az.craft')} data={result.craftGrade} />
       </div>
+
+      {documentText && (
+        <FormelCheck documentText={documentText} contentGrade={result.contentGrade.grade} />
+      )}
 
       <div className="flex items-center gap-2 text-xs text-brand-text-dim">
         <span className="rounded-lg border border-brand-border bg-brand-darker/60 px-2 py-0.5 font-mono text-[10px] uppercase">

@@ -379,7 +379,14 @@
       "missing": "欠落",
       "verdict": "率直な結論",
       "gradeConflict": "評価が不明確",
-      "gradeConflictDesc": "モデルは評価 {{grade}} としながら「{{label}}」と説明しています。これは評価 {{labelGrade}} にあたります。分析をやり直すか、より大きなモデルを使ってください。"
+      "gradeConflictDesc": "モデルは評価 {{grade}} としながら「{{label}}」と説明しています。これは評価 {{labelGrade}} にあたります。分析をやり直すか、より大きなモデルを使ってください。",
+      "formelTitle": "本文中の定型表現",
+      "formelFound": "「{{phrase}}」— 慣例の段階では評価 {{grade}} にあたります。",
+      "formelAgrees": "上の評価と一致します。",
+      "formelWorse": "上の総合評価はこれより下です。これは普通のことで、隠れた表現や欠けている項目がさらに評価を下げます。",
+      "formelBetter": "注意: 上の評価は {{grade}} ですが、文言が示すのは {{formel}} までです。証明書が定型表現より良くなることはなく、ここでは評価が誤っています。",
+      "formelAmbiguous": "本文に評価の異なる満足表現が複数あります。この状態では評価を導けません。",
+      "formelHint": "AI を使わずに算出 — 定型の証明書表現"
     },
     "plain": {
       "headline": "いちばん大事なこと",

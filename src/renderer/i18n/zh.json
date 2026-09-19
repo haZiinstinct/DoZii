@@ -379,7 +379,14 @@
       "missing": "缺失",
       "verdict": "直白结论",
       "gradeConflict": "评级不明确",
-      "gradeConflictDesc": "模型给出评级 {{grade}}，却将其描述为“{{label}}”，那应该是评级 {{labelGrade}}。请重新分析或改用更大的模型。"
+      "gradeConflictDesc": "模型给出评级 {{grade}}，却将其描述为“{{label}}”，那应该是评级 {{labelGrade}}。请重新分析或改用更大的模型。",
+      "formelTitle": "文中的固定表述",
+      "formelFound": "“{{phrase}}”——按通行标准对应评级 {{grade}}。",
+      "formelAgrees": "与上方评价一致。",
+      "formelWorse": "上方的总评级低于此。这很正常：隐藏表述和缺失段落会把它进一步拉低。",
+      "formelBetter": "注意：上方给出评级 {{grade}}，但措辞只支持评级 {{formel}}。证明书不会好过它的固定表述——此处评价有误。",
+      "formelAmbiguous": "文中出现多条评级不同的满意度表述。只要如此，就无法据此得出评级。",
+      "formelHint": "未使用 AI 计算——固定的证明书用语"
     },
     "plain": {
       "headline": "最要紧的事",

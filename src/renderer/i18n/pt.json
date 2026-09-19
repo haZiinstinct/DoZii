@@ -382,7 +382,14 @@
       "missing": "Em falta",
       "verdict": "Veredito em linguagem clara",
       "gradeConflict": "Nota pouco clara",
-      "gradeConflictDesc": "O modelo indica a nota {{grade}} mas descreve-a como «{{label}}», o que seria a nota {{labelGrade}}. Repete a análise ou usa um modelo maior."
+      "gradeConflictDesc": "O modelo indica a nota {{grade}} mas descreve-a como «{{label}}», o que seria a nota {{labelGrade}}. Repete a análise ou usa um modelo maior.",
+      "formelTitle": "Fórmula padrão no texto",
+      "formelFound": "«{{phrase}}» – na escala habitual, nota {{grade}}.",
+      "formelAgrees": "Coincide com a avaliação acima.",
+      "formelWorse": "A nota global acima é inferior. É normal: códigos ocultos e secções em falta puxam-na ainda mais para baixo.",
+      "formelBetter": "Atenção: acima está a nota {{grade}}, mas a redacção só permite a nota {{formel}}. Um certificado nunca é melhor do que a sua fórmula padrão – a avaliação erra aqui.",
+      "formelAmbiguous": "O texto contém várias fórmulas de satisfação com notas diferentes. Enquanto assim for, não é possível deduzir uma nota.",
+      "formelHint": "Calculado sem IA – linguagem fixa de certificados"
     },
     "plain": {
       "headline": "O mais importante",

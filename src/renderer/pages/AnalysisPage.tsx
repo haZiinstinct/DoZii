@@ -843,7 +843,11 @@ export function AnalysisPage() {
             ) : parsed.type === 'formulation' && parsed.data ? (
               <FormulationSuggestions result={parsed.data} />
             ) : parsed.type === 'arbeitszeugnis' && parsed.data ? (
-              <ArbeitszeugnisDecoder key={resultKey} result={parsed.data} />
+              <ArbeitszeugnisDecoder
+                key={resultKey}
+                result={parsed.data}
+                documentText={doc?.extractedText}
+              />
             ) : parsed.type === 'contract' && parsed.data ? (
               <ContractCheck key={resultKey} result={parsed.data} onShowInText={handleShowInText} />
             ) : parsed.type === 'summary' && parsed.data ? (

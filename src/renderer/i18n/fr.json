@@ -382,7 +382,14 @@
       "missing": "Manquant",
       "verdict": "Verdict en clair",
       "gradeConflict": "Note incertaine",
-      "gradeConflictDesc": "Le modèle indique la note {{grade}} mais la décrit comme « {{label}} », ce qui correspondrait à la note {{labelGrade}}. Relance l’analyse ou prends un modèle plus grand."
+      "gradeConflictDesc": "Le modèle indique la note {{grade}} mais la décrit comme « {{label}} », ce qui correspondrait à la note {{labelGrade}}. Relance l’analyse ou prends un modèle plus grand.",
+      "formelTitle": "Formule type dans le texte",
+      "formelFound": "« {{phrase}} » : selon l’échelle usuelle, note {{grade}}.",
+      "formelAgrees": "Concorde avec l’évaluation ci-dessus.",
+      "formelWorse": "La note globale ci-dessus est inférieure. C’est normal : les codes cachés et les sections manquantes la font encore baisser.",
+      "formelBetter": "Attention : la note ci-dessus est {{grade}}, mais la formulation ne justifie que la note {{formel}}. Un certificat n’est jamais meilleur que sa formule type – l’évaluation se trompe ici.",
+      "formelAmbiguous": "Le texte contient plusieurs formules de satisfaction avec des notes différentes. Tant que c’est le cas, aucune note ne peut en être déduite.",
+      "formelHint": "Calculé sans IA – formulation figée des certificats"
     },
     "plain": {
       "headline": "L'essentiel",

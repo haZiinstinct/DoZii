@@ -382,7 +382,14 @@
       "missing": "Fehlt",
       "verdict": "Klartext-Fazit",
       "gradeConflict": "Note unklar",
-      "gradeConflictDesc": "Das Modell nennt Note {{grade}}, beschreibt sie aber als „{{label}}\" – das wäre Note {{labelGrade}}. Starte die Analyse neu oder nimm ein größeres Modell."
+      "gradeConflictDesc": "Das Modell nennt Note {{grade}}, beschreibt sie aber als „{{label}}\" – das wäre Note {{labelGrade}}. Starte die Analyse neu oder nimm ein größeres Modell.",
+      "formelTitle": "Hauptformel im Text",
+      "formelFound": "„{{phrase}}“ – nach der üblichen Staffelung Note {{grade}}.",
+      "formelAgrees": "Deckt sich mit der Bewertung oben.",
+      "formelWorse": "Die Gesamtnote oben liegt darunter. Das ist normal: versteckte Codes und fehlende Abschnitte ziehen sie weiter herunter.",
+      "formelBetter": "Achtung: Oben steht Note {{grade}}, der Wortlaut gibt aber nur Note {{formel}} her. Besser als die Hauptformel wird ein Zeugnis nicht – hier irrt die Bewertung.",
+      "formelAmbiguous": "Im Text stehen mehrere Zufriedenheitsformeln mit unterschiedlicher Note. Solange das so ist, lässt sich daraus keine Note ableiten.",
+      "formelHint": "Ohne KI berechnet – feste Zeugnissprache"
     },
     "plain": {
       "headline": "Das Wichtigste",

@@ -382,7 +382,14 @@
       "missing": "Missing",
       "verdict": "Plain-text verdict",
       "gradeConflict": "Grade unclear",
-      "gradeConflictDesc": "The model states grade {{grade}} but describes it as \"{{label}}\" – that would be grade {{labelGrade}}. Run the analysis again or use a larger model."
+      "gradeConflictDesc": "The model states grade {{grade}} but describes it as \"{{label}}\" – that would be grade {{labelGrade}}. Run the analysis again or use a larger model.",
+      "formelTitle": "Standard phrase in the text",
+      "formelFound": "“{{phrase}}” – on the customary scale this is grade {{grade}}.",
+      "formelAgrees": "Matches the assessment above.",
+      "formelWorse": "The overall grade above is lower. That is normal: hidden codes and missing sections push it further down.",
+      "formelBetter": "Careful: the grade above is {{grade}}, but the wording only supports grade {{formel}}. A reference is never better than its standard phrase – the assessment is wrong here.",
+      "formelAmbiguous": "The text contains several satisfaction phrases with different grades. While that is the case, no grade can be derived from them.",
+      "formelHint": "Computed without AI – fixed reference wording"
     },
     "plain": {
       "headline": "The most important part",
