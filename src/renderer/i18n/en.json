@@ -1,8 +1,6 @@
 {
   "common": {
-    "words": "words",
-    "loading": "Loading...",
-    "retry": "Try again"
+    "words": "words"
   },
   "titlebar": {
     "minimize": "Minimize window",
@@ -81,7 +79,6 @@
     "stop": "Stop",
     "restart": "Restart",
     "exportPdf": "PDF",
-    "exportTitle": "Export as PDF",
     "exportError": "PDF export failed: {{error}}",
     "aborted": "Analysis cancelled by the user. The text so far has been saved.",
     "noDocument": "No document selected. Please upload and open a document first.",
@@ -108,8 +105,6 @@
     "chunkedNotice": "The document was too long for a single pass. It was split into {{count}} sections and merged afterwards.",
     "speak": "Read aloud",
     "speakStop": "Stop reading",
-    "speakUnsupported": "Reading aloud is not supported on this system.",
-    "copy": "Copy",
     "copied": "Copied",
     "exportMenu": "Export",
     "exportRtf": "Word-compatible (.rtf)",
@@ -136,16 +131,13 @@
     "firstImpressionNone": "No first impression available. Generate manually?",
     "generate": "Generate",
     "startSuffix": "start",
-    "language": "Language",
     "german": "German",
     "english": "English",
     "pages_one": "{{count}} page",
     "pages_other": "{{count}} pages",
     "extractedText": "Extracted text",
     "noText": "(No text extracted)",
-    "deadlines": "Deadlines",
     "ocrUsed": "Scanned document - the text was read with text recognition. Please check numbers and names against the original.",
-    "ocrPartial": "{{done}} of {{total}} pages could be read with text recognition.",
     "modePickerTitle": "What should DoZii do with it?",
     "modeRecommended": "Recommended",
     "importIncomplete": "The document was not read completely: {{warning}}"
@@ -278,7 +270,6 @@
     "count": "{{count}} documents",
     "searchPlaceholder": "Search documents and content...",
     "empty": "No documents imported yet",
-    "noResults": "No results",
     "deleteDoc": "Delete document",
     "searchResults": "{{count}} matches",
     "searchNone": "No matches for \"{{query}}\".",
@@ -430,7 +421,6 @@
       "detailsHide": "Hide details"
     },
     "letter": {
-      "title": "Letter draft",
       "notice": "Note",
       "subject": "Subject",
       "body": "Letter",
@@ -480,10 +470,8 @@
     "none": "No deadline was found in the document.",
     "scan": "Search for deadlines",
     "scanning": "Looking for deadlines...",
-    "basis": "Basis",
     "computedFrom": "Calculated from {{date}}",
     "fromDocument": "Date stated in the document",
-    "shifted": "Moved to the next working day",
     "addToCalendar": "Add to calendar (.ics)",
     "uncertain": "uncertain",
     "disclaimer": "Deadlines without guarantee. Always check them against the original document - if in doubt, what it says there counts.",
@@ -512,13 +500,5 @@
     "explain": "What does that mean?",
     "close": "Close",
     "hint": "DoZii explains underlined words - just click them."
-  },
-  "redaction": {
-    "title": "Redact personal data",
-    "hint": "Handy if you pass the analysis on to an advice center.",
-    "customTerms": "Also redact (e.g. your name)",
-    "customPlaceholder": "Separate names with commas",
-    "preview": "Preview",
-    "nothingFound": "Nothing found to redact."
   }
 }

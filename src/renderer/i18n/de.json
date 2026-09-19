@@ -1,8 +1,6 @@
 {
   "common": {
-    "words": "Wörter",
-    "loading": "Lädt...",
-    "retry": "Erneut versuchen"
+    "words": "Wörter"
   },
   "titlebar": {
     "minimize": "Fenster minimieren",
@@ -81,7 +79,6 @@
     "stop": "Stoppen",
     "restart": "Neu starten",
     "exportPdf": "PDF",
-    "exportTitle": "Als PDF exportieren",
     "exportError": "PDF-Export fehlgeschlagen: {{error}}",
     "aborted": "Analyse vom Nutzer abgebrochen. Der bisherige Text wurde gespeichert.",
     "noDocument": "Kein Dokument ausgewählt. Bitte zuerst ein Dokument hochladen und öffnen.",
@@ -108,8 +105,6 @@
     "chunkedNotice": "Das Dokument war zu lang für einen Durchgang. Es wurde in {{count}} Abschnitte geteilt und danach zusammengeführt.",
     "speak": "Vorlesen",
     "speakStop": "Vorlesen stoppen",
-    "speakUnsupported": "Vorlesen wird auf diesem System nicht unterstützt.",
-    "copy": "Kopieren",
     "copied": "Kopiert",
     "exportMenu": "Exportieren",
     "exportRtf": "Word-kompatibel (.rtf)",
@@ -136,16 +131,13 @@
     "firstImpressionNone": "Kein Ersteindruck vorhanden. Manuell generieren?",
     "generate": "Generieren",
     "startSuffix": "starten",
-    "language": "Sprache",
     "german": "Deutsch",
     "english": "English",
     "pages_one": "{{count}} Seite",
     "pages_other": "{{count}} Seiten",
     "extractedText": "Extrahierter Text",
     "noText": "(Kein Text extrahiert)",
-    "deadlines": "Fristen",
     "ocrUsed": "Gescanntes Dokument - Text wurde per Texterkennung gelesen. Zahlen und Namen bitte am Original prüfen.",
-    "ocrPartial": "Von {{total}} Seiten konnten {{done}} per Texterkennung gelesen werden.",
     "modePickerTitle": "Was soll DoZii damit machen?",
     "modeRecommended": "Empfohlen",
     "importIncomplete": "Das Dokument wurde nicht vollständig eingelesen: {{warning}}"
@@ -278,7 +270,6 @@
     "count": "{{count}} Dokumente",
     "searchPlaceholder": "In Dateinamen und Inhalten suchen...",
     "empty": "Noch keine Dokumente importiert",
-    "noResults": "Keine Ergebnisse",
     "deleteDoc": "Dokument löschen",
     "searchResults": "{{count}} Treffer",
     "searchNone": "Keine Treffer für „{{query}}“.",
@@ -430,7 +421,6 @@
       "detailsHide": "Details verbergen"
     },
     "letter": {
-      "title": "Briefentwurf",
       "notice": "Hinweis",
       "subject": "Betreff",
       "body": "Brief",
@@ -480,10 +470,8 @@
     "none": "Im Dokument wurde keine Frist gefunden.",
     "scan": "Nach Fristen suchen",
     "scanning": "Suche Fristen...",
-    "basis": "Grundlage",
     "computedFrom": "Berechnet ab {{date}}",
     "fromDocument": "Datum steht so im Dokument",
-    "shifted": "Auf den nächsten Werktag verschoben",
     "addToCalendar": "In den Kalender (.ics)",
     "uncertain": "unsicher erkannt",
     "disclaimer": "Fristen ohne Gewähr. Prüf sie immer am Originaldokument - im Zweifel zählt, was dort steht.",
@@ -512,13 +500,5 @@
     "explain": "Was heißt das?",
     "close": "Schließen",
     "hint": "Unterstrichene Wörter erklärt DoZii dir - klick sie an."
-  },
-  "redaction": {
-    "title": "Persönliche Daten schwärzen",
-    "hint": "Praktisch, wenn du die Analyse an eine Beratungsstelle weitergibst.",
-    "customTerms": "Zusätzlich schwärzen (z.B. dein Name)",
-    "customPlaceholder": "Namen mit Komma trennen",
-    "preview": "Vorschau",
-    "nothingFound": "Nichts zum Schwärzen gefunden."
   }
 }

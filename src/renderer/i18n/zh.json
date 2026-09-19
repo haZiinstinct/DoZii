@@ -1,8 +1,6 @@
 {
   "common": {
-    "words": "字数",
-    "loading": "加载中...",
-    "retry": "重试"
+    "words": "字数"
   },
   "titlebar": {
     "minimize": "最小化窗口",
@@ -81,7 +79,6 @@
     "stop": "停止",
     "restart": "重新开始",
     "exportPdf": "PDF",
-    "exportTitle": "导出为 PDF",
     "exportError": "PDF 导出失败：{{error}}",
     "aborted": "分析已被用户取消。已生成的文本已保存。",
     "noDocument": "未选择文档。请先上传并打开一个文档。",
@@ -108,8 +105,6 @@
     "chunkedNotice": "文档太长，一次处理不完。已拆成 {{count}} 段分别分析，之后再合并。",
     "speak": "朗读",
     "speakStop": "停止朗读",
-    "speakUnsupported": "此系统不支持朗读功能。",
-    "copy": "复制",
     "copied": "已复制",
     "exportMenu": "导出",
     "exportRtf": "Word 兼容格式（.rtf）",
@@ -136,15 +131,12 @@
     "firstImpressionNone": "暂无初步印象。手动生成？",
     "generate": "生成",
     "startSuffix": "开始",
-    "language": "语言",
     "german": "德语",
     "english": "英语",
     "pages_other": "{{count}} 页",
     "extractedText": "提取的文本",
     "noText": "（未提取到文本）",
-    "deadlines": "期限",
     "ocrUsed": "这是扫描件 — 文本是通过文字识别读出来的。数字和姓名请对照原件再核对一遍。",
-    "ocrPartial": "共 {{total}} 页，其中 {{done}} 页通过文字识别读取成功。",
     "modePickerTitle": "要让 DoZii 用它做什么？",
     "modeRecommended": "推荐",
     "importIncomplete": "该文档未被完整读取：{{warning}}"
@@ -277,7 +269,6 @@
     "count": "{{count}} 个文档",
     "searchPlaceholder": "搜索文档和内容...",
     "empty": "尚未导入任何文档",
-    "noResults": "无结果",
     "deleteDoc": "删除文档",
     "searchResults": "{{count}} 条匹配",
     "searchNone": "没有找到“{{query}}”的结果。",
@@ -427,7 +418,6 @@
       "detailsHide": "隐藏详情"
     },
     "letter": {
-      "title": "信件草稿",
       "notice": "提示",
       "subject": "主题",
       "body": "正文",
@@ -477,10 +467,8 @@
     "none": "文档中没有找到任何期限。",
     "scan": "查找期限",
     "scanning": "正在查找期限...",
-    "basis": "依据",
     "computedFrom": "从 {{date}} 起算",
     "fromDocument": "文档里写的就是这个日期",
-    "shifted": "已顺延到下一个工作日",
     "addToCalendar": "加入日历（.ics）",
     "uncertain": "识别得不太确定",
     "disclaimer": "期限仅供参考，不作保证。请一定对照原件核对 — 有疑问时以原件上写的为准。",
@@ -507,13 +495,5 @@
     "explain": "这是什么意思？",
     "close": "关闭",
     "hint": "带下划线的词 DoZii 会解释给你听 — 点一下试试。"
-  },
-  "redaction": {
-    "title": "涂黑个人信息",
-    "hint": "如果你要把分析结果转给咨询机构，这个功能很实用。",
-    "customTerms": "还要额外涂黑的内容（例如你的名字）",
-    "customPlaceholder": "多个名字用逗号分隔",
-    "preview": "预览",
-    "nothingFound": "没有找到需要涂黑的内容。"
   }
 }

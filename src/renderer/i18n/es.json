@@ -1,8 +1,6 @@
 {
   "common": {
-    "words": "Palabras",
-    "loading": "Cargando...",
-    "retry": "Reintentar"
+    "words": "Palabras"
   },
   "titlebar": {
     "minimize": "Minimizar ventana",
@@ -81,7 +79,6 @@
     "stop": "Detener",
     "restart": "Reiniciar",
     "exportPdf": "PDF",
-    "exportTitle": "Exportar como PDF",
     "exportError": "Error al exportar el PDF: {{error}}",
     "aborted": "Análisis cancelado por el usuario. El texto generado hasta ahora se ha guardado.",
     "noDocument": "Ningún documento seleccionado. Primero sube y abre un documento.",
@@ -108,8 +105,6 @@
     "chunkedNotice": "El documento era demasiado largo para una sola pasada. Se dividió en {{count}} secciones y después se unió todo.",
     "speak": "Leer en voz alta",
     "speakStop": "Detener la lectura",
-    "speakUnsupported": "Este sistema no admite la lectura en voz alta.",
-    "copy": "Copiar",
     "copied": "Copiado",
     "exportMenu": "Exportar",
     "exportRtf": "Compatible con Word (.rtf)",
@@ -136,16 +131,13 @@
     "firstImpressionNone": "No hay una primera impresión. ¿Generarla manualmente?",
     "generate": "Generar",
     "startSuffix": "iniciar",
-    "language": "Idioma",
     "german": "Alemán",
     "english": "Inglés",
     "pages_one": "{{count}} página",
     "pages_other": "{{count}} páginas",
     "extractedText": "Texto extraído",
     "noText": "(No se extrajo texto)",
-    "deadlines": "Plazos",
     "ocrUsed": "Documento escaneado: el texto se leyó con reconocimiento de caracteres. Comprueba las cifras y los nombres en el original.",
-    "ocrPartial": "De {{total}} páginas se pudieron leer {{done}} con el reconocimiento de texto.",
     "modePickerTitle": "¿Qué quieres que haga DoZii con esto?",
     "modeRecommended": "Recomendado",
     "importIncomplete": "El documento no se leyó por completo: {{warning}}"
@@ -278,7 +270,6 @@
     "count": "{{count}} documentos",
     "searchPlaceholder": "Buscar documentos y contenido...",
     "empty": "Todavía no se ha importado ningún documento",
-    "noResults": "Sin resultados",
     "deleteDoc": "Eliminar documento",
     "searchResults": "{{count}} coincidencias",
     "searchNone": "Sin coincidencias para «{{query}}».",
@@ -430,7 +421,6 @@
       "detailsHide": "Ocultar detalles"
     },
     "letter": {
-      "title": "Borrador de carta",
       "notice": "Aviso",
       "subject": "Asunto",
       "body": "Carta",
@@ -480,10 +470,8 @@
     "none": "No se encontró ningún plazo en el documento.",
     "scan": "Buscar plazos",
     "scanning": "Buscando plazos...",
-    "basis": "Base",
     "computedFrom": "Calculado a partir del {{date}}",
     "fromDocument": "La fecha figura así en el documento",
-    "shifted": "Trasladado al siguiente día laborable",
     "addToCalendar": "Al calendario (.ics)",
     "uncertain": "detectado con dudas",
     "disclaimer": "Los plazos son orientativos. Compruébalos siempre en el documento original: en caso de duda vale lo que ponga allí.",
@@ -512,13 +500,5 @@
     "explain": "¿Qué significa esto?",
     "close": "Cerrar",
     "hint": "DoZii te explica las palabras subrayadas: haz clic en ellas."
-  },
-  "redaction": {
-    "title": "Tachar los datos personales",
-    "hint": "Práctico si le pasas el análisis a un servicio de asesoramiento.",
-    "customTerms": "Tachar además (p. ej. tu nombre)",
-    "customPlaceholder": "Separa los nombres con comas",
-    "preview": "Vista previa",
-    "nothingFound": "No se encontró nada que tachar."
   }
 }

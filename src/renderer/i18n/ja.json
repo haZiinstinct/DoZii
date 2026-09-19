@@ -1,8 +1,6 @@
 {
   "common": {
-    "words": "単語",
-    "loading": "読み込み中...",
-    "retry": "再試行"
+    "words": "単語"
   },
   "titlebar": {
     "minimize": "ウィンドウを最小化",
@@ -81,7 +79,6 @@
     "stop": "停止",
     "restart": "再開",
     "exportPdf": "PDF",
-    "exportTitle": "PDF としてエクスポート",
     "exportError": "PDF のエクスポートに失敗しました: {{error}}",
     "aborted": "分析がユーザーによって中止されました。これまでのテキストは保存されました。",
     "noDocument": "ドキュメントが選択されていません。まずドキュメントをアップロードして開いてください。",
@@ -108,8 +105,6 @@
     "chunkedNotice": "ドキュメントが一度に処理するには長すぎました。{{count}} 個のセクションに分けて分析し、そのあとまとめました。",
     "speak": "読み上げ",
     "speakStop": "読み上げを停止",
-    "speakUnsupported": "このシステムでは読み上げに対応していません。",
-    "copy": "コピー",
     "copied": "コピーしました",
     "exportMenu": "エクスポート",
     "exportRtf": "Word 互換 (.rtf)",
@@ -136,15 +131,12 @@
     "firstImpressionNone": "第一印象がありません。手動で生成しますか？",
     "generate": "生成",
     "startSuffix": "開始",
-    "language": "言語",
     "german": "ドイツ語",
     "english": "英語",
     "pages_other": "{{count}} ページ",
     "extractedText": "抽出されたテキスト",
     "noText": "（テキストが抽出されませんでした）",
-    "deadlines": "期限",
     "ocrUsed": "スキャンされたドキュメントです - テキストは文字認識で読み取りました。数字と名前は原本で確認してください。",
-    "ocrPartial": "{{total}} ページのうち {{done}} ページを文字認識で読み取れました。",
     "modePickerTitle": "DoZii に何をさせますか？",
     "modeRecommended": "おすすめ",
     "importIncomplete": "この文書は完全には読み取れませんでした: {{warning}}"
@@ -277,7 +269,6 @@
     "count": "{{count}} 件のドキュメント",
     "searchPlaceholder": "ドキュメントと内容を検索...",
     "empty": "まだドキュメントがインポートされていません",
-    "noResults": "結果がありません",
     "deleteDoc": "ドキュメントを削除",
     "searchResults": "{{count}} 件ヒット",
     "searchNone": "「{{query}}」に一致するものはありません。",
@@ -427,7 +418,6 @@
       "detailsHide": "詳細を隠す"
     },
     "letter": {
-      "title": "手紙の下書き",
       "notice": "注意",
       "subject": "件名",
       "body": "本文",
@@ -477,10 +467,8 @@
     "none": "ドキュメント内に期限は見つかりませんでした。",
     "scan": "期限を探す",
     "scanning": "期限を探しています...",
-    "basis": "根拠",
     "computedFrom": "{{date}} から計算",
     "fromDocument": "ドキュメントにそのまま書かれている日付です",
-    "shifted": "次の営業日にずらしました",
     "addToCalendar": "カレンダーに追加 (.ics)",
     "uncertain": "認識があいまい",
     "disclaimer": "期限は保証できません。かならず原本で確認してください - 迷ったときは原本の記載が優先です。",
@@ -507,13 +495,5 @@
     "explain": "どういう意味？",
     "close": "閉じる",
     "hint": "下線の引かれた言葉は DoZii が説明します - クリックしてみてください。"
-  },
-  "redaction": {
-    "title": "個人情報を伏せる",
-    "hint": "分析結果を相談窓口に渡すときに便利です。",
-    "customTerms": "追加で伏せる語（例: あなたの名前）",
-    "customPlaceholder": "名前はコンマで区切ってください",
-    "preview": "プレビュー",
-    "nothingFound": "伏せるものは見つかりませんでした。"
   }
 }

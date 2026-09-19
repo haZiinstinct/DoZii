@@ -133,6 +133,12 @@ export function AnalysisPage() {
   const [documentType, setDocumentType] = useState<string | null>(null)
   const [letterNotes, setLetterNotes] = useState('')
   const [showOriginal, setShowOriginal] = useState(false)
+  /**
+   * Wie viele Abschnitte dieser Lauf hatte. Der Hinweis im gespeicherten Text
+   * ist deutsch (wie der Kuerzungs-Hinweis auch, er gehoert zum Export); in der
+   * Oberflaeche zeigen wir ihn uebersetzt.
+   */
+  const [chunkTotal, setChunkTotal] = useState(0)
   const [activeQuoteId, setActiveQuoteId] = useState<string | null>(null)
   const speech = useSpeech()
 
@@ -209,6 +215,7 @@ export function AnalysisPage() {
   // zurueckgesetzt: die saubere Endausgabe ersetzt die Zwischenstaende.
   useEffect(() => {
     const unsub = window.api.analysis.onPhase((phase) => {
+      if (phase.kind === 'chunk') setChunkTotal(phase.total)
       setAnalysis((s) => {
         if (s.kind !== 'streaming') return s
         if (phase.kind === 'verifying' || phase.kind === 'merging') {
@@ -226,6 +233,7 @@ export function AnalysisPage() {
       setAskedQuestion(question ?? null)
       setExportError(null)
       setShowOriginal(false)
+      setChunkTotal(0)
       setAnalysis({ kind: 'streaming', text: '', phase: { kind: 'analyzing' } })
 
       await analysisStream.run(() => window.api.analysis.run(docId, mode, question, extra), {
@@ -679,6 +687,20 @@ export function AnalysisPage() {
           >
             <Send size={16} aria-hidden="true" />
           </button>
+        </div>
+      )}
+
+      {/* Das Dokument war zu lang fuer einen Durchgang - das gehoert gesagt. */}
+      {analysis.kind === 'done' && chunkTotal > 1 && (
+        <div className="flex items-start gap-2 rounded-xl border border-brand-amber/30 bg-brand-amber/5 px-4 py-3">
+          <AlertCircle
+            size={14}
+            className="mt-0.5 flex-shrink-0 text-brand-amber"
+            aria-hidden="true"
+          />
+          <p className="text-xs leading-relaxed text-brand-text-dim">
+            {t('analysis.chunkedNotice', { count: chunkTotal })}
+          </p>
         </div>
       )}
 

@@ -1,8 +1,6 @@
 {
   "common": {
-    "words": "mots",
-    "loading": "Chargement...",
-    "retry": "Réessayer"
+    "words": "mots"
   },
   "titlebar": {
     "minimize": "Réduire la fenêtre",
@@ -81,7 +79,6 @@
     "stop": "Arrêter",
     "restart": "Redémarrer",
     "exportPdf": "PDF",
-    "exportTitle": "Exporter en PDF",
     "exportError": "Échec de l'export PDF : {{error}}",
     "aborted": "Analyse annulée par l'utilisateur. Le texte généré jusqu'ici a été enregistré.",
     "noDocument": "Aucun document sélectionné. Veuillez d'abord importer et ouvrir un document.",
@@ -108,8 +105,6 @@
     "chunkedNotice": "Le document était trop long pour un seul passage. Il a été découpé en {{count}} sections, puis réassemblé.",
     "speak": "Lire à voix haute",
     "speakStop": "Arrêter la lecture",
-    "speakUnsupported": "La lecture à voix haute n'est pas prise en charge sur ce système.",
-    "copy": "Copier",
     "copied": "Copié",
     "exportMenu": "Exporter",
     "exportRtf": "Compatible Word (.rtf)",
@@ -136,16 +131,13 @@
     "firstImpressionNone": "Aucune première impression disponible. La générer manuellement ?",
     "generate": "Générer",
     "startSuffix": "démarrer",
-    "language": "Langue",
     "german": "Allemand",
     "english": "Anglais",
     "pages_one": "{{count}} page",
     "pages_other": "{{count}} pages",
     "extractedText": "Texte extrait",
     "noText": "(Aucun texte extrait)",
-    "deadlines": "Délais",
     "ocrUsed": "Document numérisé - le texte a été lu par reconnaissance de caractères. Vérifie les chiffres et les noms sur l'original.",
-    "ocrPartial": "Sur {{total}} pages, {{done}} ont pu être lues par reconnaissance de caractères.",
     "modePickerTitle": "Qu'est-ce que DoZii doit en faire ?",
     "modeRecommended": "Recommandé",
     "importIncomplete": "Le document n’a pas été lu en entier : {{warning}}"
@@ -278,7 +270,6 @@
     "count": "{{count}} documents",
     "searchPlaceholder": "Rechercher dans les documents et le contenu...",
     "empty": "Aucun document importé pour l'instant",
-    "noResults": "Aucun résultat",
     "deleteDoc": "Supprimer le document",
     "searchResults": "{{count}} résultats",
     "searchNone": "Aucun résultat pour « {{query}} ».",
@@ -430,7 +421,6 @@
       "detailsHide": "Masquer les détails"
     },
     "letter": {
-      "title": "Brouillon de courrier",
       "notice": "Remarque",
       "subject": "Objet",
       "body": "Courrier",
@@ -480,10 +470,8 @@
     "none": "Aucun délai n'a été trouvé dans le document.",
     "scan": "Rechercher des délais",
     "scanning": "Recherche des délais...",
-    "basis": "Base de calcul",
     "computedFrom": "Calculé à partir du {{date}}",
     "fromDocument": "La date figure telle quelle dans le document",
-    "shifted": "Reporté au jour ouvrable suivant",
     "addToCalendar": "Ajouter au calendrier (.ics)",
     "uncertain": "détection incertaine",
     "disclaimer": "Délais indiqués sans garantie. Vérifie-les toujours sur le document original - en cas de doute, c'est ce qui y est écrit qui compte.",
@@ -512,13 +500,5 @@
     "explain": "Ça veut dire quoi ?",
     "close": "Fermer",
     "hint": "DoZii t'explique les mots soulignés - clique dessus."
-  },
-  "redaction": {
-    "title": "Masquer les données personnelles",
-    "hint": "Pratique si tu transmets l'analyse à un service de conseil.",
-    "customTerms": "Masquer en plus (p. ex. ton nom)",
-    "customPlaceholder": "Sépare les noms par une virgule",
-    "preview": "Aperçu",
-    "nothingFound": "Rien à masquer n'a été trouvé."
   }
 }

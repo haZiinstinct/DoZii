@@ -1,8 +1,6 @@
 {
   "common": {
-    "words": "palavras",
-    "loading": "A carregar...",
-    "retry": "Tentar novamente"
+    "words": "palavras"
   },
   "titlebar": {
     "minimize": "Minimizar janela",
@@ -81,7 +79,6 @@
     "stop": "Parar",
     "restart": "Reiniciar",
     "exportPdf": "PDF",
-    "exportTitle": "Exportar como PDF",
     "exportError": "Falha na exportação para PDF: {{error}}",
     "aborted": "Análise cancelada pelo utilizador. O texto produzido até agora foi guardado.",
     "noDocument": "Nenhum documento selecionado. Carregue e abra primeiro um documento.",
@@ -108,8 +105,6 @@
     "chunkedNotice": "O documento era demasiado longo para uma única passagem. Foi dividido em {{count}} secções e depois reunido.",
     "speak": "Ler em voz alta",
     "speakStop": "Parar a leitura",
-    "speakUnsupported": "A leitura em voz alta não é suportada neste sistema.",
-    "copy": "Copiar",
     "copied": "Copiado",
     "exportMenu": "Exportar",
     "exportRtf": "Compatível com Word (.rtf)",
@@ -136,16 +131,13 @@
     "firstImpressionNone": "Nenhuma primeira impressão disponível. Gerar manualmente?",
     "generate": "Gerar",
     "startSuffix": "iniciar",
-    "language": "Idioma",
     "german": "Alemão",
     "english": "Inglês",
     "pages_one": "{{count}} página",
     "pages_other": "{{count}} páginas",
     "extractedText": "Texto extraído",
     "noText": "(Nenhum texto extraído)",
-    "deadlines": "Prazos",
     "ocrUsed": "Documento digitalizado - o texto foi lido por reconhecimento ótico. Confirme os números e os nomes no original.",
-    "ocrPartial": "De {{total}} páginas, {{done}} puderam ser lidas por reconhecimento de texto.",
     "modePickerTitle": "O que deve o DoZii fazer com isto?",
     "modeRecommended": "Recomendado",
     "importIncomplete": "O documento não foi lido na totalidade: {{warning}}"
@@ -278,7 +270,6 @@
     "count": "{{count}} documentos",
     "searchPlaceholder": "Procurar documentos e conteúdos...",
     "empty": "Ainda não foram importados documentos",
-    "noResults": "Sem resultados",
     "deleteDoc": "Eliminar documento",
     "searchResults": "{{count}} resultados",
     "searchNone": "Sem resultados para «{{query}}».",
@@ -430,7 +421,6 @@
       "detailsHide": "Ocultar detalhes"
     },
     "letter": {
-      "title": "Rascunho da carta",
       "notice": "Nota",
       "subject": "Assunto",
       "body": "Carta",
@@ -480,10 +470,8 @@
     "none": "Não foi encontrado nenhum prazo no documento.",
     "scan": "Procurar prazos",
     "scanning": "À procura de prazos...",
-    "basis": "Base",
     "computedFrom": "Calculado a partir de {{date}}",
     "fromDocument": "A data está assim no documento",
-    "shifted": "Adiado para o dia útil seguinte",
     "addToCalendar": "Adicionar ao calendário (.ics)",
     "uncertain": "deteção incerta",
     "disclaimer": "Prazos sem garantia. Verifique-os sempre no documento original - em caso de dúvida, vale o que lá está escrito.",
@@ -512,13 +500,5 @@
     "explain": "O que quer isto dizer?",
     "close": "Fechar",
     "hint": "O DoZii explica-lhe as palavras sublinhadas - clique nelas."
-  },
-  "redaction": {
-    "title": "Ocultar dados pessoais",
-    "hint": "Prático se quiser entregar a análise a um serviço de apoio.",
-    "customTerms": "Ocultar também (p. ex. o seu nome)",
-    "customPlaceholder": "Separe os nomes por vírgulas",
-    "preview": "Pré-visualização",
-    "nothingFound": "Não foi encontrado nada para ocultar."
   }
 }
