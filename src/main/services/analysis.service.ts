@@ -20,6 +20,7 @@ import { PLAIN_HEADINGS_DE, PLAIN_HEADINGS_EN } from '../prompts/plain-language.
 import { estimateTokens } from '../prompts/token-budget'
 import { splitIntoChunks } from '@shared/chunk-text'
 import { pickNumCtx } from '@shared/context-window-calc'
+import { isHeavyModeCapable } from '@shared/model-catalog'
 import { extractJsonObject } from '../lib/extract-json'
 import { logger } from './logger.service'
 import {
@@ -64,21 +65,6 @@ function sendPhase(win: BrowserWindow, phase: AnalysisPhaseEvent): void {
     win.webContents.send('analysis:phase', phase)
   }
 }
-
-/**
- * Small models that struggle with heavy analysis modes (especially Arbeitszeugnis
- * which has a ~15 KB system prompt). We log a warning but still run.
- */
-const SMALL_MODELS_FOR_HEAVY_MODE = new Set([
-  'gemma3:1b',
-  'gemma2:2b',
-  'llama3.2:1b',
-  'llama3.2:3b',
-  'phi3:mini',
-  'phi3.5:mini',
-  'qwen2.5:1.5b',
-  'qwen2.5:3b'
-])
 
 function isHeavyMode(mode: AnalysisMode): boolean {
   return mode === 'arbeitszeugnis' || mode === 'contract'
@@ -336,7 +322,7 @@ export async function runAnalysis(
   const numCtx = await resolveNumCtx(modelName, neededTokens)
 
   // Small model on heavy mode: warn but don't block. User may have chosen it intentionally.
-  if (isHeavyMode(mode) && SMALL_MODELS_FOR_HEAVY_MODE.has(modelName)) {
+  if (isHeavyMode(mode) && !isHeavyModeCapable(modelName)) {
     logger.warn('analysis.service', 'Heavy mode on small model - may fail or hallucinate', {
       mode,
       model: modelName,

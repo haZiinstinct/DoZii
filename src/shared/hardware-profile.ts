@@ -15,19 +15,14 @@ import type { HardwareProfile } from './types'
 export const VRAM_HEADROOM_GB = 1.5
 
 /**
- * Ungefaehre Groesse der empfohlenen Modelle auf der Platte (Q4-Quantisierung),
- * in GB. Die Schwellen der Einstufung leiten sich DARAUS ab - sonst empfiehlt
- * die App ein Modell, das auf der erkannten Karte gar nicht laeuft.
+ * Groesse des Modells je Stufe, in GB. Die Schwellen der Einstufung leiten
+ * sich DARAUS ab - sonst empfiehlt die App ein Modell, das auf der erkannten
+ * Karte gar nicht laeuft.
  *
- * Aendert sich der Modellkatalog, gehoeren diese Zahlen mit angepasst.
+ * Wird als Parameter hereingereicht, damit der Modellkatalog die einzige
+ * Quelle bleibt und dieses Modul rein und ohne Importzirkel testbar ist.
  */
-export const PROFILE_MODEL_SIZE_GB: Record<HardwareProfile, number> = {
-  minimal: 0.8, // ~1B
-  light: 1.9, // ~3B
-  medium: 4.7, // ~7B
-  strong: 14, // ~24B
-  power: 40 // ~70B
-}
+export type ProfileModelSizes = Record<HardwareProfile, number>
 
 export interface ProfileInput {
   ramGb: number
@@ -55,13 +50,13 @@ export function fitsInVram(modelSizeGb: number, vramGb: number): boolean {
  * ohne Grafikkarte ein 70B-Modell empfohlen bekam - auf der CPU unter einem
  * Token pro Sekunde.
  */
-export function determineProfile(input: ProfileInput): HardwareProfile {
+export function determineProfile(input: ProfileInput, sizes: ProfileModelSizes): HardwareProfile {
   const { ramGb, vramGb } = input
 
   if (vramGb > 0) {
     const byVram: HardwareProfile[] = ['power', 'strong', 'medium', 'light', 'minimal']
     for (const profile of byVram) {
-      if (fitsInVram(PROFILE_MODEL_SIZE_GB[profile], vramGb)) return profile
+      if (fitsInVram(sizes[profile], vramGb)) return profile
     }
     // Die Karte ist zu klein fuer jedes Modell - dann entscheidet der RAM.
   }

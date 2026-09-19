@@ -1,8 +1,9 @@
 import os from 'os'
 import { execFile } from 'child_process'
 import { promisify } from 'util'
-import type { GpuInfo, HardwareInfo, HardwareProfile } from '@shared/types'
+import type { GpuInfo, HardwareInfo } from '@shared/types'
 import { determineProfile } from '@shared/hardware-profile'
+import { modelForProfile, profileModelSizes } from '@shared/model-catalog'
 import { logger } from './logger.service'
 
 const execFileAsync = promisify(execFile)
@@ -191,14 +192,6 @@ async function detectGpuCached(): Promise<GpuInfo | null> {
   return cachedGpu
 }
 
-const MODEL_MAP: Record<HardwareProfile, string> = {
-  minimal: 'gemma3:1b',
-  light: 'qwen2.5:3b', // was llama3.2:3b - Qwen is stronger at German + JSON
-  medium: 'qwen2.5:7b', // was llama3.1:8b - Qwen is stronger at German + JSON
-  strong: 'mistral-small:24b',
-  power: 'llama3.1:70b'
-}
-
 export async function detectHardware(): Promise<HardwareInfo> {
   const cpus = os.cpus()
   const totalRam = os.totalmem()
@@ -216,7 +209,7 @@ export async function detectHardware(): Promise<HardwareInfo> {
   // Ungueltige VRAM-Angaben (NaN aus einer kaputten Werkzeugausgabe) duerfen
   // die Einstufung nicht verfaelschen.
   const vramGb = gpu && Number.isFinite(gpu.vramMb) ? gpu.vramMb / 1024 : 0
-  const profile = determineProfile({ ramGb: totalGb, vramGb })
+  const profile = determineProfile({ ramGb: totalGb, vramGb }, profileModelSizes())
 
   const info: HardwareInfo = {
     cpu: {
@@ -232,7 +225,7 @@ export async function detectHardware(): Promise<HardwareInfo> {
       arch: os.arch()
     },
     profile,
-    recommendedModel: MODEL_MAP[profile]
+    recommendedModel: modelForProfile(profile)
   }
 
   logger.info('hardware-detector', 'Hardware detected', {
