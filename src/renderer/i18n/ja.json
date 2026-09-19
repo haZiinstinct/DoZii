@@ -376,7 +376,9 @@
       "wishes": "今後への願い",
       "thanks": "感謝",
       "missing": "欠落",
-      "verdict": "率直な結論"
+      "verdict": "率直な結論",
+      "gradeConflict": "評価が不明確",
+      "gradeConflictDesc": "モデルは評価 {{grade}} としながら「{{label}}」と説明しています。これは評価 {{labelGrade}} にあたります。分析をやり直すか、より大きなモデルを使ってください。"
     },
     "plain": {
       "headline": "いちばん大事なこと",

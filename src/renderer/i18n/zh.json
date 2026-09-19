@@ -376,7 +376,9 @@
       "wishes": "未来祝愿",
       "thanks": "感谢",
       "missing": "缺失",
-      "verdict": "直白结论"
+      "verdict": "直白结论",
+      "gradeConflict": "评级不明确",
+      "gradeConflictDesc": "模型给出评级 {{grade}}，却将其描述为“{{label}}”，那应该是评级 {{labelGrade}}。请重新分析或改用更大的模型。"
     },
     "plain": {
       "headline": "最要紧的事",

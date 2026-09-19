@@ -2,6 +2,7 @@ import os from 'os'
 import { execFile } from 'child_process'
 import { promisify } from 'util'
 import type { GpuInfo, HardwareInfo, HardwareProfile } from '@shared/types'
+import { determineProfile } from '@shared/hardware-profile'
 import { logger } from './logger.service'
 
 const execFileAsync = promisify(execFile)
@@ -15,13 +16,25 @@ async function detectNvidiaGpu(): Promise<GpuInfo | null> {
     )
     const output = stdout.trim()
     if (!output) return null
-    const [name, vramStr] = output.split(',').map((s) => s.trim())
-    const gpu: GpuInfo = {
-      name: name || 'NVIDIA GPU',
-      vramMb: parseInt(vramStr || '0', 10),
-      vendor: 'nvidia'
+
+    // nvidia-smi gibt EINE ZEILE PRO GPU aus. Frueher wurde die gesamte
+    // Ausgabe an Kommas zerlegt - bei einem Laptop mit zwei Karten oder einem
+    // Rechner mit zwei GPUs kam dabei die erstbeste heraus, nicht die
+    // staerkste. Ollama nimmt aber die groesste.
+    const candidates: GpuInfo[] = []
+    for (const line of output.split('\n')) {
+      const [name, vramStr] = line.split(',').map((part) => part.trim())
+      const vramMb = Number.parseInt(vramStr ?? '', 10)
+      if (!Number.isFinite(vramMb) || vramMb <= 0) continue
+      candidates.push({ name: name || 'NVIDIA GPU', vramMb, vendor: 'nvidia' })
     }
-    logger.info('hardware-detector', 'nvidia-smi detected GPU', gpu)
+    if (candidates.length === 0) return null
+
+    const gpu = candidates.sort((a, b) => b.vramMb - a.vramMb)[0]
+    logger.info('hardware-detector', 'nvidia-smi detected GPU', {
+      ...gpu,
+      gpuCount: candidates.length
+    })
     return gpu
   } catch (err) {
     logger.debug('hardware-detector', 'nvidia-smi probe failed', {
@@ -43,10 +56,11 @@ async function detectAmdGpu(): Promise<GpuInfo | null> {
     const lines = output.split('\n')
     if (lines.length < 2) return null
     const totalMatch = lines[1]?.match(/(\d+)/)
-    const vramMb = totalMatch ? parseInt(totalMatch[1], 10) / (1024 * 1024) : 0
+    const rawBytes = totalMatch ? Number.parseInt(totalMatch[1], 10) : Number.NaN
+    if (!Number.isFinite(rawBytes) || rawBytes <= 0) return null
     const gpu: GpuInfo = {
       name: 'AMD GPU',
-      vramMb: Math.round(vramMb),
+      vramMb: Math.round(rawBytes / (1024 * 1024)),
       vendor: 'amd'
     }
     logger.info('hardware-detector', 'rocm-smi detected GPU', gpu)
@@ -177,16 +191,6 @@ async function detectGpuCached(): Promise<GpuInfo | null> {
   return cachedGpu
 }
 
-function determineProfile(ramGb: number, gpu: GpuInfo | null): HardwareProfile {
-  const vramGb = gpu ? gpu.vramMb / 1024 : 0
-
-  if (ramGb >= 64 || vramGb >= 24) return 'power'
-  if (ramGb >= 32 || vramGb >= 12) return 'strong'
-  if (ramGb >= 16 || vramGb >= 6) return 'medium'
-  if (ramGb >= 8) return 'light'
-  return 'minimal'
-}
-
 const MODEL_MAP: Record<HardwareProfile, string> = {
   minimal: 'gemma3:1b',
   light: 'qwen2.5:3b', // was llama3.2:3b - Qwen is stronger at German + JSON
@@ -209,7 +213,10 @@ export async function detectHardware(): Promise<HardwareInfo> {
   const threads = logicalCpus
 
   const gpu = await detectGpuCached()
-  const profile = determineProfile(totalGb, gpu)
+  // Ungueltige VRAM-Angaben (NaN aus einer kaputten Werkzeugausgabe) duerfen
+  // die Einstufung nicht verfaelschen.
+  const vramGb = gpu && Number.isFinite(gpu.vramMb) ? gpu.vramMb / 1024 : 0
+  const profile = determineProfile({ ramGb: totalGb, vramGb })
 
   const info: HardwareInfo = {
     cpu: {
@@ -231,6 +238,7 @@ export async function detectHardware(): Promise<HardwareInfo> {
   logger.info('hardware-detector', 'Hardware detected', {
     profile,
     ramGb: totalGb,
+    vramGb: Math.round(vramGb * 10) / 10,
     logicalCpus,
     hasGpu: !!gpu,
     gpuVendor: gpu?.vendor

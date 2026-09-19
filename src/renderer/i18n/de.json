@@ -379,7 +379,9 @@
       "wishes": "Zukunftswünsche",
       "thanks": "Dank",
       "missing": "Fehlt",
-      "verdict": "Klartext-Fazit"
+      "verdict": "Klartext-Fazit",
+      "gradeConflict": "Note unklar",
+      "gradeConflictDesc": "Das Modell nennt Note {{grade}}, beschreibt sie aber als „{{label}}\" – das wäre Note {{labelGrade}}. Starte die Analyse neu oder nimm ein größeres Modell."
     },
     "plain": {
       "headline": "Das Wichtigste",

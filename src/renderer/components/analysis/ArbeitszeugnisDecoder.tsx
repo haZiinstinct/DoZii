@@ -158,6 +158,44 @@ function GradeHero({ title, data }: { title: string; data: ZeugnisGrade }): Reac
   const { t } = useTranslation()
   const colors = gradeColor(data.grade)
   const label = data.label ?? t(`results.az.grade${data.grade}`)
+
+  /*
+   * Zahl und Wortlaut widersprechen sich (beobachtet: "Note 1" mit dem Label
+   * "mangelhaft" und einer Begruendung voller Maengel). Dann wird KEINE der
+   * beiden Noten als Ergebnis hingestellt - eine falsche Note ist schlimmer
+   * als eine fehlende, gerade wenn jemand sein Zeugnis danach beurteilt.
+   */
+  if (data.conflicted && data.labelGrade !== undefined) {
+    return (
+      <div className="rounded-2xl border border-brand-amber/40 bg-brand-amber/5 p-6">
+        <div className="mb-3 flex items-center gap-2">
+          <AlertTriangle size={14} className="text-brand-amber" aria-hidden="true" />
+          <p className="text-xs font-semibold uppercase tracking-wider text-brand-text-dim">
+            {title}
+          </p>
+          <span className="ms-auto rounded-lg border border-brand-border bg-brand-darker/60 px-2 py-0.5 text-[10px] font-semibold uppercase text-brand-text-dim">
+            {t('results.az.confidence')}: low
+          </span>
+        </div>
+
+        <p className="mb-2 font-mono text-3xl font-bold text-brand-amber">
+          {t('results.az.gradeConflict')}
+        </p>
+        <p className="text-xs leading-relaxed text-brand-text">
+          {t('results.az.gradeConflictDesc', {
+            grade: data.grade,
+            label: data.label,
+            labelGrade: data.labelGrade
+          })}
+        </p>
+
+        {data.reasoning && (
+          <p className="mt-3 text-xs leading-relaxed text-brand-text-dim">{data.reasoning}</p>
+        )}
+      </div>
+    )
+  }
+
   return (
     <div className={`rounded-2xl border p-6 ${colors.border} ${colors.bg}`}>
       <div className="mb-3 flex items-center gap-2">

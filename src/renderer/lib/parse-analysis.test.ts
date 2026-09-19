@@ -3,7 +3,8 @@ import {
   parseGrammar,
   parseArbeitszeugnis,
   stripTrailingJsonBlock,
-  isInDocument
+  isInDocument,
+  gradeFromLabel
 } from './parse-analysis'
 
 const GRAMMAR_MD = `
@@ -172,5 +173,87 @@ describe('isInDocument', () => {
     expect(isInDocument('ab', 'ab cd ef')).toBe(false)
     expect(isInDocument(undefined, 'text')).toBe(false)
     expect(isInDocument('nicht enthalten', 'völlig anderer text')).toBe(false)
+  })
+})
+
+describe('Zeugnis-Note: Zahl gegen Wortlaut', () => {
+  const base = {
+    documentType: 'qualifiziertes',
+    notGenuineZeugnis: false,
+    sections: [],
+    codedPhrases: [],
+    missingElements: [],
+    closingFormula: {},
+    summary: 'Test'
+  }
+
+  const wrap = (obj: unknown): string => '```json\n' + JSON.stringify(obj) + '\n```'
+
+  it('erkennt den Widerspruch zwischen Zahl und Wortlaut', () => {
+    // Real beobachtet: Note 1 mit dem Label "mangelhaft" und einer
+    // Begruendung, die eindeutig eine 5 beschreibt.
+    const result = parseArbeitszeugnis(
+      wrap({
+        ...base,
+        contentGrade: { grade: 3, label: 'befriedigend', confidence: 'high', reasoning: '' },
+        craftGrade: {
+          grade: 1,
+          label: 'mangelhaft',
+          confidence: 'low',
+          reasoning: 'Vollstaendigkeitsmangel, Formulierungsqualitaet schlecht'
+        }
+      })
+    )
+    expect(result).not.toBeNull()
+    expect(result!.craftGrade.conflicted).toBe(true)
+    expect(result!.craftGrade.labelGrade).toBe(5)
+    // Die stimmige Note bleibt unangetastet
+    expect(result!.contentGrade.conflicted).toBe(false)
+  })
+
+  it('stimmige Angaben gelten nicht als Widerspruch', () => {
+    const result = parseArbeitszeugnis(
+      wrap({
+        ...base,
+        contentGrade: { grade: 2, label: 'gut', confidence: 'high', reasoning: '' },
+        craftGrade: { grade: 1, label: 'sehr gut', confidence: 'high', reasoning: '' }
+      })
+    )
+    expect(result!.contentGrade.conflicted).toBe(false)
+    expect(result!.craftGrade.conflicted).toBe(false)
+  })
+
+  it('unbekannter Wortlaut loest keinen Fehlalarm aus', () => {
+    const result = parseArbeitszeugnis(
+      wrap({
+        ...base,
+        contentGrade: { grade: 3, label: 'solide Leistung', confidence: 'high', reasoning: '' },
+        craftGrade: { grade: 3, label: 'befriedigend', confidence: 'high', reasoning: '' }
+      })
+    )
+    expect(result!.contentGrade.conflicted).toBe(false)
+    expect(result!.contentGrade.labelGrade).toBeUndefined()
+  })
+})
+
+describe('gradeFromLabel', () => {
+  it('ordnet die sechs Notenwoerter zu', () => {
+    expect(gradeFromLabel('sehr gut')).toBe(1)
+    expect(gradeFromLabel('gut')).toBe(2)
+    expect(gradeFromLabel('befriedigend')).toBe(3)
+    expect(gradeFromLabel('ausreichend')).toBe(4)
+    expect(gradeFromLabel('mangelhaft')).toBe(5)
+    expect(gradeFromLabel('ungenügend')).toBe(6)
+    expect(gradeFromLabel('ungenuegend')).toBe(6)
+  })
+
+  it('verwechselt "sehr gut" nicht mit "gut"', () => {
+    expect(gradeFromLabel('Sehr Gut')).toBe(1)
+  })
+
+  it('greift nicht in fremden Woertern', () => {
+    expect(gradeFromLabel('gutachterlich geprueft')).toBeUndefined()
+    expect(gradeFromLabel('')).toBeUndefined()
+    expect(gradeFromLabel(undefined)).toBeUndefined()
   })
 })

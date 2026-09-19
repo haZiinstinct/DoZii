@@ -379,7 +379,9 @@
       "wishes": "Future wishes",
       "thanks": "Thanks",
       "missing": "Missing",
-      "verdict": "Plain-text verdict"
+      "verdict": "Plain-text verdict",
+      "gradeConflict": "Grade unclear",
+      "gradeConflictDesc": "The model states grade {{grade}} but describes it as \"{{label}}\" – that would be grade {{labelGrade}}. Run the analysis again or use a larger model."
     },
     "plain": {
       "headline": "The most important part",

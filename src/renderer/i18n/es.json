@@ -379,7 +379,9 @@
       "wishes": "Deseos para el futuro",
       "thanks": "Agradecimiento",
       "missing": "Falta",
-      "verdict": "Veredicto en lenguaje claro"
+      "verdict": "Veredicto en lenguaje claro",
+      "gradeConflict": "Nota poco clara",
+      "gradeConflictDesc": "El modelo indica la nota {{grade}} pero la describe como «{{label}}», que sería la nota {{labelGrade}}. Repite el análisis o usa un modelo más grande."
     },
     "plain": {
       "headline": "Lo más importante",

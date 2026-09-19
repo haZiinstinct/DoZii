@@ -379,7 +379,9 @@
       "wishes": "Vœux pour l'avenir",
       "thanks": "Remerciements",
       "missing": "Manquant",
-      "verdict": "Verdict en clair"
+      "verdict": "Verdict en clair",
+      "gradeConflict": "Note incertaine",
+      "gradeConflictDesc": "Le modèle indique la note {{grade}} mais la décrit comme « {{label}} », ce qui correspondrait à la note {{labelGrade}}. Relance l’analyse ou prends un modèle plus grand."
     },
     "plain": {
       "headline": "L'essentiel",
