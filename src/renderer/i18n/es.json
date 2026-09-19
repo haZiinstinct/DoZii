@@ -208,7 +208,7 @@
     "unknown": "Desconocido",
     "strengths": {
       "gemma4:12b": "Mejores resultados en nuestras pruebas: notas y plazos sin un solo error. Para tarjetas gráficas desde 10 GB.",
-      "granite4.1:3b": "Funciona sin tarjeta gráfica, alrededor de un minuto por certificado. En plazos y cláusulas actúa la comprobación integrada.",
+      "granite4.1:3b": "La descarga más pequeña. Menos preciso que Qwen 3 (4B) en notas y plazos: eliégelo solo si el espacio escasea de verdad.",
       "granite4.1:8b": "Encuentra la mayoría de cláusulas críticas. Necesita tarjeta gráfica: en CPU un certificado tarda unos veinte minutos.",
       "llama3.2:3b": "Solo para los modos sencillos. Demasiado pequeño para el descodificador de certificados y la revisión de contratos: salen notas contradictorias.",
       "qwen2.5:7b": "Probado y versátil, pero con 32K la ventana de contexto más pequeña: los contratos largos se dividen.",

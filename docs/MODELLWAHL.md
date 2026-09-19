@@ -7,6 +7,17 @@ Messaufbau: AMD-Karte mit 12 GB, Ollama 0.33, alle Modelle Q4, `num_ctx` 8192, e
 zur Zeit. Die Eval-Suiten liegen unter `eval/`, gestartet mit
 `DOZII_EVAL_MODEL=<tag> npm run eval`.
 
+## Das Ergebnis
+
+| Stufe | Modell | wofür |
+| --- | --- | --- |
+| minimal / leicht | **qwen3:4b** (2,5 GB) | der Boden: läuft ohne Grafikkarte, beste Fristen im Feld |
+| mittel | **granite4.1:8b** (5,3 GB) | findet die meisten Vertragsklauseln, braucht eine Karte |
+| stark | **gemma4:12b** (7,6 GB) | beste Ergebnisse überhaupt, ab 10 GB VRAM |
+
+`granite4.1:3b`, `gemma3:4b`, `qwen2.5:7b` und `llama3.2:3b` bleiben wählbar, werden aber
+nicht mehr empfohlen. Eine Stufe für Riesenmodelle führt DoZii bewusst nicht.
+
 ## Die Leitlinie
 
 Das schwächste Modell muss **alle** Funktionen bedienen können. Ein schwacher Rechner soll
@@ -26,15 +37,26 @@ sind zum Teil keine Modellschwäche, sondern diese Fehlkonfiguration; dass gemma
 diesem Handicap trotzdem fehlerfrei benotet, ist mehr wert, als die Tabelle zeigt.
 
 Behoben in `RESPONSE_RESERVE_TOKENS` / `responseReserveTokens()`; die Eval rechnet das
-Fenster seither wie die App (`eval/lib/context.ts`). Die Zeugnis- und Vertragszahlen unten
-stammen noch aus den Läufen davor und sind damit eine **untere Schranke**.
+Fenster seither wie die App (`eval/lib/context.ts`).
+
+Die Zeugnisse der beiden Boden-Kandidaten sind danach **neu gemessen** worden, und das
+Ergebnis ist drastisch — dieselbe Datei, dasselbe Modell, nur 12288 statt 8192 Token:
+
+| Modell | Note mit 8192 | Note mit korrektem Fenster |
+| --- | --- | --- |
+| qwen3:4b | 0 von 6 auswertbar | **0,33 · 6 von 6** |
+| granite4.1:3b | 1,33 · 4 von 6 | 1,17 · 4 von 6 |
+
+Die Vertrags- und Fristenzahlen unten stammen noch aus den Läufen davor und sind damit
+eine **untere Schranke**. Was von den kleinen Modellen als Schwäche gemessen wurde, war
+zu einem guten Teil unsere eigene Fehlkonfiguration.
 
 ## Qualität
 
 | Modell | Zeugnisnote | Verträge: Klauseln / Risiko | Fristen: Recall |
 | --- | --- | --- | --- |
-| granite4.1:3b | 1,33 daneben, rät faktisch „3" | 28,6 % / 1 von 4 | 42,9 %, zweimal gar nichts |
-| qwen3:4b | siehe Denkmodus | 42,9 % / **4 von 4** | **100 %** |
+| granite4.1:3b | 1,17 · 4 von 6, Halluzination 30,8 % | 28,6 % / 1 von 4 | 42,9 %, zweimal gar nichts |
+| **qwen3:4b** | **0,33 · 6 von 6**, Halluzination 10,3 % | 42,9 % / **4 von 4** | **100 %** |
 | gemma3:4b | 1,83 daneben | — | — |
 | granite4.1:8b | 0,83 daneben | **71,4 %** / 2 von 4 | 85,7 %, eine erfundene Frist |
 | gemma4:12b | **0,00 · 6 von 6** | 57,1 % / 3 von 4 | **100 %** |

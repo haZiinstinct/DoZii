@@ -20,8 +20,10 @@ describe('determineProfile mit GPU', () => {
   })
 
   it('auch die unterste Stufe bekommt ein Modell, das alles kann', () => {
-    // Der Boden ist bewusst kein 1B-Modell: langsamer ja, schlechter nein.
-    expect(modelForProfile('minimal')).toBe('granite4.1:3b')
+    // Der Boden ist bewusst nicht das kleinste Modell: granite4.1:3b ist
+    // 0,4 GB kleiner und gleich schnell, fand aber bei zwei von sechs
+    // Bescheiden gar keine Frist. Langsamer ja, schlechter nein.
+    expect(modelForProfile('minimal')).toBe('qwen3:4b')
   })
 
   it('eine leere Stufe faengt nicht alles ab', () => {

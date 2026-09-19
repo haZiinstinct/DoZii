@@ -103,23 +103,35 @@ export function modelForProfile(profile: HardwareProfile): string {
 }
 
 /**
- * Fallback, wenn zur Stufe nichts hinterlegt ist - und zugleich der Boden des
- * Katalogs. Bewusst ein Modell, das ALLE Modi kann: ein schwacher Rechner soll
- * langsamer sein, nicht schlechter. Ein 1B-Modell waere zwar noch kleiner,
- * wuerde beim Zeugnis-Decoder aber Unsinn liefern - und eine falsche Note ist
- * schlimmer als eine langsame.
+ * Der Boden des Katalogs, und zugleich der Rueckfall, wenn zu einer Stufe
+ * nichts hinterlegt ist.
+ *
+ * Bewusst ein Modell, das ALLE Modi kann: ein schwacher Rechner soll
+ * langsamer sein, nicht schlechter. Gemessen an denselben Zeugnissen,
+ * Vertraegen und Bescheiden:
+ *
+ *                   Note        Vertragsrisiko   Fristen
+ *   granite4.1:3b   1,17 · 4/6  1 von 4          42,9 %
+ *   qwen3:4b        0,33 · 6/6  4 von 4          100 %
+ *
+ * qwen3:4b ist 0,4 GB groesser und auf der CPU gleich schnell (10,6 gegen
+ * 11,9 Token/s) - es gibt also keinen Grund, das schwaechere zu empfehlen.
+ * Es erkennt ausserdem, wie sonst nur gemma4:12b, ein Kuendigungsschreiben
+ * als Nicht-Zeugnis, statt ihm eine Note zu geben.
  */
-export const DEFAULT_MODEL = 'granite4.1:3b'
+export const DEFAULT_MODEL = 'qwen3:4b'
 
 export const MODEL_CATALOG: readonly CatalogModel[] = [
   {
+    // Bleibt waehlbar - der kleinste Download im Katalog. Empfohlen wird es
+    // nicht mehr: bei den Fristen fand es zwei von sechs Bescheiden gar
+    // nicht, und die Note lag im Schnitt gut eine Stufe daneben.
     name: 'granite4.1:3b',
     displayName: 'Granite 4.1 (3B)',
     sizeGb: 2.1,
     contextK: 128,
     heavyModeCapable: true,
-    cpuFriendly: true,
-    recommendedFor: 'light'
+    cpuFriendly: true
   },
   {
     name: 'granite4.1:8b',
@@ -140,12 +152,15 @@ export const MODEL_CATALOG: readonly CatalogModel[] = [
     recommendedFor: 'strong'
   },
   {
+    // Der Boden. Bestes kleines Modell im Test und bei den Fristen sogar das
+    // beste ueberhaupt (100 % Precision und Recall).
     name: 'qwen3:4b',
     displayName: 'Qwen 3 (4B)',
     sizeGb: 2.5,
     contextK: 256,
     heavyModeCapable: true,
-    cpuFriendly: true
+    cpuFriendly: true,
+    recommendedFor: 'light'
   },
   {
     name: 'qwen2.5:7b',
