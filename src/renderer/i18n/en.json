@@ -431,7 +431,19 @@
       "showInText": "Show in document",
       "verdict": "Plain-text verdict",
       "detailsShow": "Show details",
-      "detailsHide": "Hide details"
+      "detailsHide": "Hide details",
+      "radarTitle": "Checked without AI",
+      "radarIntro": "DoZii finds these clauses with a fixed rule set – independent of the chosen model and identical on every machine.",
+      "radar": {
+        "einseitigePreisaenderung": "Prices changeable unilaterally at any time",
+        "endrenovierung": "Obligation to renovate on moving out",
+        "haftungGrobeFahrlaessigkeit": "Liability excluded even for gross negligence",
+        "kautionZuHoch": "Deposit exceeds three months’ base rent",
+        "kuendigungNurSchriftlich": "Termination only by registered letter",
+        "ueberstundenPauschal": "All overtime covered by the salary",
+        "verlaengerungZuLang": "Automatic renewal for a full year",
+        "wettbewerbOhneKarenz": "Non-compete without compensation"
+      }
     },
     "letter": {
       "notice": "Note",

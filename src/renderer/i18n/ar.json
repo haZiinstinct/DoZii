@@ -443,7 +443,19 @@
       "showInText": "إظهاره في المستند",
       "verdict": "الخلاصة الصريحة",
       "detailsShow": "إظهار التفاصيل",
-      "detailsHide": "إخفاء التفاصيل"
+      "detailsHide": "إخفاء التفاصيل",
+      "radarTitle": "مُدقّق دون ذكاء اصطناعي",
+      "radarIntro": "يعثر DoZii على هذه البنود عبر مجموعة قواعد ثابتة — مستقلة عن النموذج المختار ومتطابقة على كل جهاز.",
+      "radar": {
+        "einseitigePreisaenderung": "إمكانية تغيير الأسعار من طرف واحد في أي وقت",
+        "endrenovierung": "التزام بالتجديد عند المغادرة",
+        "haftungGrobeFahrlaessigkeit": "إعفاء من المسؤولية حتى عند الإهمال الجسيم",
+        "kautionZuHoch": "تأمين يتجاوز ثلاثة إيجارات أساسية",
+        "kuendigungNurSchriftlich": "الإنهاء بالبريد المسجل فقط",
+        "ueberstundenPauschal": "جميع الساعات الإضافية مشمولة بالراتب",
+        "verlaengerungZuLang": "تجديد تلقائي لسنة كاملة",
+        "wettbewerbOhneKarenz": "منع المنافسة دون تعويض"
+      }
     },
     "letter": {
       "notice": "ملاحظة",

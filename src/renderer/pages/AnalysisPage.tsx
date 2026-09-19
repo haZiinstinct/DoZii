@@ -849,7 +849,12 @@ export function AnalysisPage() {
                 documentText={doc?.extractedText}
               />
             ) : parsed.type === 'contract' && parsed.data ? (
-              <ContractCheck key={resultKey} result={parsed.data} onShowInText={handleShowInText} />
+              <ContractCheck
+                key={resultKey}
+                result={parsed.data}
+                onShowInText={handleShowInText}
+                documentText={doc?.extractedText}
+              />
             ) : parsed.type === 'summary' && parsed.data ? (
               <SummaryView result={parsed.data} />
             ) : parsed.type === 'letter' && parsed.data ? (

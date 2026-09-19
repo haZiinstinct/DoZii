@@ -428,7 +428,19 @@
       "showInText": "在文档中显示",
       "verdict": "直白结论",
       "detailsShow": "显示详情",
-      "detailsHide": "隐藏详情"
+      "detailsHide": "隐藏详情",
+      "radarTitle": "未使用 AI 的检查",
+      "radarIntro": "这些条款由固定规则集找出——与所选模型无关，在任何电脑上结果一致。",
+      "radar": {
+        "einseitigePreisaenderung": "价格可随时单方面变更",
+        "endrenovierung": "退租时的翻新义务",
+        "haftungGrobeFahrlaessigkeit": "即使重大过失也免除责任",
+        "kautionZuHoch": "押金超过三个月净租金",
+        "kuendigungNurSchriftlich": "仅能以挂号信解约",
+        "ueberstundenPauschal": "所有加班均已包含在工资中",
+        "verlaengerungZuLang": "自动续约整整一年",
+        "wettbewerbOhneKarenz": "竞业禁止但无补偿"
+      }
     },
     "letter": {
       "notice": "提示",

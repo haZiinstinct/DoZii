@@ -431,7 +431,19 @@
       "showInText": "Montrer dans le document",
       "verdict": "Verdict en clair",
       "detailsShow": "Afficher les détails",
-      "detailsHide": "Masquer les détails"
+      "detailsHide": "Masquer les détails",
+      "radarTitle": "Vérifié sans IA",
+      "radarIntro": "DoZii repère ces clauses grâce à un jeu de règles fixe, indépendant du modèle choisi et identique sur toutes les machines.",
+      "radar": {
+        "einseitigePreisaenderung": "Prix modifiables unilatéralement à tout moment",
+        "endrenovierung": "Obligation de rénover en quittant le logement",
+        "haftungGrobeFahrlaessigkeit": "Responsabilité exclue même en cas de faute lourde",
+        "kautionZuHoch": "Dépôt de garantie supérieur à trois loyers hors charges",
+        "kuendigungNurSchriftlich": "Résiliation uniquement par lettre recommandée",
+        "ueberstundenPauschal": "Toutes les heures supplémentaires incluses dans le salaire",
+        "verlaengerungZuLang": "Reconduction automatique pour une année entière",
+        "wettbewerbOhneKarenz": "Clause de non-concurrence sans contrepartie"
+      }
     },
     "letter": {
       "notice": "Remarque",

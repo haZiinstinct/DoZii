@@ -431,7 +431,19 @@
       "showInText": "Im Dokument zeigen",
       "verdict": "Klartext-Fazit",
       "detailsShow": "Details anzeigen",
-      "detailsHide": "Details verbergen"
+      "detailsHide": "Details verbergen",
+      "radarTitle": "Ohne KI geprüft",
+      "radarIntro": "Diese Klauseln findet DoZii über ein festes Regelwerk – unabhängig vom gewählten Modell und auf jedem Rechner gleich.",
+      "radar": {
+        "einseitigePreisaenderung": "Preise jederzeit einseitig änderbar",
+        "endrenovierung": "Renovierungspflicht bei Auszug",
+        "haftungGrobeFahrlaessigkeit": "Haftungsausschluss auch bei grober Fahrlässigkeit",
+        "kautionZuHoch": "Kaution über drei Nettokaltmieten",
+        "kuendigungNurSchriftlich": "Kündigung nur per Einschreiben",
+        "ueberstundenPauschal": "Alle Überstunden pauschal abgegolten",
+        "verlaengerungZuLang": "Automatische Verlängerung um ein ganzes Jahr",
+        "wettbewerbOhneKarenz": "Wettbewerbsverbot ohne Karenzentschädigung"
+      }
     },
     "letter": {
       "notice": "Hinweis",

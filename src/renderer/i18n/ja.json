@@ -428,7 +428,19 @@
       "showInText": "ドキュメント内で表示",
       "verdict": "率直な結論",
       "detailsShow": "詳細を表示",
-      "detailsHide": "詳細を隠す"
+      "detailsHide": "詳細を隠す",
+      "radarTitle": "AI を使わずに確認",
+      "radarIntro": "これらの条項は固定のルールで検出しています。選んだモデルに左右されず、どの環境でも同じ結果になります。",
+      "radar": {
+        "einseitigePreisaenderung": "価格をいつでも一方的に変更可能",
+        "endrenovierung": "退去時の原状回復義務",
+        "haftungGrobeFahrlaessigkeit": "重過失の場合も責任を免除",
+        "kautionZuHoch": "敷金が賃料 3 か月分を超える",
+        "kuendigungNurSchriftlich": "解約は書留郵便のみ",
+        "ueberstundenPauschal": "残業代が給与に一括で含まれる",
+        "verlaengerungZuLang": "1 年単位の自動更新",
+        "wettbewerbOhneKarenz": "代償なしの競業避止"
+      }
     },
     "letter": {
       "notice": "注意",

@@ -431,7 +431,19 @@
       "showInText": "Mostrar no documento",
       "verdict": "Veredito em linguagem clara",
       "detailsShow": "Mostrar detalhes",
-      "detailsHide": "Ocultar detalhes"
+      "detailsHide": "Ocultar detalhes",
+      "radarTitle": "Verificado sem IA",
+      "radarIntro": "O DoZii encontra estas cláusulas com um conjunto de regras fixo – independente do modelo escolhido e igual em qualquer computador.",
+      "radar": {
+        "einseitigePreisaenderung": "Preços alteráveis unilateralmente a qualquer momento",
+        "endrenovierung": "Obrigação de renovar ao sair",
+        "haftungGrobeFahrlaessigkeit": "Responsabilidade excluída mesmo em negligência grave",
+        "kautionZuHoch": "Caução superior a três rendas base",
+        "kuendigungNurSchriftlich": "Rescisão apenas por carta registada",
+        "ueberstundenPauschal": "Todas as horas extra incluídas no salário",
+        "verlaengerungZuLang": "Renovação automática por um ano inteiro",
+        "wettbewerbOhneKarenz": "Cláusula de não concorrência sem compensação"
+      }
     },
     "letter": {
       "notice": "Nota",
