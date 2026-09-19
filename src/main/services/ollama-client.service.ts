@@ -371,11 +371,14 @@ async function consumeStream(
       }
     }
     flush()
-    return { text: chunks.join(''), aborted: false }
+    // Der gespeicherte Text darf keinen Gedankengang enthalten. Im Stream
+    // waere er dem Nutzer schon durchgelaufen, in der Datenbank bliebe er
+    // stehen - und alle Modi ausser Zeugnis und Vertrag parsen ihn ungeprueft.
+    return { text: stripThinking(chunks.join('')), aborted: false }
   } catch (err) {
     if (isAbortError(err)) {
       flush() // Teiltext noch zustellen
-      return { text: chunks.join(''), aborted: true }
+      return { text: stripThinking(chunks.join('')), aborted: true }
     }
     throw err
   }
