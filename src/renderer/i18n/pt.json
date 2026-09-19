@@ -28,7 +28,8 @@
     "profile": "Perfil",
     "runsGpu": "A executar totalmente na GPU",
     "runsHybrid": "Dividido entre GPU + CPU",
-    "runsCpu": "A executar apenas na CPU"
+    "runsCpu": "A executar apenas na CPU",
+    "vramHint": "VRAM ocupada pelos modelos carregados. O DoZii não vê o que outros programas usam na placa gráfica."
   },
   "profile": {
     "minimal": "Mínimo",

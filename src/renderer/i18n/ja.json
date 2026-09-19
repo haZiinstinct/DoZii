@@ -28,7 +28,8 @@
     "profile": "プロファイル",
     "runsGpu": "GPU 上で完全に実行",
     "runsHybrid": "GPU と CPU で分担",
-    "runsCpu": "CPU のみで実行"
+    "runsCpu": "CPU のみで実行",
+    "vramHint": "読み込み済みモデルが使用している VRAM です。他のソフトの使用分は DoZii からは見えません。"
   },
   "profile": {
     "minimal": "最小",

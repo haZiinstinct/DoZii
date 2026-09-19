@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Cpu, MemoryStick, Sparkles } from 'lucide-react'
+import { Cpu, MemoryStick, Microchip, Sparkles } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import type { HardwareInfo, LoadedModelInfo } from '@shared/types'
 import { useSystemMetrics } from '@/hooks/useSystemMetrics'
@@ -27,12 +27,14 @@ interface BarRowProps {
   icon: React.ReactNode
   percent: number
   detail?: string
+  /** Erklaerender Tooltip, z.B. was die Zahl genau misst. */
+  title?: string
 }
 
-function BarRow({ label, icon, percent, detail }: BarRowProps) {
+function BarRow({ label, icon, percent, detail, title }: BarRowProps) {
   const clamped = Math.max(0, Math.min(100, Math.round(percent)))
   return (
-    <div className="space-y-1">
+    <div className="space-y-1" title={title}>
       <div className="flex items-center gap-1.5 text-[10px] text-brand-text-dim">
         <span className="flex h-3 w-3 items-center justify-center">{icon}</span>
         <span className="font-mono uppercase tracking-wider">{label}</span>
@@ -129,6 +131,21 @@ export function HardwareIndicator() {
               : undefined
           }
         />
+        {/*
+          VRAM nur bei erkannter GPU. Der Wert stammt aus Ollamas /api/ps und
+          zaehlt deshalb NUR die geladenen Modelle - nicht, was Desktop oder
+          Browser sonst belegen. Der Titel sagt das, damit die Zahl nicht als
+          GPU-Gesamtauslastung missverstanden wird.
+        */}
+        {metrics && metrics.vramTotalGb > 0 && (
+          <BarRow
+            label="VRAM"
+            icon={<Microchip size={10} />}
+            percent={metrics.vramUsedPercent}
+            detail={`${metrics.vramUsedGb.toFixed(1)} / ${metrics.vramTotalGb.toFixed(1)} GB`}
+            title={t('hardware.vramHint')}
+          />
+        )}
       </div>
 
       {/* Profile footer */}

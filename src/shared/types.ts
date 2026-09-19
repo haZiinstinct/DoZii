@@ -381,6 +381,20 @@ export interface SystemMetrics {
   ramUsedGb: number
   ramTotalGb: number
   ramUsedPercent: number
+  /**
+   * VRAM der erkannten GPU insgesamt. 0 = keine GPU erkannt, dann zeigt die
+   * Anzeige keine VRAM-Leiste.
+   */
+  vramTotalGb: number
+  /**
+   * Davon durch geladene Ollama-Modelle belegt.
+   *
+   * Bewusst NICHT die gesamte GPU-Auslastung: Ollama meldet nur die eigenen
+   * Modelle. Was Desktop, Browser oder Spiele belegen, sieht DoZii nicht -
+   * und soll es auch nicht behaupten.
+   */
+  vramUsedGb: number
+  vramUsedPercent: number
   loadedModels: LoadedModelInfo[]
   activeStreamCount: number
 }

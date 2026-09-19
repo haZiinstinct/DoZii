@@ -109,11 +109,24 @@ export async function getSystemMetrics(): Promise<SystemMetrics> {
   const raw = await listLoadedModels()
   const loadedModels = raw.map((m) => classifyLoadedModel(m, totalVramMb))
 
+  // Summe ueber alle geladenen Modelle: Ollama kann mehrere gleichzeitig
+  // im Speicher halten, wenn der Nutzer zwischen ihnen wechselt.
+  const vramUsedBytes = raw.reduce((sum, m) => sum + m.sizeVram, 0)
+  const vramTotalGb = Math.round((totalVramMb / 1024) * 10) / 10
+  const vramUsedGb = Math.round((vramUsedBytes / 1024 ** 3) * 10) / 10
+  const vramUsedPercent =
+    totalVramMb > 0
+      ? Math.max(0, Math.min(100, Math.round((vramUsedBytes / (totalVramMb * 1024 ** 2)) * 100)))
+      : 0
+
   return {
     cpuLoadPercent,
     ramUsedGb,
     ramTotalGb,
     ramUsedPercent,
+    vramTotalGb,
+    vramUsedGb,
+    vramUsedPercent,
     loadedModels,
     activeStreamCount: getActiveStreamCount()
   }

@@ -8,6 +8,9 @@ const EMPTY_METRICS: SystemMetrics = {
   ramUsedGb: 0,
   ramTotalGb: 0,
   ramUsedPercent: 0,
+  vramTotalGb: 0,
+  vramUsedGb: 0,
+  vramUsedPercent: 0,
   loadedModels: [],
   activeStreamCount: 0
 }

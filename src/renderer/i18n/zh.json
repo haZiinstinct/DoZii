@@ -28,7 +28,8 @@
     "profile": "配置",
     "runsGpu": "完全在 GPU 上运行",
     "runsHybrid": "在 GPU + CPU 间分配",
-    "runsCpu": "仅在 CPU 上运行"
+    "runsCpu": "仅在 CPU 上运行",
+    "vramHint": "已加载模型占用的显存。DoZii 看不到其他程序在显卡上的占用。"
   },
   "profile": {
     "minimal": "极简",
