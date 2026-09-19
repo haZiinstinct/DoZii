@@ -144,10 +144,30 @@ wird mitgezaehlt, obwohl ROCm sie meist nicht unterstuetzt. Vom Namen her ist si
 zuverlaessig von einer eingebauten Karte zu unterscheiden; die gemeldeten Groessen sind
 bei AMD bislang klein genug, dass daraus keine falsche Empfehlung wird.
 
-### Kuendigungsschreiben wird als Arbeitszeugnis benotet
+### Kündigungsschreiben wird als Arbeitszeugnis benotet
 `src/main/prompts/arbeitszeugnis.prompt.ts`
 
-Ein Kuendigungsschreiben, das ein Zeugnis nur ankuendigt ("ein qualifiziertes
-Arbeitszeugnis erhalten Sie nach Beendigung"), wird von granite4.1:8b als Zeugnis
-behandelt und bekommt eine Note. Regel 5 des Prompts gibt es, sie greift hier nur nicht.
-Fixture `az-kein-zeugnis` haelt den Fall fest.
+Ein Kündigungsschreiben, das ein Zeugnis nur ankündigt ("ein qualifiziertes
+Arbeitszeugnis erhalten Sie nach Beendigung"), wird von granite4.1:8b als Zeugnis behandelt
+und bekommt eine Note. Regel 5 des Prompts gibt es, sie greift hier nur nicht. Fixture
+`az-kein-zeugnis` hält den Fall fest.
+
+**Teilweise entschärft:** Fehlt jede Zufriedenheitsformel, steht jetzt unter der Note ein
+Hinweis, dass sie allein auf der Einschätzung des Modells beruht. Die Note verschwindet
+aber nicht – wer nur auf die Zahl schaut, sieht sie weiterhin.
+
+### Die Formelnote fließt nicht in den Prompt zurück
+`src/shared/zeugnis-formel.ts`
+
+Die Hauptformel wird im Code ausgerechnet und daneben angezeigt, das Modell erfährt davon
+nichts. Gäbe man sie ihm als Vorgabe mit, müsste es seine Begründung nicht mehr gegen die
+eigene Note schreiben – genau daraus entstand "Note 1 / mangelhaft". Während der Messreihe
+bewusst nicht geändert, weil sonst gegen ein bewegliches Ziel gemessen würde.
+
+### Klausel-Radar deckt sieben von acht Mustern ab, nicht den ganzen Katalog
+`src/shared/klausel-radar.ts`
+
+Auf den Eval-Verträgen findet das Regelwerk 6 von 7 roten Klauseln. Was fehlt, sind
+Klauseln, die man nur im Zusammenhang erkennt – etwa eine Inkasso-Androhung. Das bleibt
+Aufgabe des Modells. Weitere Muster aufzunehmen ist billig, aber jedes zusätzliche Muster
+erhöht das Risiko eines Fehlalarms, und ein Fehlalarm entwertet die echten Funde.
