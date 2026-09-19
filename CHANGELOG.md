@@ -24,6 +24,19 @@ auch, bis wann du reagieren musst – und schreibt die Antwort auf Wunsch gleich
   direkt im Brief ausgefüllt, Export als Word-kompatibles RTF
 - **Behörden-Glossar** – 120+ Begriffe, per Klick im Text erklärt. Rein lokale Daten,
   kein Modellaufruf
+- **Notenprobe ohne KI** – die Zufriedenheitsformel ist eine feste Tabelle, keine
+  Ermessensfrage. DoZii sucht die Hauptformel im Text und rechnet die Note selbst aus.
+  Anlass war die Messung: die Modelle zitieren „stets zu unserer vollsten Zufriedenheit"
+  korrekt und verbuchen sie als Note 4. Überschrieben wird nichts – versteckte Codes
+  drücken die Gesamtnote zu Recht darunter. Nur **besser** als die Hauptformel kann ein
+  Zeugnis nicht sein, und das wird gemeldet
+- **Klausel-Radar** – acht Stolperfallen werden über ein festes Regelwerk gefunden, nicht
+  über das Modell: Kaution über drei Nettokaltmieten (§ 551 BGB), Endrenovierung,
+  Wettbewerbsverbot ohne Karenzentschädigung (§ 74 HGB), pauschal abgegoltene Überstunden,
+  Jahresverlängerung (§ 309 Nr. 9 BGB), Kündigung nur per Einschreiben, Haftungsausschluss
+  bei grober Fahrlässigkeit, einseitige Preisänderung. Eine rote Klausel hebt das
+  angezeigte Gesamtrisiko auf „hoch" – gemessen meldete das kleine Modell bei einer
+  Kaution über vier Nettokaltmieten „mittleres Risiko"
 - **OCR für gescannte PDFs** – bisher der häufigste Totalausfall: ein eingescannter
   Bescheid hat keine Textebene und landete leer in der App. Jetzt wird der Scan erkannt
   und seitenweise per Texterkennung gelesen, mit Fortschrittsanzeige
@@ -61,6 +74,18 @@ auch, bis wann du reagieren musst – und schreibt die Antwort auf Wunsch gleich
   Handy-Fotos hoch)
 - Der **Ersteindruck** wird nach dem Import automatisch erzeugt statt erst auf Knopfdruck
 - Datums- und Zahlenformate folgen der gewählten Sprache statt fest `de-DE`
+
+### Behoben
+
+- **Widersprüchliche Zeugnisnote** – „Note 1" mit dem Wortlaut „mangelhaft" wurde als
+  Ergebnis hingestellt. Widersprechen sich Zahl und Wortlaut, wird jetzt keine von beiden
+  behauptet
+- **Modellempfehlung auf Büro-Laptops** – Intel-Grafik meldet über die Windows-Registry
+  den geteilten Arbeitsspeicher als eigenen VRAM. Aus 32 GB RAM wurden so „16 GB VRAM",
+  und der Laptop bekam das größte Modell empfohlen, das dann auf der CPU kroch. Gezählt
+  wird jetzt nur noch, was Ollama beschleunigt: NVIDIA (CUDA) und AMD (ROCm)
+- **Warnung vor zu kleinen Modellen** – wer den Zeugnis-Decoder mit einem Modell startet,
+  das dafür zu klein ist, sieht das jetzt vorher statt nur im Logfile
 
 ### Hinweise
 
