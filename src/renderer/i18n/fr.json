@@ -207,14 +207,12 @@
     "copyPath": "Copier le chemin",
     "unknown": "Inconnu",
     "strengths": {
-      "gemma3:1b": "Ultra-léger - fonctionne sur n'importe quel vieux portable",
-      "gemma2:2b": "Le meilleur mini-modèle allemand de Google",
-      "llama3.2:3b": "Éprouvé, fiable, qualité Meta",
-      "qwen2.5:3b": "Performant en allemand + JSON (recommandé)",
-      "qwen2.5:7b": "Excellent en allemand + JSON (recommandé, moyen)",
-      "llama3.1:8b": "Classique de Meta, éprouvé",
-      "mistral-small:24b": "Surtout pour les certificats de travail (recommandé, élevé)",
-      "llama3.1:70b": "Maximum pour utilisateurs avertis"
+      "gemma4:12b": "Meilleurs résultats de nos tests : notes et délais sans la moindre erreur. Pour cartes graphiques à partir de 10 Go.",
+      "granite4.1:3b": "Fonctionne sans carte graphique, environ une minute par certificat. Pour les délais et les clauses, la vérification intégrée prend le relais.",
+      "granite4.1:8b": "Repère le plus de clauses critiques. Nécessite une carte graphique : sur le processeur, un certificat prend une vingtaine de minutes.",
+      "llama3.2:3b": "Uniquement pour les modes simples. Trop petit pour le décodeur de certificats et l’analyse de contrat – les notes s’y contredisent.",
+      "qwen2.5:7b": "Éprouvé et polyvalent, mais avec 32K la plus petite fenêtre de contexte – les longs contrats sont découpés.",
+      "qwen3:4b": "Le plus fiable pour repérer les délais dans nos tests, et évalue correctement le risque contractuel. Tient sur un portable."
     },
     "accessibility": "Affichage et accessibilité",
     "fontScale": "Taille du texte",

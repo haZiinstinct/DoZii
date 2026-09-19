@@ -207,14 +207,12 @@
     "copyPath": "Copiar caminho",
     "unknown": "Desconhecido",
     "strengths": {
-      "gemma3:1b": "Ultraleve - funciona em qualquer portátil antigo",
-      "gemma2:2b": "O melhor mini da Google para alemão",
-      "llama3.2:3b": "Comprovado, fiável, qualidade Meta",
-      "qwen2.5:3b": "Forte em alemão + JSON (recomendado)",
-      "qwen2.5:7b": "Topo em alemão + JSON (recomendado, médio)",
-      "llama3.1:8b": "Clássico da Meta, comprovado",
-      "mistral-small:24b": "Sobretudo para referências (recomendado, forte)",
-      "llama3.1:70b": "Máximo para utilizadores avançados"
+      "gemma4:12b": "Melhores resultados nos nossos testes: notas e prazos sem um único erro. Para placas gráficas a partir de 10 GB.",
+      "granite4.1:3b": "Funciona sem placa gráfica, cerca de um minuto por certificado. Nos prazos e cláusulas atua a verificação integrada.",
+      "granite4.1:8b": "Encontra a maioria das cláusulas críticas. Precisa de placa gráfica: no CPU um certificado demora cerca de vinte minutos.",
+      "llama3.2:3b": "Apenas para os modos simples. Demasiado pequeno para o descodificador de certificados e a análise de contratos – saem notas contraditórias.",
+      "qwen2.5:7b": "Comprovado e versátil, mas com 32K a menor janela de contexto – contratos longos são divididos.",
+      "qwen3:4b": "O mais fiável a detetar prazos nos nossos testes e acerta no risco contratual. Cabe num portátil."
     },
     "accessibility": "Apresentação e acessibilidade",
     "fontScale": "Tamanho do texto",

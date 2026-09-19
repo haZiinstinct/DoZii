@@ -207,14 +207,12 @@
     "copyPath": "Pfad kopieren",
     "unknown": "Unbekannt",
     "strengths": {
-      "gemma3:1b": "Ultraleicht - läuft auf jedem alten Laptop",
-      "gemma2:2b": "Googles bestes Deutsch-Mini",
-      "llama3.2:3b": "Bewährt, zuverlässig, Meta-Qualität",
-      "qwen2.5:3b": "Stark bei Deutsch + JSON (Empfehlung)",
-      "qwen2.5:7b": "Top Deutsch + JSON (Empfehlung Mittel)",
-      "llama3.1:8b": "Meta-Klassiker, bewährt",
-      "mistral-small:24b": "Primär für Arbeitszeugnisse (Empfehlung Stark)",
-      "llama3.1:70b": "Power-User Maximum"
+      "gemma4:12b": "Beste Ergebnisse im Test: Zeugnisnoten und Fristen fehlerfrei. Für Grafikkarten ab 10 GB.",
+      "granite4.1:3b": "Läuft auch ohne Grafikkarte, rund eine Minute pro Zeugnis. Bei Fristen und Klauseln trägt die eingebaute Prüfung.",
+      "granite4.1:8b": "Findet die meisten kritischen Vertragsklauseln. Braucht eine Grafikkarte – auf der CPU dauert ein Zeugnis rund zwanzig Minuten.",
+      "llama3.2:3b": "Nur für die einfachen Modi. Für Zeugnis-Decoder und Vertrags-Check zu klein – dort kommen widersprüchliche Noten heraus.",
+      "qwen2.5:7b": "Bewährt und vielseitig, aber mit 32K das kleinste Kontextfenster im Katalog – lange Verträge werden zerlegt.",
+      "qwen3:4b": "Erkennt Fristen am zuverlässigsten im Test und schätzt das Vertragsrisiko richtig ein. Klein genug für einen Laptop."
     },
     "accessibility": "Darstellung & Barrierefreiheit",
     "fontScale": "Schriftgröße",
