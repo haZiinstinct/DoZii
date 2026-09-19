@@ -6,6 +6,7 @@ import { chatOnce } from './ollama-client.service'
 import { buildDeadlineExtractPrompt } from '../prompts/deadline-extract.prompt'
 import { parseDeadlineAnchors } from '../lib/parse-deadline-anchors'
 import { computeDeadline } from '@shared/deadline-calc'
+import { findDeadlineAnchors } from '@shared/fristen-radar'
 import { logger } from './logger.service'
 import { DEFAULT_NUM_CTX } from '../config/constants'
 import type {
@@ -156,6 +157,25 @@ export function anchorsToDeadlines(
 }
 
 /**
+ * Fuehrt die Anker aus dem Regelwerk und die aus dem Modell zusammen.
+ *
+ * Das Regelwerk hat je Fristart Vorrang. Grund ist die Messung an denselben
+ * sechs Bescheiden: das Regelwerk berechnete jedes gefundene Datum exakt und
+ * meldete beim Bescheid ohne Frist nichts, waehrend granite4.1:8b dort eine
+ * Frist erfand und granite4.1:3b bei zwei Bescheiden gar nichts fand.
+ *
+ * Das Modell bleibt trotzdem noetig: es findet Fristarten, die das Regelwerk
+ * nicht abdeckt - etwa eine Zahlungsfrist neben der Widerspruchsfrist.
+ */
+export function mergeAnchors(
+  fromRules: DeadlineAnchor[],
+  fromModel: DeadlineAnchor[]
+): DeadlineAnchor[] {
+  const covered = new Set(fromRules.map((a) => a.kind))
+  return [...fromRules, ...fromModel.filter((a) => !covered.has(a.kind))]
+}
+
+/**
  * Durchsucht ein Dokument nach Fristen: ein kleiner Modell-Durchlauf liest die
  * Anker (Startdatum, Fristtext, Zitat), gerechnet wird anschliessend
  * deterministisch in TypeScript.
@@ -181,9 +201,10 @@ export async function scanDeadlines(
       numCtx: DEFAULT_NUM_CTX
     })
 
-    const anchors = parseDeadlineAnchors(raw, doc.extractedText, (unverified) => {
+    const modelAnchors = parseDeadlineAnchors(raw, doc.extractedText, (unverified) => {
       logger.warn(SOURCE, 'Fristen ohne Beleg im Dokument verworfen', { documentId, unverified })
     })
+    const anchors = mergeAnchors(findDeadlineAnchors(doc.extractedText), modelAnchors)
     const deadlines = anchorsToDeadlines(
       documentId,
       anchors,

@@ -18,6 +18,8 @@
  * die echten Funde entwertet.
  */
 
+import { sentenceAround } from './sentence'
+
 export type KlauselSeverity = 'red' | 'yellow'
 
 export interface KlauselFinding {
@@ -62,19 +64,6 @@ function parseAmount(raw: string): number | undefined {
 }
 
 const AMOUNT = `(${Object.keys(NUMBER_WORDS).join('|')}|\\d+(?:[.,]\\d+)?)`
-
-/**
- * Liefert den Satz um eine Fundstelle. Ein nackter Treffer wie "vier
- * Nettokaltmieten" ist als Beleg zu duenn - man muss sehen, worauf er sich
- * bezieht.
- */
-function sentenceAround(text: string, index: number, length: number): string {
-  const before = text.lastIndexOf('.', index)
-  const after = text.indexOf('.', index + length)
-  const start = before === -1 ? 0 : before + 1
-  const end = after === -1 ? text.length : after + 1
-  return text.slice(start, end).trim().replace(/\s+/g, ' ')
-}
 
 /** Steht die Fundstelle im Umfeld eines der Stichwoerter? */
 function nearAny(text: string, index: number, words: string[], radius = 250): boolean {
