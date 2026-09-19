@@ -912,8 +912,15 @@ export function SettingsPage() {
                     )}
                   </div>
                   <p className="text-xs text-brand-text-dim">
-                    {m.sizeGb} GB &middot; {m.contextK}K &middot;{' '}
-                    {t(`settings.strengths.${m.name}`)}
+                    {m.sizeGb} GB &middot; {m.contextK}K
+                    {/*
+                      Ohne Rueckfallwert schreibt i18next den Schluessel selbst
+                      in die Oberflaeche - ein neues Modell im Katalog haette
+                      dort "settings.strengths.<tag>" stehen lassen.
+                    */}
+                    {t(`settings.strengths.${m.name}`, { defaultValue: '' }) && (
+                      <> &middot; {t(`settings.strengths.${m.name}`, { defaultValue: '' })}</>
+                    )}
                   </p>
                   {!canRun && !isInstalled && (
                     <p className="mt-1 text-xs text-brand-amber">{insufficientReason}</p>
