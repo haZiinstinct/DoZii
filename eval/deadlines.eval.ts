@@ -21,7 +21,7 @@ import { parseDeadlineAnchors } from '../src/main/lib/parse-deadline-anchors'
 import { computeDeadline } from '../src/shared/deadline-calc'
 import type { DeadlineKind } from '../src/shared/types'
 import { chat, checkEvalPreconditions, EVAL_MODEL, reportSkip } from './lib/ollama'
-import { formatScorecard, scoreDates, scoreEvidence } from './lib/score'
+import { formatScorecard, rate, scoreDates, scoreEvidence } from './lib/score'
 
 /** Der Extraktions-Prompt braucht Treue, keine Kreativitaet. */
 const TEMPERATURE = 0.1
@@ -145,19 +145,19 @@ suite(`Fristen-Eval (${EVAL_MODEL})`, () => {
 
   afterAll(() => {
     if (rows.length === 0) return
-    const precision = actualTotal === 0 ? 1 : matchedTotal / actualTotal
-    const recall = expectedTotal === 0 ? 1 : matchedTotal / expectedTotal
-    const evidenceRate = quotesTotal === 0 ? 1 : quotesVerified / quotesTotal
+    const precision = rate(matchedTotal, actualTotal)
+    const recall = rate(matchedTotal, expectedTotal)
+    const evidenceRate = rate(quotesVerified, quotesTotal)
 
     console.log(`\n=== Fristen-Eval - ${EVAL_MODEL} ===\n`)
     console.log(formatScorecard(rows))
     console.log(
       [
         '',
-        `Fristen-Precision: ${(precision * 100).toFixed(1)} % (${matchedTotal}/${actualTotal} gelieferte Fristen stimmen)`,
-        `Fristen-Recall:    ${(recall * 100).toFixed(1)} % (${matchedTotal}/${expectedTotal} erwartete Fristen gefunden)`,
-        `Evidence-Trefferquote: ${(evidenceRate * 100).toFixed(1)} % (${quotesVerified}/${quotesTotal} Zitate)`,
-        `Halluzinationsrate:    ${((1 - evidenceRate) * 100).toFixed(1)} %`,
+        `Fristen-Precision: ${precision} (${matchedTotal}/${actualTotal} gelieferte Fristen stimmen)`,
+        `Fristen-Recall:    ${recall} (${matchedTotal}/${expectedTotal} erwartete Fristen gefunden)`,
+        `Evidence-Trefferquote: ${evidenceRate} (${quotesVerified}/${quotesTotal} Zitate)`,
+        `Halluzinationsrate:    ${rate(quotesTotal - quotesVerified, quotesTotal)}`,
         ''
       ].join('\n')
     )

@@ -22,7 +22,14 @@ import {
   type ArbeitszeugnisResult
 } from '../src/renderer/lib/parse-analysis'
 import { chat, checkEvalPreconditions, EVAL_MODEL, reportSkip } from './lib/ollama'
-import { DEFAULT_GRADE_TOLERANCE, formatScorecard, scoreEvidence, scoreGrade } from './lib/score'
+import {
+  DEFAULT_GRADE_TOLERANCE,
+  formatScorecard,
+  mean,
+  rate,
+  scoreEvidence,
+  scoreGrade
+} from './lib/score'
 
 /** Wie prompt-builder.ts den Modus arbeitszeugnis fuehrt (MODE_PARAMS, nicht exportiert). */
 const TEMPERATURE = 0.15
@@ -176,21 +183,18 @@ suite(`Arbeitszeugnis-Eval (${EVAL_MODEL})`, () => {
 
   afterAll(() => {
     if (rows.length === 0) return
-    const meanDeviation =
-      deviations.length === 0
-        ? 0
-        : deviations.reduce((sum, value) => sum + value, 0) / deviations.length
-    const evidenceRate = quotesTotal === 0 ? 1 : quotesVerified / quotesTotal
+    const meanDeviation = mean(deviations)
+    const evidenceRate = rate(quotesVerified, quotesTotal)
 
     console.log(`\n=== Arbeitszeugnis-Eval - ${EVAL_MODEL} ===\n`)
     console.log(formatScorecard(rows))
     console.log(
       [
         '',
-        `Mittlere Notenabweichung: ${meanDeviation.toFixed(2)} Noten`,
+        `Mittlere Notenabweichung: ${meanDeviation} Noten (${deviations.length} bewertet)`,
         `Innerhalb der Toleranz:   ${toleranceHits}/${gradedCount} bewertete Zeugnisse`,
-        `Evidence-Trefferquote:    ${(evidenceRate * 100).toFixed(1)} % (${quotesVerified}/${quotesTotal} Zitate)`,
-        `Halluzinationsrate:       ${((1 - evidenceRate) * 100).toFixed(1)} %`,
+        `Evidence-Trefferquote:    ${evidenceRate} (${quotesVerified}/${quotesTotal} Zitate)`,
+        `Halluzinationsrate:       ${rate(quotesTotal - quotesVerified, quotesTotal)}`,
         ''
       ].join('\n')
     )

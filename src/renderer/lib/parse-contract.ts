@@ -12,6 +12,7 @@
  */
 
 import { isInDocument } from './parse-analysis'
+import { stripThinking } from '@shared/strip-thinking'
 
 // ============================================================================
 // Typen
@@ -309,7 +310,9 @@ function mapRisk(
 
 export function parseContractCheck(raw: string, documentText: string): ContractCheckResult | null {
   try {
-    const parsed = findContractJson(raw)
+    // Denkmodelle stellen ihrer Antwort einen Gedankengang voran. Bleibt
+    // der stehen, findet die JSON-Suche dahinter nichts mehr.
+    const parsed = findContractJson(stripThinking(raw))
     if (!parsed) return null
 
     const clauses = mapClauses(parsed.clauses, documentText)

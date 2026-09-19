@@ -1,6 +1,7 @@
 import { Ollama, type Message } from 'ollama'
 import { BrowserWindow } from 'electron'
 import { logger } from './logger.service'
+import { stripThinking } from '@shared/strip-thinking'
 import { getSettings } from './settings.service'
 
 export const DEFAULT_OLLAMA_URL = 'http://localhost:11434'
@@ -164,10 +165,11 @@ export async function chatOnce(options: {
           { role: 'user', content: options.prompt }
         ],
         stream: false,
+        think: false,
         options: modelOptions
       })
     )
-    return response.message?.content ?? ''
+    return stripThinking(response.message?.content ?? '')
   } finally {
     decrementActiveStreams()
   }
@@ -407,6 +409,7 @@ export async function streamChat(options: StreamOptions): Promise<StreamResult> 
             { role: 'user', content: prompt }
           ],
           stream: true,
+          think: false,
           options: Object.keys(chatOptions).length > 0 ? chatOptions : undefined
         })
 
@@ -471,6 +474,7 @@ export async function streamConversation(
           model,
           messages,
           stream: true,
+          think: false,
           options: Object.keys(chatOptions).length > 0 ? chatOptions : undefined
         })
 

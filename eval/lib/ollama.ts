@@ -10,6 +10,8 @@
  * ein Eval-Lauf ohne Ollama wird uebersprungen, nicht rot.
  */
 
+import { stripThinking } from '../../src/shared/strip-thinking'
+
 /** Modell fuer die Evals. Ueberschreibbar, um Prompt-Aenderungen gegen mehrere Modelle zu messen. */
 export const EVAL_MODEL = process.env.DOZII_EVAL_MODEL || 'qwen2.5:7b'
 
@@ -112,6 +114,7 @@ export async function chat(
   const body = {
     model: options.model ?? EVAL_MODEL,
     stream: false,
+    think: false,
     messages: [
       { role: 'system', content: system },
       { role: 'user', content: user }
@@ -134,8 +137,9 @@ export async function chat(
   }
 
   const payload = (await response.json()) as ChatResponse
-  const content = typeof payload.message?.content === 'string' ? payload.message.content : ''
-  return { content: content.trim(), durationMs: Date.now() - startedAt }
+  const raw = typeof payload.message?.content === 'string' ? payload.message.content : ''
+  // Denkmodell? Der Gedankengang gehoert nicht in die Auswertung.
+  return { content: stripThinking(raw), durationMs: Date.now() - startedAt }
 }
 
 /**

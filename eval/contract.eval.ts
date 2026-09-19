@@ -22,7 +22,7 @@ import { buildContractCheckPrompt } from '../src/main/prompts/contract-check.pro
 import { isInDocument } from '../src/renderer/lib/parse-analysis'
 import { parseContractCheck, type ContractClause } from '../src/renderer/lib/parse-contract'
 import { chat, checkEvalPreconditions, EVAL_MODEL, reportSkip } from './lib/ollama'
-import { formatScorecard, scoreEvidence } from './lib/score'
+import { formatScorecard, rate, scoreEvidence } from './lib/score'
 
 /** Der Vertrags-Check soll treu zitieren, nicht formulieren. */
 const TEMPERATURE = 0.15
@@ -165,20 +165,20 @@ suite(`Vertrags-Eval (${EVAL_MODEL})`, () => {
 
   afterAll(() => {
     if (rows.length === 0) return
-    const findRate = expectedClauses === 0 ? 1 : foundClauses / expectedClauses
-    const redRate = expectedClauses === 0 ? 1 : foundAsRed / expectedClauses
-    const evidenceRate = quotesTotal === 0 ? 1 : quotesVerified / quotesTotal
+    const findRate = rate(foundClauses, expectedClauses)
+    const redRate = rate(foundAsRed, expectedClauses)
+    const evidenceRate = rate(quotesVerified, quotesTotal)
 
     console.log(`\n=== Vertrags-Eval - ${EVAL_MODEL} ===\n`)
     console.log(formatScorecard(rows))
     console.log(
       [
         '',
-        `Kritische Klauseln gefunden: ${(findRate * 100).toFixed(1)} % (${foundClauses}/${expectedClauses})`,
-        `davon als rot eingestuft:    ${(redRate * 100).toFixed(1)} % (${foundAsRed}/${expectedClauses})`,
+        `Kritische Klauseln gefunden: ${findRate} (${foundClauses}/${expectedClauses})`,
+        `davon als rot eingestuft:    ${redRate} (${foundAsRed}/${expectedClauses})`,
         `Gesamtrisiko exakt getroffen: ${riskHits}/${rows.length}`,
-        `Evidence-Trefferquote:        ${(evidenceRate * 100).toFixed(1)} % (${quotesVerified}/${quotesTotal} Zitate)`,
-        `Halluzinationsrate:           ${((1 - evidenceRate) * 100).toFixed(1)} %`,
+        `Evidence-Trefferquote:        ${evidenceRate} (${quotesVerified}/${quotesTotal} Zitate)`,
+        `Halluzinationsrate:           ${rate(quotesTotal - quotesVerified, quotesTotal)}`,
         ''
       ].join('\n')
     )

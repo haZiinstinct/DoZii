@@ -172,3 +172,21 @@ function formatCell(value: string | number | undefined): string {
   }
   return value
 }
+
+/**
+ * Prozentwert, der eine leere Stichprobe als solche ausweist.
+ *
+ * `x === 0 ? 1 : ...` machte aus "gar nichts geliefert" eine Quote von
+ * 100 %. Eine Kennzahl, die bei Totalausfall am besten aussieht, ist
+ * schlimmer als gar keine.
+ */
+export function rate(hit: number, total: number): string {
+  if (total === 0) return 'n/a'
+  return `${((hit / total) * 100).toFixed(1)} %`
+}
+
+/** Mittelwert, der eine leere Stichprobe als solche ausweist. */
+export function mean(values: number[], digits = 2): string {
+  if (values.length === 0) return 'n/a'
+  return (values.reduce((sum, v) => sum + v, 0) / values.length).toFixed(digits)
+}

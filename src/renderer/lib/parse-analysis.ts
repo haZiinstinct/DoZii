@@ -10,6 +10,8 @@
  * - JSON-Block scanner for Arbeitszeugnis (finds the valid block, not blindly the last)
  */
 
+import { stripThinking } from '@shared/strip-thinking'
+
 // ============================================================================
 // Shared helper functions
 // ============================================================================
@@ -623,7 +625,9 @@ export function parseArbeitszeugnis(
   documentText?: string
 ): ArbeitszeugnisResult | null {
   try {
-    const parsed = findValidArbeitszeugnisJson(markdown)
+    // Denkmodelle stellen ihrer Antwort einen Gedankengang voran. Bleibt
+    // der stehen, findet die JSON-Suche dahinter nichts mehr.
+    const parsed = findValidArbeitszeugnisJson(stripThinking(markdown))
     if (!parsed) return null
 
     // Dual-grade schema: prefer contentGrade + craftGrade, fall back to overallGrade
