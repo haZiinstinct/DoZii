@@ -66,9 +66,18 @@ export function sanitizeSettings(raw: unknown): AppSettings {
   const r = raw as Record<string, unknown>
   let repaired = false
 
+  /**
+   * Ein FEHLENDES Feld ist kein Schaden, sondern der Normalfall nach einem
+   * Update, das neue Einstellungen mitbringt - dafuer gibt es den Default.
+   * Gewarnt wird nur, wenn ein Feld da ist und nicht stimmt.
+   *
+   * Ohne diese Unterscheidung meldete die App nach dem Update auf v1.3.0 bei
+   * JEDEM Lesen der Einstellungen "Korrupte Settings-Felder" - also alle paar
+   * Sekunden, weil die Systemanzeige sie pollt.
+   */
   const pick = <K extends keyof AppSettings>(key: K, valid: boolean, value: AppSettings[K]) => {
     if (valid) return value
-    repaired = true
+    if (r[key] !== undefined) repaired = true
     return DEFAULT_SETTINGS[key]
   }
 

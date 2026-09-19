@@ -8,6 +8,7 @@ vi.mock('./logger.service', () => ({
 vi.mock('electron-store', () => ({ default: class {} }))
 
 import { isValidOllamaUrl, sanitizeSettings } from './settings.service'
+import { logger } from './logger.service'
 import { DEFAULT_SETTINGS } from '@shared/types'
 
 describe('sanitizeSettings', () => {
@@ -71,5 +72,41 @@ describe('isValidOllamaUrl', () => {
   it('eine fremde Adresse in der Settings-Datei faellt auf den Default zurueck', () => {
     const result = sanitizeSettings({ ollamaUrl: 'https://irgendwo.example.com' })
     expect(result.ollamaUrl).toBe(DEFAULT_SETTINGS.ollamaUrl)
+  })
+})
+
+describe('Update von einer aelteren Version', () => {
+  it('fehlende neue Felder sind kein Schaden - Defaults ohne Warnung', () => {
+    // So sah die Einstellungsdatei in v1.2.1 aus: ohne die Felder, die v1.3.0
+    // mitbringt. Das ist der Normalfall nach einem Update, keine Korruption.
+    const alt = {
+      ollamaUrl: 'http://localhost:11434',
+      selectedModel: 'qwen2.5:7b',
+      language: 'de',
+      theme: 'dark',
+      ocrLanguages: ['deu', 'eng'],
+      ocrQuality: 'balanced',
+      firstLaunchDone: true,
+      autoUpdateCheck: true
+    }
+    vi.mocked(logger.warn).mockClear()
+    const result = sanitizeSettings(alt)
+
+    expect(result.selectedModel).toBe('qwen2.5:7b')
+    expect(result.autoAnalyze).toBe(DEFAULT_SETTINGS.autoAnalyze)
+    expect(result.fontScale).toBe(DEFAULT_SETTINGS.fontScale)
+    expect(result.autoContextWindow).toBe(DEFAULT_SETTINGS.autoContextWindow)
+    // Der eigentliche Punkt: KEINE Warnung. Die Einstellungen werden bei jedem
+    // Systemmetrik-Tick gelesen - eine Warnung hier flutet das Logfile alle
+    // paar Sekunden mit "Korrupte Settings-Felder", obwohl nichts kaputt ist.
+    expect(logger.warn).not.toHaveBeenCalled()
+  })
+
+  it('ein wirklich ungueltiger Wert warnt weiterhin', () => {
+    vi.mocked(logger.warn).mockClear()
+    const result = sanitizeSettings({ ...DEFAULT_SETTINGS, theme: 'neon' })
+
+    expect(result.theme).toBe(DEFAULT_SETTINGS.theme)
+    expect(logger.warn).toHaveBeenCalled()
   })
 })
