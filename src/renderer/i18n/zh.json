@@ -117,7 +117,8 @@
     "redactedCount": "已涂黑 {{count}} 处",
     "writeLetter": "写回信",
     "noticeTruncated": "文档超出上下文窗口，已被截短——结果并未覆盖整个文档。",
-    "noticeChunksTruncated": "其中 {{count}} 个片段还被额外截短，这部分内容未被读取。"
+    "noticeChunksTruncated": "其中 {{count}} 个片段还被额外截短，这部分内容未被读取。",
+    "modelTooSmall": "“{{model}}”对该模式来说太小。证明解码器和合同检查需要能输出严格 JSON 的模型，否则会出现自相矛盾的评级。推荐：{{recommended}}。"
   },
   "document": {
     "back": "返回",

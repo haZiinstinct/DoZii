@@ -117,7 +117,8 @@
     "redactedCount": "{{count}} spots redacted",
     "writeLetter": "Write a reply",
     "noticeTruncated": "The document was too long for the context window and was shortened – the result does not cover the whole document.",
-    "noticeChunksTruncated": "{{count}} of those sections had to be shortened as well. That part of the document was not read."
+    "noticeChunksTruncated": "{{count}} of those sections had to be shortened as well. That part of the document was not read.",
+    "modelTooSmall": "\"{{model}}\" is too small for this mode. The reference decoder and contract check need a model that produces strict JSON – otherwise you get contradictory grades. Recommended: {{recommended}}."
   },
   "document": {
     "back": "Back",

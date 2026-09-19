@@ -53,6 +53,7 @@ import { parsePlainLanguage } from '@/lib/parse-plain-language'
 import { parseContractCheck } from '@/lib/parse-contract'
 import { parseLetter } from '@/lib/parse-letter'
 import type { HighlightQuery } from '@/lib/highlight'
+import { DEFAULT_MODEL, isHeavyModeCapable } from '@shared/model-catalog'
 import { useTranslation } from 'react-i18next'
 
 // ============================================================================
@@ -132,6 +133,8 @@ export function AnalysisPage() {
   const [redactOnExport, setRedactOnExport] = useState(false)
   const [doc, setDoc] = useState<DoziiDocument | null>(null)
   const [documentType, setDocumentType] = useState<string | null>(null)
+  /** Aktuell gewaehltes Modell - fuer die Warnung bei zu kleinen Modellen. */
+  const [selectedModel, setSelectedModel] = useState('')
   const [letterNotes, setLetterNotes] = useState('')
   const [showOriginal, setShowOriginal] = useState(false)
   const [activeQuoteId, setActiveQuoteId] = useState<string | null>(null)
@@ -199,7 +202,10 @@ export function AnalysisPage() {
   useEffect(() => {
     window.api.settings
       .get()
-      .then((s) => setRedactOnExport(s.redactOnExport))
+      .then((s) => {
+        setRedactOnExport(s.redactOnExport)
+        setSelectedModel(s.selectedModel)
+      })
       .catch(() => {
         /* Default false */
       })
@@ -474,6 +480,13 @@ export function AnalysisPage() {
     }
   }, [analysis])
 
+  /**
+   * Taugt das gewaehlte Modell fuer diesen Modus? Zeugnis-Decoder und
+   * Vertrags-Check verlangen striktes JSON nach einem sehr langen Prompt.
+   */
+  const modelTooSmall =
+    EVIDENCE_MODES.has(mode) && selectedModel.length > 0 && !isHeavyModeCapable(selectedModel)
+
   /** Was vorgelesen wird: die Kernaussagen, nicht das rohe Markdown. */
   const speakableText = useMemo(() => {
     if (analysis.kind !== 'done') return ''
@@ -667,6 +680,27 @@ export function AnalysisPage() {
           </div>
         )}
       </div>
+
+      {/*
+        Warnung vor zu kleinen Modellen. Genau hier ist der Schaden entstanden:
+        ein 3B-Modell lieferte beim Zeugnis-Decoder "Note 1" mit dem Wortlaut
+        "mangelhaft". Der Hinweis stand bisher nur im Logfile.
+      */}
+      {modelTooSmall && (
+        <div className="flex items-start gap-2 rounded-xl border border-brand-amber/30 bg-brand-amber/5 px-4 py-3">
+          <AlertCircle
+            size={14}
+            className="mt-0.5 flex-shrink-0 text-brand-amber"
+            aria-hidden="true"
+          />
+          <p className="text-xs leading-relaxed text-brand-text-dim">
+            {t('analysis.modelTooSmall', {
+              model: selectedModel,
+              recommended: DEFAULT_MODEL
+            })}
+          </p>
+        </div>
+      )}
 
       {/* Ein-Klick-Flow: kurz erklaeren, warum die Analyse von selbst lief */}
       {autoStarted && analysis.kind !== 'idle' && (

@@ -117,7 +117,8 @@
     "redactedCount": "{{count}} passagens ocultadas",
     "writeLetter": "Escrever resposta",
     "noticeTruncated": "O documento era demasiado longo para a janela de contexto e foi encurtado – o resultado não cobre o documento inteiro.",
-    "noticeChunksTruncated": "{{count}} dessas secções também tiveram de ser encurtadas. Essa parte do documento não foi lida."
+    "noticeChunksTruncated": "{{count}} dessas secções também tiveram de ser encurtadas. Essa parte do documento não foi lida.",
+    "modelTooSmall": "«{{model}}» é demasiado pequeno para este modo. O descodificador de certificados e a análise de contratos precisam de um modelo que produza JSON estrito – caso contrário saem notas contraditórias. Recomendado: {{recommended}}."
   },
   "document": {
     "back": "Voltar",

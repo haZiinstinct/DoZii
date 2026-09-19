@@ -117,7 +117,8 @@
     "redactedCount": "{{count}} passages masqués",
     "writeLetter": "Rédiger une réponse",
     "noticeTruncated": "Le document était trop long pour la fenêtre de contexte et a été raccourci : le résultat ne couvre pas tout le document.",
-    "noticeChunksTruncated": "{{count}} de ces sections ont dû être raccourcies elles aussi. Cette partie du document n’a pas été lue."
+    "noticeChunksTruncated": "{{count}} de ces sections ont dû être raccourcies elles aussi. Cette partie du document n’a pas été lue.",
+    "modelTooSmall": "« {{model}} » est trop petit pour ce mode. Le décodeur de certificats et l’analyse de contrat ont besoin d’un modèle qui produit du JSON strict, sinon les notes se contredisent. Recommandé : {{recommended}}."
   },
   "document": {
     "back": "Retour",

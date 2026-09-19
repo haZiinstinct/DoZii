@@ -117,7 +117,8 @@
     "redactedCount": "{{count}} 箇所を伏せました",
     "writeLetter": "返信を書く",
     "noticeTruncated": "文書がコンテキストウィンドウに収まらず短縮されました。結果は文書全体をカバーしていません。",
-    "noticeChunksTruncated": "そのうち {{count}} 個の区間はさらに短縮されました。その部分は読み取られていません。"
+    "noticeChunksTruncated": "そのうち {{count}} 個の区間はさらに短縮されました。その部分は読み取られていません。",
+    "modelTooSmall": "「{{model}}」はこのモードには小さすぎます。証明書デコーダーと契約チェックは厳密な JSON を出力できるモデルを必要とし、そうでないと矛盾した評価が出ます。推奨: {{recommended}}。"
   },
   "document": {
     "back": "戻る",

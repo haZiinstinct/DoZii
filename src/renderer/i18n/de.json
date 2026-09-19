@@ -117,7 +117,8 @@
     "redactedCount": "{{count}} Stellen geschwärzt",
     "writeLetter": "Antwort schreiben",
     "noticeTruncated": "Das Dokument war zu lang für das Kontextfenster und wurde gekürzt – das Ergebnis deckt nicht das ganze Dokument ab.",
-    "noticeChunksTruncated": "{{count}} dieser Abschnitte mussten zusätzlich gekürzt werden. Dieser Teil des Dokuments wurde nicht gelesen."
+    "noticeChunksTruncated": "{{count}} dieser Abschnitte mussten zusätzlich gekürzt werden. Dieser Teil des Dokuments wurde nicht gelesen.",
+    "modelTooSmall": "„{{model}}\" ist für diesen Modus zu klein. Zeugnis-Decoder und Vertrags-Check brauchen ein Modell, das striktes JSON liefert – sonst kommen widersprüchliche Noten heraus. Empfohlen: {{recommended}}."
   },
   "document": {
     "back": "Zurück",

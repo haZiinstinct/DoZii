@@ -117,7 +117,8 @@
     "redactedCount": "{{count}} datos tachados",
     "writeLetter": "Escribir una respuesta",
     "noticeTruncated": "El documento era demasiado largo para la ventana de contexto y se acortó: el resultado no cubre todo el documento.",
-    "noticeChunksTruncated": "{{count}} de esas secciones también tuvieron que acortarse. Esa parte del documento no se leyó."
+    "noticeChunksTruncated": "{{count}} de esas secciones también tuvieron que acortarse. Esa parte del documento no se leyó.",
+    "modelTooSmall": "«{{model}}» es demasiado pequeño para este modo. El descodificador de certificados y la revisión de contratos necesitan un modelo que produzca JSON estricto; si no, salen notas contradictorias. Recomendado: {{recommended}}."
   },
   "document": {
     "back": "Atrás",
