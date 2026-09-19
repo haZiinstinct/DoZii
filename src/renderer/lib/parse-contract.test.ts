@@ -127,13 +127,38 @@ describe('parseContractCheck', () => {
     ])
   })
 
-  it('normalisiert overallRisk und ergaenzt Defaults', () => {
+  it('normalisiert overallRisk', () => {
     const hoch = { ...FULL_JSON, overallRisk: { level: 'hoch', reasoning: 'Viel rot.' } }
     expect(parseContractCheck(contractMarkdown(hoch), DOC)!.overallRisk.level).toBe('high')
+  })
 
+  it('leitet ein fehlendes overallRisk aus den Klauseln ab, statt es zu erfinden', () => {
+    // FULL_JSON enthaelt mindestens eine rote Klausel - die bestimmt das
+    // Gesamtbild. Ein pauschales "mittel" waere eine Aussage, die niemand
+    // getroffen hat, die der Nutzer aber fuer eine Einschaetzung haelt.
     const ohne = { ...FULL_JSON, overallRisk: undefined }
     const result = parseContractCheck(contractMarkdown(ohne), DOC)
-    expect(result!.overallRisk).toEqual({ level: 'medium', reasoning: '' })
+    expect(result!.overallRisk).toEqual({ level: 'high', reasoning: '' })
+  })
+
+  it('nur gruene Klauseln ergeben ohne Angabe ein niedriges Risiko', () => {
+    const nurGruen = {
+      ...FULL_JSON,
+      overallRisk: undefined,
+      clauses: [
+        {
+          title: 'Kuendigungsfrist',
+          quote: 'Der Vertrag kann mit einer Frist von einem Monat gekuendigt werden.',
+          category: 'laufzeit',
+          severity: 'green',
+          side: 'mieter',
+          plain: 'Du kannst monatlich kuendigen.',
+          why: 'Das ist nutzerfreundlich.'
+        }
+      ]
+    }
+    const result = parseContractCheck(contractMarkdown(nurGruen), DOC)
+    expect(result!.overallRisk.level).toBe('low')
   })
 
   it('kommt mit komplett fehlenden Feldern klar', () => {

@@ -575,6 +575,7 @@ ${renderKindSpec(KIND_SPECS_DE[kind], true)}
 8. **KEINE UNTERSCHRIFT SIMULIEREN**: Der Brief endet mit der Grussformel, darunter [Unterschrift] und [Dein Name].
 9. **DATUM**: Im Brief steht immer "[Ort], [Datum]" - der Nutzer druckt ihn spaeter aus und unterschreibt ihn. Das heutige Datum nutzt du nur im Abschnitt "Hinweis", um eine Frist einzuordnen.
 10. **VOR-ANALYSE IST BELEG, NICHT DEKORATION**: Liegt eine Vor-Analyse bei, stuetzt du dich nur auf ihre belegten Befunde. Was dort nicht steht, kommt nicht in den Brief.
+11. **RECHTSCHREIBUNG IM BRIEF**: Diese Anweisungen sind aus technischen Gruenden ohne Umlaute geschrieben. Der BRIEF ist es NICHT: dort schreibst du korrektes Deutsch mit ae/oe/ue als echten Umlauten und ss als scharfem S - also "Bescheid vom", "Widerspruch", "gemaess", "Gruessen" korrekt als "gemäß" und "Grüßen". Ein Brief an eine Behoerde mit "Mit freundlichen Gruessen" sieht aus wie ein Fehler.
 
 # AUSGABE-FORMAT (STRIKT)
 

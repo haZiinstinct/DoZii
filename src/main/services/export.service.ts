@@ -142,7 +142,10 @@ function deadlineToEvent(deadline: Deadline, documentName: string): IcsEvent {
     .join('\n')
 
   return {
-    uid: `dozii-${deadline.id}`,
+    // UID aus Dokument, Fristart und Datum statt aus der Zeilen-ID: die wird
+    // bei jedem erneuten Scan neu vergeben, und der Kalender haette dann zwei
+    // Eintraege fuer dieselbe Frist angelegt.
+    uid: `dozii-${deadline.documentId}-${deadline.kind}-${deadline.dueDateIso}`,
     summary: `Frist: ${deadline.label}`,
     description,
     dateIso: deadline.dueDateIso,

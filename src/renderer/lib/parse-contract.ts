@@ -277,10 +277,30 @@ function mapMissing(raw: unknown): ContractMissing[] {
   return result
 }
 
-function mapRisk(raw: unknown): { level: 'low' | 'medium' | 'high'; reasoning: string } {
-  if (typeof raw !== 'object' || raw === null) return { level: 'medium', reasoning: '' }
-  const r = raw as Record<string, unknown>
-  return { level: normalizeRiskLevel(r.level), reasoning: toText(r.reasoning) }
+/**
+ * Gesamt-Risiko. Fehlt es in der Modellantwort, wird es aus den Klauseln
+ * ABGELEITET statt geraten: ein pauschales "mittleres Risiko" waere eine
+ * Aussage, die niemand getroffen hat - und die der Nutzer fuer eine
+ * Einschaetzung haelt.
+ */
+function mapRisk(
+  raw: unknown,
+  clauses: ContractClause[]
+): { level: 'low' | 'medium' | 'high'; reasoning: string } {
+  if (typeof raw === 'object' && raw !== null) {
+    const r = raw as Record<string, unknown>
+    if (typeof r.level === 'string') {
+      return { level: normalizeRiskLevel(r.level), reasoning: toText(r.reasoning) }
+    }
+  }
+  // Die schwerste Klausel bestimmt das Gesamtbild - eine rote Klausel
+  // irgendwo macht den ganzen Vertrag riskant.
+  const level = clauses.some((c) => c.severity === 'red')
+    ? 'high'
+    : clauses.some((c) => c.severity === 'yellow')
+      ? 'medium'
+      : 'low'
+  return { level, reasoning: '' }
 }
 
 // ============================================================================
@@ -301,7 +321,7 @@ export function parseContractCheck(raw: string, documentText: string): ContractC
       keyTerms: mapKeyTerms(parsed.keyTerms, documentText),
       clauses,
       missingClauses: mapMissing(parsed.missingClauses),
-      overallRisk: mapRisk(parsed.overallRisk),
+      overallRisk: mapRisk(parsed.overallRisk, clauses),
       summary: toText(parsed.summary),
       unverifiedCount: clauses.filter((c) => !c.verified).length
     }

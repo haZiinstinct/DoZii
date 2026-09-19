@@ -110,18 +110,21 @@ export function LetterView({ result, onCopy }: Props): React.ReactElement {
 
   return (
     <div className="space-y-6">
-      {/* Hinweis - bleibt stehen, ist nicht wegklickbar. */}
-      {result.notice && (
-        <div className="rounded-2xl border border-brand-amber/30 bg-brand-amber/5 p-6">
-          <h3 className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-brand-amber">
-            <AlertTriangle size={14} aria-hidden="true" />
-            {t('results.letter.notice')}
-          </h3>
-          <p className="whitespace-pre-wrap text-sm leading-relaxed text-brand-text">
-            {result.notice}
-          </p>
-        </div>
-      )}
+      {/*
+        Hinweis - bleibt stehen, ist nicht wegklickbar. Laesst das Modell den
+        Abschnitt weg, greift der feste Text aus den Uebersetzungen: der
+        Rechtsvorbehalt darf nicht davon abhaengen, ob ein Sprachmodell
+        ihn diesmal mitgeschrieben hat.
+      */}
+      <div className="rounded-2xl border border-brand-amber/30 bg-brand-amber/5 p-6">
+        <h3 className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-brand-amber">
+          <AlertTriangle size={14} aria-hidden="true" />
+          {t('results.letter.notice')}
+        </h3>
+        <p className="whitespace-pre-wrap text-sm leading-relaxed text-brand-text">
+          {result.notice.trim() || t('results.letter.disclaimer')}
+        </p>
+      </div>
 
       {/* Platzhalter ausfuellen */}
       {result.placeholders.length > 0 && (

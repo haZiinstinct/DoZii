@@ -5,6 +5,12 @@ directories:
 files:
   - '!**/.vscode/*'
   - '!src/*'
+  # Eval-Harness ist Entwicklungswerkzeug: Beispieldokumente und Testlaeufe
+  # haben im Installationspaket nichts verloren.
+  - '!eval/*'
+  - '!vitest.config.ts'
+  - '!vitest.eval.config.ts'
+  - '!eslint.config.mjs'
   - '!electron.vite.config.*'
   - '!{.eslintignore,.eslintrc.cjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md}'
   - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
