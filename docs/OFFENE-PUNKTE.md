@@ -134,3 +134,20 @@ Eine über Mitternacht offene Ansicht zeigt eine um einen Tag falsche Restlaufze
 
 Bricht der Nutzer ab, bevor der erste Abschnitt fertig ist, gibt es kein Teilergebnis und
 die Meldung lautet "Modell hat keine Antwort geliefert" statt "abgebrochen".
+
+### Integrierte AMD-Grafik zaehlt noch als beschleunigt
+`src/shared/hardware-profile.ts`
+
+`usableVramGb` schliesst Intel und unerkannte Adapter aus, weil Ollama sie nicht
+beschleunigt. Integrierte Radeon-Grafik in Ryzen-Notebooks meldet sich aber als `amd` und
+wird mitgezaehlt, obwohl ROCm sie meist nicht unterstuetzt. Vom Namen her ist sie nicht
+zuverlaessig von einer eingebauten Karte zu unterscheiden; die gemeldeten Groessen sind
+bei AMD bislang klein genug, dass daraus keine falsche Empfehlung wird.
+
+### Kuendigungsschreiben wird als Arbeitszeugnis benotet
+`src/main/prompts/arbeitszeugnis.prompt.ts`
+
+Ein Kuendigungsschreiben, das ein Zeugnis nur ankuendigt ("ein qualifiziertes
+Arbeitszeugnis erhalten Sie nach Beendigung"), wird von granite4.1:8b als Zeugnis
+behandelt und bekommt eine Note. Regel 5 des Prompts gibt es, sie greift hier nur nicht.
+Fixture `az-kein-zeugnis` haelt den Fall fest.
