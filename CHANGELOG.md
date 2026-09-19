@@ -30,6 +30,14 @@ auch, bis wann du reagieren musst – und schreibt die Antwort auf Wunsch gleich
   korrekt und verbuchen sie als Note 4. Überschrieben wird nichts – versteckte Codes
   drücken die Gesamtnote zu Recht darunter. Nur **besser** als die Hauptformel kann ein
   Zeugnis nicht sein, und das wird gemeldet
+- **Fristen-Radar liest die Rechtsbehelfsbelehrung selbst** – die Berechnung war schon immer
+  deterministisch, gescheitert ist das Modell am Anker: ein kleines Modell fand bei zwei von
+  sechs Bescheiden gar keine Frist. Jetzt liest ein Regelwerk die Belehrung mit und hat je
+  Fristart Vorrang. Als Bezugsdatum gilt die **Zustellung** („Zugestellt am: 05.02.2026"),
+  nicht das Bescheiddatum – dazwischen liegen regelmäßig zwei bis vier Tage, bei einer
+  Zwei-Wochen-Frist also zu früh Entwarnung. „Innerhalb von zwei Wochen nach Rechtskraft"
+  wird bewusst **nicht** gerechnet: Rechtskraft tritt erst nach Ablauf der Einspruchsfrist
+  ein, und eine plausibel aussehende falsche Frist ist gefährlicher als gar keine
 - **Klausel-Radar** – acht Stolperfallen werden über ein festes Regelwerk gefunden, nicht
   über das Modell: Kaution über drei Nettokaltmieten (§ 551 BGB), Endrenovierung,
   Wettbewerbsverbot ohne Karenzentschädigung (§ 74 HGB), pauschal abgegoltene Überstunden,
