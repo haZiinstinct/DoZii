@@ -22,7 +22,7 @@ import {
   isPlainTextExtension
 } from '@shared/file-types'
 import { checkPrintability } from '@shared/text-validators'
-import { detectScannedPdf } from '@shared/scan-detect'
+import { detectScannedPages, detectScannedPdf } from '@shared/scan-detect'
 import { escapeLikePattern, LIKE_ESCAPE_CHAR } from '@shared/like-pattern'
 import type { DocumentSummary, DoziiDocument } from '@shared/types'
 
@@ -106,11 +106,13 @@ async function extractPdfWithOcrFallback(
   const settings = getSettings()
   let text = ''
   let pageCount: number | null = null
+  let pages: string[] = []
 
   try {
     const result = await extractPdf(destPath)
     text = result.text
     pageCount = result.pageCount
+    pages = result.pages
   } catch (err) {
     // Passwortschutz und kaputte Dateien sind echte Fehler - durchreichen.
     // Alles andere kann ein PDF sein, dessen Textebene pdf.js nicht mag; dann
@@ -123,6 +125,41 @@ async function extractPdfWithOcrFallback(
   }
 
   const verdict = detectScannedPdf(text, pageCount)
+
+  // Gemischte Dokumente: ein Vertrag mit 18 Textseiten und 2 eingescannten
+  // Anlagen liegt im Durchschnitt weit ueber der Schwelle - die beiden Anlagen
+  // blieben sonst leer, ohne dass es jemand merkt. Deshalb wird jede Seite
+  // einzeln beurteilt und nur die betroffenen werden nachgezogen.
+  const scannedPages = pages.length > 1 ? detectScannedPages(pages) : []
+  const partialScan =
+    !verdict.isScanned && scannedPages.length > 0 && scannedPages.length < pages.length
+
+  if (partialScan) {
+    logger.info('document-store', 'Einzelne Scanseiten erkannt', {
+      scanseiten: scannedPages.length,
+      seiten: pages.length
+    })
+    const ocr = await ocrPdf(
+      destPath,
+      settings.ocrLanguages,
+      settings.ocrQuality,
+      onProgress,
+      scannedPages
+    )
+    if (ocr.textByPage.size === 0) {
+      return { text, pageCount, ocrUsed: false, ocrWarning: ocr.warning }
+    }
+    // Erkannten Text an der Stelle der leeren Seite einsetzen, damit die
+    // Reihenfolge des Dokuments erhalten bleibt.
+    const merged = pages.map((pageText, index) => ocr.textByPage.get(index + 1) ?? pageText)
+    return {
+      text: merged.join('\n').trim(),
+      pageCount,
+      ocrUsed: true,
+      ocrWarning: ocr.warning
+    }
+  }
+
   if (!verdict.isScanned) {
     return { text, pageCount, ocrUsed: false }
   }

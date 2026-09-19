@@ -113,3 +113,20 @@ export function detectScannedPdf(text: string, pageCount: number | null): ScanVe
     charsPerPage
   }
 }
+
+/**
+ * Welche Seiten eines PDFs einzeln betrachtet wie ein Scan aussehen.
+ *
+ * Der Durchschnitt ueber das ganze Dokument reicht nicht: ein Vertrag mit 18
+ * sauberen Textseiten und 2 eingescannten Anlagen liegt im Mittel weit ueber
+ * der Schwelle - die beiden Anlagen blieben leer, ohne dass es jemand merkt.
+ *
+ * Liefert 1-basierte Seitennummern.
+ */
+export function detectScannedPages(pages: string[]): number[] {
+  const scanned: number[] = []
+  pages.forEach((pageText, index) => {
+    if (detectScannedPdf(pageText, 1).isScanned) scanned.push(index + 1)
+  })
+  return scanned
+}

@@ -19,6 +19,8 @@ export interface PdfOcrResult {
   pagesProcessed: number
   method: 'embedded-image' | 'rendered' | 'none'
   warning?: string
+  /** Erkannter Text je bearbeiteter Seite (1-basiert). Fuer gemischte Dokumente. */
+  textByPage: Map<number, string>
 }
 
 /** Strukturelle Kopie von unpdfs ExtractedImageObject (der Typ wird nicht exportiert). */
@@ -66,7 +68,13 @@ export async function ocrPdf(
   filePath: string,
   languages: string[],
   quality: OcrQuality = 'balanced',
-  onProgress?: (page: number, total: number) => void
+  onProgress?: (page: number, total: number) => void,
+  /**
+   * Nur diese (1-basierten) Seiten erkennen. Ohne Angabe alle. Gemischte
+   * Dokumente sparen damit die Seiten, die schon eine Textebene haben - das
+   * ist der Unterschied zwischen zwei Minuten und zwanzig.
+   */
+  onlyPages?: readonly number[]
 ): Promise<PdfOcrResult> {
   const data = await readFile(filePath)
   // unpdf verlangt ein echtes Uint8Array, kein Node-Buffer (strikter Konstruktor-Check).
@@ -97,12 +105,18 @@ export async function ocrPdf(
   }
 
   const totalPages = pdf.numPages
-  const pagesToDo = Math.min(totalPages, OCR_MAX_PAGES)
-  const truncated = totalPages > OCR_MAX_PAGES
+  const requested =
+    onlyPages && onlyPages.length > 0
+      ? [...new Set(onlyPages)].filter((p) => p >= 1 && p <= totalPages).sort((a, b) => a - b)
+      : Array.from({ length: totalPages }, (_, i) => i + 1)
+  const targetPages = requested.slice(0, OCR_MAX_PAGES)
+  const pagesToDo = targetPages.length
+  const truncated = requested.length > OCR_MAX_PAGES
 
   logger.info(SOURCE, 'OCR-Fallback gestartet', {
     totalPages,
     pagesToDo,
+    teilweise: requested.length < totalPages,
     languages: languages.join('+')
   })
 
@@ -111,14 +125,16 @@ export async function ocrPdf(
   const tmpDir = await mkdtemp(join(app.getPath('temp'), 'dozii-ocr-'))
 
   const pageTexts: string[] = []
+  const textByPage = new Map<number, string>()
   const skippedPages: number[] = []
   let pagesProcessed = 0
   let usedEmbedded = false
   let usedRendered = false
 
   try {
-    for (let page = 1; page <= pagesToDo; page++) {
-      onProgress?.(page, pagesToDo)
+    for (let i = 0; i < targetPages.length; i++) {
+      const page = targetPages[i]
+      onProgress?.(i + 1, pagesToDo)
 
       let pngs: Buffer[] = []
       let method: 'embedded-image' | 'rendered' = 'embedded-image'
@@ -172,7 +188,11 @@ export async function ocrPdf(
             /* wird spaetestens mit dem Verzeichnis entfernt */
           })
         }
-        if (parts.length > 0) pageTexts.push(parts.join(LINE_BREAK))
+        if (parts.length > 0) {
+          const pageText = parts.join(LINE_BREAK)
+          pageTexts.push(pageText)
+          textByPage.set(page, pageText)
+        }
         pagesProcessed++
         if (method === 'embedded-image') usedEmbedded = true
         else usedRendered = true
@@ -207,12 +227,12 @@ export async function ocrPdf(
   const warnings: string[] = []
   if (skippedPages.length > 0) {
     warnings.push(
-      `${skippedPages.length} von ${pagesToDo} Seiten konnten nicht erkannt werden (Seite ${skippedPages.slice(0, 5).join(', ')}${skippedPages.length > 5 ? ' u.a.' : ''}).`
+      `${skippedPages.length} von ${pagesToDo} Seiten konnten nicht per Texterkennung gelesen werden (Seite ${skippedPages.slice(0, 5).join(', ')}${skippedPages.length > 5 ? ' u.a.' : ''}).`
     )
   }
   if (truncated) {
     warnings.push(
-      `Nur die ersten ${OCR_MAX_PAGES} von ${totalPages} Seiten wurden per Texterkennung gelesen.`
+      `Nur ${OCR_MAX_PAGES} von ${requested.length} zu erkennenden Seiten wurden gelesen - der Rest fehlt.`
     )
   }
 
@@ -225,9 +245,10 @@ export async function ocrPdf(
       : 'none'
 
   const result: PdfOcrResult = {
-    text: pageTexts.join('\n\n').trim(),
+    text: pageTexts.join(LINE_BREAK + LINE_BREAK).trim(),
     pagesProcessed,
     method,
+    textByPage,
     ...(warnings.length > 0 ? { warning: warnings.join(' ') } : {})
   }
 

@@ -302,3 +302,28 @@ describe('decodeTextBytes', () => {
     expect(decodeTextBytes(bytes, 'windows-1252')).toBe(chars(0x20ac, 0x201c, 0x2013, 0x2019))
   })
 })
+
+describe('decodeTextBytes: Windows-1252 mit wenigen Umlauten', () => {
+  it('erkennt schon einen einzelnen kaputten Umlaut in langem Text', () => {
+    // Realfall: zehnseitiger Behoerdenbrief in Windows-1252, ein Umlaut.
+    // Mit einer Quotenschwelle blieb das unter dem Grenzwert und der Umlaut
+    // wurde durch ein Ersatzzeichen ersetzt statt korrekt gelesen.
+    const filler = 'Sehr geehrte Damen und Herren, '.repeat(200)
+    const bytes = Uint8Array.from([
+      ...Buffer.from(filler, 'latin1'),
+      0x47,
+      0x72,
+      0xfc,
+      0xdf,
+      0x65 // "Grüße" in latin1
+    ])
+    const decoded = decodeTextBytes(bytes, null)
+    expect(decoded.endsWith('Grüße')).toBe(true)
+    expect(decoded).not.toContain('\uFFFD')
+  })
+
+  it('laesst sauberes UTF-8 auch bei viel Text in Ruhe', () => {
+    const text = 'Widerspruch gegen den Bescheid über Bürgergeld. '.repeat(200)
+    expect(decodeTextBytes(Buffer.from(text, 'utf8'), null)).toBe(text)
+  })
+})

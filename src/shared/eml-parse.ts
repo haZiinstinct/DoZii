@@ -22,8 +22,17 @@ export interface ParsedEmail {
 const MAX_MULTIPART_DEPTH = 4
 /** Mehr Teile pro Ebene schaut sich niemand an - reiner Laufzeitschutz. */
 const MAX_PARTS_PER_LEVEL = 50
-/** Ab diesem Anteil an U+FFFD gilt eine UTF-8-Dekodierung als gescheitert. */
-const REPLACEMENT_RATIO_MAX = 0.002
+/**
+ * Ab wie vielen Ersatzzeichen (U+FFFD) eine UTF-8-Dekodierung als gescheitert
+ * gilt. Antwort: ab dem ersten.
+ *
+ * Eine echte UTF-8-Datei enthaelt praktisch nie ein U+FFFD - das Zeichen
+ * entsteht erst beim Dekodieren kaputter Bytes. Mit einer Quote statt einer
+ * absoluten Schwelle blieb ein zehnseitiger Behoerdenbrief in Windows-1252
+ * mit zwanzig Umlauten unter dem Grenzwert und wurde mit zwanzig zerstoerten
+ * Umlauten weitergereicht.
+ */
+const MAX_REPLACEMENT_CHARS = 0
 
 /**
  * Windows-1252 belegt 0x80-0x9F mit Satzzeichen (Anfuehrungszeichen,
@@ -100,12 +109,14 @@ function decodeCp1252(bytes: Uint8Array): string {
 }
 
 function looksMisdecoded(text: string): boolean {
-  if (text.length === 0) return false
   let bad = 0
   for (let i = 0; i < text.length; i++) {
-    if (text.charCodeAt(i) === 0xfffd) bad++
+    if (text.charCodeAt(i) === 0xfffd) {
+      bad++
+      if (bad > MAX_REPLACEMENT_CHARS) return true
+    }
   }
-  return bad / text.length > REPLACEMENT_RATIO_MAX
+  return false
 }
 
 /**

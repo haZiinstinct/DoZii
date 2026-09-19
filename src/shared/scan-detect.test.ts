@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest'
-import { detectScannedPdf, isMostlyGibberish, SCANNED_PDF_MIN_CHARS_PER_PAGE } from './scan-detect'
+import {
+  detectScannedPages,
+  detectScannedPdf,
+  isMostlyGibberish,
+  SCANNED_PDF_MIN_CHARS_PER_PAGE
+} from './scan-detect'
 
 /** Realistischer Behoerdensatz, ~110 Zeichen. */
 const SATZ =
@@ -99,5 +104,27 @@ describe('isMostlyGibberish', () => {
   it('zu kurze Texte werden nicht verurteilt', () => {
     expect(isMostlyGibberish('')).toBe(false)
     expect(isMostlyGibberish('~|^')).toBe(false)
+  })
+})
+
+describe('detectScannedPages', () => {
+  const textPage = 'Sehr geehrte Damen und Herren, hiermit teilen wir Ihnen mit. '.repeat(30)
+
+  it('findet einzelne Scanseiten in einem sonst lesbaren Dokument', () => {
+    // Genau der Fall, den der Durchschnitt uebersieht.
+    const pages = [textPage, textPage, '', textPage, '  2  ']
+    expect(detectScannedPages(pages)).toEqual([3, 5])
+  })
+
+  it('reines Textdokument liefert keine Seiten', () => {
+    expect(detectScannedPages([textPage, textPage])).toEqual([])
+  })
+
+  it('reiner Scan liefert alle Seiten', () => {
+    expect(detectScannedPages(['', '', ''])).toEqual([1, 2, 3])
+  })
+
+  it('leere Seitenliste ist kein Scan', () => {
+    expect(detectScannedPages([])).toEqual([])
   })
 })
