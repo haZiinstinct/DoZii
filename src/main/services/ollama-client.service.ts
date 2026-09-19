@@ -64,8 +64,10 @@ function decrementActiveStreams(): void {
 
 /**
  * Check whether an error is an AbortError caused by the user stopping the stream.
+ * Exportiert, weil auch der Chunking-Pfad in analysis.service den Abbruch vom
+ * echten Fehler unterscheiden muss.
  */
-function isAbortError(err: unknown): boolean {
+export function isAbortError(err: unknown): boolean {
   if (!(err instanceof Error)) return false
   return (
     err.name === 'AbortError' ||

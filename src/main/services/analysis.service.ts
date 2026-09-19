@@ -4,7 +4,7 @@ import { eq, desc } from 'drizzle-orm'
 import { getDb, schema } from '../db'
 import { getDocumentById } from './document-store.service'
 import { getSettings } from './settings.service'
-import { streamChat, warmupModel, chatOnce, showModel } from './ollama-client.service'
+import { streamChat, warmupModel, chatOnce, showModel, isAbortError } from './ollama-client.service'
 import { getModelContextLimit } from './context-window.service'
 import { scanDeadlines, todayIso } from './deadline.service'
 import {
@@ -37,6 +37,9 @@ const TRUNCATION_NOTICE =
  * `letter` ebenfalls nicht - ein Brief wird als Ganzes geschrieben.
  */
 const CHUNKABLE_MODES = new Set<AnalysisMode>(['plain', 'summary', 'contract'])
+
+/** Trenner zwischen Teilergebnissen, wenn das Zusammenfuehren nicht zustande kam. */
+const CHUNK_SEPARATOR = ['', '', '---', '', ''].join('\n')
 
 /** Modi, nach denen es sich lohnt, automatisch nach Fristen zu suchen. */
 const DEADLINE_MODES = new Set<AnalysisMode>(['plain', 'summary', 'contract'])
@@ -160,14 +163,33 @@ async function runChunked(params: {
   for (const chunk of chunks) {
     sendPhase(win, { kind: 'chunk', current: chunk.index + 1, total: chunks.length })
     const prompt = buildPrompt(mode, chunk.text, language, { ...options, numCtx })
-    const partial = await chatOnce({
-      model: modelName,
-      system: prompt.system,
-      prompt: prompt.user,
-      temperature: prompt.temperature,
-      numCtx
-    })
-    if (partial.trim().length > 0) partials.push(partial)
+    try {
+      const partial = await chatOnce({
+        model: modelName,
+        system: prompt.system,
+        prompt: prompt.user,
+        temperature: prompt.temperature,
+        numCtx
+      })
+      if (partial.trim().length > 0) partials.push(partial)
+    } catch (err) {
+      // Stopp-Knopf waehrend der Abschnitts-Analyse: das ist kein Fehler.
+      // Ohne diese Unterscheidung bekaeme der Nutzer eine rote Fehlermeldung,
+      // obwohl er selbst abgebrochen hat - und die bereits fertigen Abschnitte
+      // waeren verloren.
+      if (isAbortError(err)) {
+        logger.info('analysis.service', 'Chunked-Analyse abgebrochen', {
+          fertigeAbschnitte: partials.length,
+          gesamt: chunks.length
+        })
+        return {
+          text: partials.join(CHUNK_SEPARATOR),
+          aborted: true,
+          chunkCount: chunks.length
+        }
+      }
+      throw err
+    }
   }
 
   if (partials.length === 0) {
@@ -197,7 +219,7 @@ async function runChunked(params: {
   if (merged.text.trim().length === 0) {
     logger.warn('analysis.service', 'Zusammenfuehren lieferte leeren Text, nutze Teilergebnisse')
     return {
-      text: partials.join('\n\n---\n\n'),
+      text: partials.join(CHUNK_SEPARATOR),
       aborted: merged.aborted,
       chunkCount: chunks.length
     }
