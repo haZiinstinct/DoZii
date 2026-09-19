@@ -1,36 +1,48 @@
 import { describe, it, expect } from 'vitest'
-import { determineProfile, fitsInVram, VRAM_HEADROOM_GB } from './hardware-profile'
+import {
+  determineProfile,
+  fitsInVram,
+  PROFILE_MODEL_SIZE_GB,
+  VRAM_HEADROOM_GB
+} from './hardware-profile'
 
 describe('determineProfile mit GPU', () => {
-  it('stuft nach VRAM ein, nicht nach RAM', () => {
-    // 8 GB RAM, aber eine 24-GB-Karte: das Modell laeuft auf der Karte.
-    expect(determineProfile({ ramGb: 8, vramGb: 24 })).toBe('power')
+  it('nimmt die hoechste Stufe, deren Modell noch in den Speicher passt', () => {
+    expect(determineProfile({ ramGb: 32, vramGb: 48 })).toBe('power') // 70B passt
+    expect(determineProfile({ ramGb: 32, vramGb: 16 })).toBe('strong') // 24B passt
+    expect(determineProfile({ ramGb: 32, vramGb: 8 })).toBe('medium') // 7B passt
+    expect(determineProfile({ ramGb: 32, vramGb: 4 })).toBe('light') // 3B passt
   })
 
-  it('typische Karten landen in der erwarteten Stufe', () => {
-    expect(determineProfile({ ramGb: 32, vramGb: 24 })).toBe('power') // 4090 / 3090
-    expect(determineProfile({ ramGb: 32, vramGb: 12 })).toBe('strong') // 6750 XT / 3060 12G
-    expect(determineProfile({ ramGb: 16, vramGb: 8 })).toBe('medium') // 3070 / 6600
-    expect(determineProfile({ ramGb: 16, vramGb: 4 })).toBe('light') // aeltere Karten
+  it('eine 12-GB-Karte bekommt 7B, nicht 24B', () => {
+    // Der eigentliche Punkt: ein 24B-Modell braucht rund 14 GB und passt hier
+    // nicht. Frueher landete diese Karte trotzdem auf "strong".
+    expect(determineProfile({ ramGb: 32, vramGb: 12 })).toBe('medium')
+    expect(fitsInVram(PROFILE_MODEL_SIZE_GB.strong, 12)).toBe(false)
+  })
+
+  it('das VRAM schlaegt den Arbeitsspeicher', () => {
+    // 8 GB RAM, aber eine 24-GB-Karte: das Modell laeuft auf der Karte.
+    expect(determineProfile({ ramGb: 8, vramGb: 24 })).toBe('strong')
   })
 
   it('rechnet den Puffer fuer Kontext und Bildausgabe ab', () => {
-    // Knapp unter der Schwelle: 11 GB minus Puffer sind 9,5 -> noch nicht 'strong'.
-    expect(determineProfile({ ramGb: 32, vramGb: 11 })).toBe('medium')
-    expect(determineProfile({ ramGb: 32, vramGb: 11.5 })).toBe('strong')
+    const needed = PROFILE_MODEL_SIZE_GB.medium + VRAM_HEADROOM_GB
+    expect(determineProfile({ ramGb: 4, vramGb: needed })).toBe('medium')
+    expect(determineProfile({ ramGb: 4, vramGb: needed - 0.1 })).toBe('light')
   })
 
-  it('eine winzige GPU zaehlt nicht als GPU-Betrieb', () => {
-    // 1 GB VRAM ist nach Abzug des Puffers nichts - dann entscheidet der RAM.
+  it('eine zu kleine GPU faellt auf die RAM-Einstufung zurueck', () => {
+    // 1 GB VRAM traegt nicht einmal das kleinste Modell samt Puffer.
     expect(determineProfile({ ramGb: 32, vramGb: 1 })).toBe('medium')
+    expect(determineProfile({ ramGb: 8, vramGb: 1 })).toBe('light')
   })
 })
 
 describe('determineProfile ohne GPU', () => {
   it('empfiehlt auch bei viel RAM hoechstens die mittlere Stufe', () => {
-    // Der eigentliche Punkt: 64 GB RAM ohne Grafikkarte ergaben frueher
-    // 'power' und damit die Empfehlung eines 70B-Modells, das auf der CPU
-    // unbenutzbar ist.
+    // 64 GB RAM ohne Grafikkarte ergaben frueher "power" und damit ein
+    // 70B-Modell, das auf der CPU unbenutzbar ist.
     expect(determineProfile({ ramGb: 64, vramGb: 0 })).toBe('medium')
     expect(determineProfile({ ramGb: 128, vramGb: 0 })).toBe('medium')
   })
@@ -44,8 +56,8 @@ describe('determineProfile ohne GPU', () => {
 
 describe('fitsInVram', () => {
   it('beruecksichtigt den Puffer', () => {
-    expect(fitsInVram(4.7, 8)).toBe(true) // qwen2.5:7b auf 8 GB
-    expect(fitsInVram(14, 12)).toBe(false) // 24B-Modell auf 12 GB: nein
+    expect(fitsInVram(4.7, 8)).toBe(true)
+    expect(fitsInVram(14, 12)).toBe(false)
     expect(fitsInVram(4.7, 4.7 + VRAM_HEADROOM_GB)).toBe(true)
   })
 
