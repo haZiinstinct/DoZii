@@ -92,6 +92,18 @@ auch, bis wann du reagieren musst – und schreibt die Antwort auf Wunsch gleich
   den geteilten Arbeitsspeicher als eigenen VRAM. Aus 32 GB RAM wurden so „16 GB VRAM",
   und der Laptop bekam das größte Modell empfohlen, das dann auf der CPU kroch. Gezählt
   wird jetzt nur noch, was Ollama beschleunigt: NVIDIA (CUDA) und AMD (ROCm)
+- **Antwort wurde abgeschnitten** – DoZii reservierte 1500 Tokens für die Antwort des
+  Modells, gemessen braucht ein Zeugnis-Durchlauf 5000 bis 6000. Das Kontextfenster war
+  dadurch zu klein, Ollama schob beim Schreiben den System-Prompt hinaus und übrig blieb
+  abgeschnittenes JSON, das die App verwarf. Das Fenster richtet sich jetzt nach dem, was
+  der Modus wirklich braucht
+- **Antworten ohne Code-Zaun wurden weggeworfen** – manche Modelle liefern das JSON ohne
+  ```` ```json ````. Der Zeugnis-Decoder akzeptierte nur eingezäunte Blöcke und verwarf
+  komplett richtige Antworten; der Vertrags-Check konnte es längst besser. Beide benutzen
+  jetzt denselben Weg
+- **Gedankengang in der Antwort** – Modelle mit Denkmodus (etwa Qwen 3) stellten ihren
+  Gedankengang voran. Er wird jetzt abgeschaltet und, falls er doch durchkommt, entfernt,
+  bevor ausgewertet oder gespeichert wird
 - **Warnung vor zu kleinen Modellen** – wer den Zeugnis-Decoder mit einem Modell startet,
   das dafür zu klein ist, sieht das jetzt vorher statt nur im Logfile
 

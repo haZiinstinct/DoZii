@@ -14,6 +14,21 @@ langsamer sein, nicht schlechter. Nach oben endet der Katalog dort, wo ein gutes
 Gaming-Notebook aufhört — größere Modelle bringen der Zielgruppe nichts, weil sie sie
 nicht laden kann.
 
+## Ein Vorbehalt zu den Qualitätszahlen
+
+Die Suiten fuhren mit festen 8192 Tokens Kontext. Das ist die **Untergrenze** der App, nicht
+das, was sie wählt. Beim Zeugnis-Modus belegt allein das Prompt-Gerüst rund 4300 Tokens,
+die Antwort braucht gemessen 5000 bis 6000 — bei 8192 blieb für das Zeugnis selbst nichts
+übrig, und Ollama schiebt beim Schreiben den Anfang des Prompts hinaus.
+
+Gemessen wurde damit ein Zustand, den kein Nutzer hat. Die Ausfälle der kleinen Modelle
+sind zum Teil keine Modellschwäche, sondern diese Fehlkonfiguration; dass gemma4:12b unter
+diesem Handicap trotzdem fehlerfrei benotet, ist mehr wert, als die Tabelle zeigt.
+
+Behoben in `RESPONSE_RESERVE_TOKENS` / `responseReserveTokens()`; die Eval rechnet das
+Fenster seither wie die App (`eval/lib/context.ts`). Die Zeugnis- und Vertragszahlen unten
+stammen noch aus den Läufen davor und sind damit eine **untere Schranke**.
+
 ## Qualität
 
 | Modell | Zeugnisnote | Verträge: Klauseln / Risiko | Fristen: Recall |
