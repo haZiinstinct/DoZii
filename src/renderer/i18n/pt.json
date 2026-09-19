@@ -389,7 +389,8 @@
       "formelWorse": "A nota global acima é inferior. É normal: códigos ocultos e secções em falta puxam-na ainda mais para baixo.",
       "formelBetter": "Atenção: acima está a nota {{grade}}, mas a redacção só permite a nota {{formel}}. Um certificado nunca é melhor do que a sua fórmula padrão – a avaliação erra aqui.",
       "formelAmbiguous": "O texto contém várias fórmulas de satisfação com notas diferentes. Enquanto assim for, não é possível deduzir uma nota.",
-      "formelHint": "Calculado sem IA – linguagem fixa de certificados"
+      "formelHint": "Calculado sem IA – linguagem fixa de certificados",
+      "formelMissing": "O texto não contém nenhuma das fórmulas de satisfação habituais. Ou não é um certificado de trabalho, ou é um certificado simples sem avaliação. A nota acima assenta assim apenas no juízo do modelo – use-a com cautela."
     },
     "plain": {
       "headline": "O mais importante",

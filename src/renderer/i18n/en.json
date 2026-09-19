@@ -389,7 +389,8 @@
       "formelWorse": "The overall grade above is lower. That is normal: hidden codes and missing sections push it further down.",
       "formelBetter": "Careful: the grade above is {{grade}}, but the wording only supports grade {{formel}}. A reference is never better than its standard phrase – the assessment is wrong here.",
       "formelAmbiguous": "The text contains several satisfaction phrases with different grades. While that is the case, no grade can be derived from them.",
-      "formelHint": "Computed without AI – fixed reference wording"
+      "formelHint": "Computed without AI – fixed reference wording",
+      "formelMissing": "The text contains none of the customary satisfaction phrases. Either this is not a work reference, or it is a simple reference without an assessment. The grade above therefore rests on the model’s judgement alone – treat it with caution."
     },
     "plain": {
       "headline": "The most important part",

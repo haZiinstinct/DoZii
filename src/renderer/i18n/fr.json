@@ -389,7 +389,8 @@
       "formelWorse": "La note globale ci-dessus est inférieure. C’est normal : les codes cachés et les sections manquantes la font encore baisser.",
       "formelBetter": "Attention : la note ci-dessus est {{grade}}, mais la formulation ne justifie que la note {{formel}}. Un certificat n’est jamais meilleur que sa formule type – l’évaluation se trompe ici.",
       "formelAmbiguous": "Le texte contient plusieurs formules de satisfaction avec des notes différentes. Tant que c’est le cas, aucune note ne peut en être déduite.",
-      "formelHint": "Calculé sans IA – formulation figée des certificats"
+      "formelHint": "Calculé sans IA – formulation figée des certificats",
+      "formelMissing": "Le texte ne contient aucune des formules de satisfaction usuelles. Soit ce n’est pas un certificat de travail, soit c’est un certificat simple sans appréciation. La note ci-dessus repose donc uniquement sur le jugement du modèle – à prendre avec prudence."
     },
     "plain": {
       "headline": "L'essentiel",

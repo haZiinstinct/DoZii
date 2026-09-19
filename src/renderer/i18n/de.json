@@ -389,7 +389,8 @@
       "formelWorse": "Die Gesamtnote oben liegt darunter. Das ist normal: versteckte Codes und fehlende Abschnitte ziehen sie weiter herunter.",
       "formelBetter": "Achtung: Oben steht Note {{grade}}, der Wortlaut gibt aber nur Note {{formel}} her. Besser als die Hauptformel wird ein Zeugnis nicht – hier irrt die Bewertung.",
       "formelAmbiguous": "Im Text stehen mehrere Zufriedenheitsformeln mit unterschiedlicher Note. Solange das so ist, lässt sich daraus keine Note ableiten.",
-      "formelHint": "Ohne KI berechnet – feste Zeugnissprache"
+      "formelHint": "Ohne KI berechnet – feste Zeugnissprache",
+      "formelMissing": "Im Text steht keine der üblichen Zufriedenheitsformeln. Entweder ist es kein Arbeitszeugnis, oder es ist ein einfaches Zeugnis ohne Bewertung. Die Note oben beruht damit allein auf der Einschätzung des Modells – nimm sie mit Vorsicht."
     },
     "plain": {
       "headline": "Das Wichtigste",

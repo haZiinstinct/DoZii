@@ -298,7 +298,20 @@ function FormelCheck({
   }
 
   const hauptformel = formeln.hauptformelGrade
-  if (hauptformel === undefined) return null
+  if (hauptformel === undefined) {
+    /*
+     * Keine der ueblichen Wendungen im Text. Das heisst entweder: es ist gar
+     * kein Zeugnis (granite4.1:8b benotete ein Kuendigungsschreiben, weil
+     * darin das Wort "Arbeitszeugnis" vorkam), oder es ist ein einfaches
+     * Zeugnis ohne Bewertung nach Paragraf 109 GewO. In beiden Faellen steht
+     * die Note allein auf der Einschaetzung des Modells - das gehoert dazu.
+     */
+    return (
+      <FormelBox tone="neutral">
+        <p className="text-xs text-brand-text-dim">{t('results.az.formelMissing')}</p>
+      </FormelBox>
+    )
+  }
 
   const match = formeln.matches.find((m) => m.kind === 'hauptformel')
   const tooGood = contentGrade < hauptformel
