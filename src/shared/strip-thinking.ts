@@ -11,8 +11,23 @@
  * bleibt der halbe Gedankengang als vermeintliche Antwort stehen.
  */
 export function stripThinking(text: string): string {
-  return text
+  const cleaned = text
     .replace(/<(think|thinking|reasoning)>[\s\S]*?<\/\1>/gi, '')
     .replace(/<(think|thinking|reasoning)>[\s\S]*$/i, '')
     .trim()
+
+  /*
+   * Ein schliessendes Tag OHNE oeffnendes. Klingt abwegig, ist aber der
+   * Regelfall bei qwen3 unter Ollama: der Denkmodus laesst sich nicht
+   * abschalten, Ollama schneidet nur das oeffnende Tag heraus und der
+   * Gedankengang bleibt als scheinbar normaler Text davor stehen. Vor der
+   * Korrektur war das der Grund, warum qwen3:4b bei ALLEN sieben Zeugnissen
+   * nichts Verwertbares lieferte - obwohl es gut 5000 Token dafuer schrieb.
+   */
+  const orphan = cleaned.lastIndexOf('</think>')
+  if (orphan !== -1) return cleaned.slice(orphan + '</think>'.length).trim()
+  const orphanLong = cleaned.lastIndexOf('</thinking>')
+  if (orphanLong !== -1) return cleaned.slice(orphanLong + '</thinking>'.length).trim()
+
+  return cleaned
 }

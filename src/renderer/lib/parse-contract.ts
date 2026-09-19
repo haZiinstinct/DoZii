@@ -1,18 +1,19 @@
 /**
  * Parser fuer den Vertrags-Check (Modus "contract").
  *
- * Gleiches Prinzip wie parseArbeitszeugnis: das Modell liefert einen
- * ```json-Block, wir holen ihn defensiv heraus und pruefen jede Klausel gegen
+ * Gleiches Prinzip wie parseArbeitszeugnis: das Modell liefert ein
+ * JSON-Objekt, wir holen es defensiv heraus und pruefen jede Klausel gegen
  * den Originaltext (Evidence-Check). Nichts wird geworfen - fehlende oder
  * falsch getypte Felder werden ausgelassen statt den ganzen Parse zu kippen.
  *
- * parse-analysis.ts wird nur fuer isInDocument mitbenutzt; der Block-Scanner
- * dort ist Zeugnis-spezifisch und nicht exportiert, deshalb steht hier ein
- * eigener, schlanker.
+ * Das Herausholen des JSON steckt in @shared/json-blocks - denselben Scanner
+ * benutzt der Zeugnis-Parser. Zwei Kopien haben sich vorher auseinander
+ * entwickelt: hier wurde nacktes JSON akzeptiert, dort nur eingezaeuntes.
  */
 
 import { isInDocument } from './parse-analysis'
 import { stripThinking } from '@shared/strip-thinking'
+import { findJson } from '@shared/json-blocks'
 
 // ============================================================================
 // Typen
@@ -139,75 +140,14 @@ function looksLikeContractResult(o: Record<string, unknown>): boolean {
   return o.notAContract === true
 }
 
-function tryParse(text: string): Record<string, unknown> | null {
-  if (!text) return null
-  try {
-    const parsed: unknown = JSON.parse(text)
-    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
-      return parsed as Record<string, unknown>
-    }
-  } catch {
-    /* kein gueltiges JSON */
-  }
-  return null
-}
-
 /**
- * Teilstring vom '{' bei `start` bis zur passenden schliessenden Klammer,
- * String-Literale und Escapes korrekt ueberspringend.
- */
-function sliceBalanced(text: string, start: number): string | null {
-  let depth = 0
-  let inString = false
-  let escaped = false
-  for (let i = start; i < text.length; i++) {
-    const ch = text[i]
-    if (inString) {
-      if (escaped) escaped = false
-      else if (ch === '\\') escaped = true
-      else if (ch === '"') inString = false
-      continue
-    }
-    if (ch === '"') inString = true
-    else if (ch === '{') depth++
-    else if (ch === '}') {
-      depth--
-      if (depth === 0) return text.slice(start, i + 1)
-    }
-  }
-  return null
-}
-
-/**
- * Findet das Ergebnis-Objekt: erst Codefences (von hinten, die echte Antwort
- * steht meist am Ende), dann ein balancierter Klammern-Scan fuer Modelle, die
- * den Block ohne Fences ausgeben.
+ * Sucht den JSON-Block mit dem erwarteten Vertrags-Schema.
+ *
+ * Eingezaeunt oder nackt - manche Modelle lassen die Backticks weg. Geprueft
+ * wird das Schema, damit nicht das Beispiel aus dem Prompt gewinnt.
  */
 function findContractJson(raw: string): Record<string, unknown> | null {
-  const text = raw.trim()
-  if (!text) return null
-
-  const fences = [...text.matchAll(/```(?:json)?\s*([\s\S]*?)```/gi)]
-  for (let i = fences.length - 1; i >= 0; i--) {
-    const obj = tryParse(fences[i][1].trim())
-    if (obj && looksLikeContractResult(obj)) return obj
-  }
-
-  let last: Record<string, unknown> | null = null
-  let pos = text.indexOf('{')
-  while (pos !== -1) {
-    const candidate = sliceBalanced(text, pos)
-    if (candidate) {
-      const obj = tryParse(candidate)
-      if (obj) {
-        if (looksLikeContractResult(obj)) last = obj
-        pos = text.indexOf('{', pos + candidate.length)
-        continue
-      }
-    }
-    pos = text.indexOf('{', pos + 1)
-  }
-  return last
+  return findJson(raw, looksLikeContractResult)
 }
 
 // ============================================================================

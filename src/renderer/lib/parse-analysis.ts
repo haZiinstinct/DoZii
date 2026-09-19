@@ -11,6 +11,7 @@
  */
 
 import { stripThinking } from '@shared/strip-thinking'
+import { findJson } from '@shared/json-blocks'
 
 // ============================================================================
 // Shared helper functions
@@ -551,35 +552,22 @@ function isValidConfidence(c: unknown): c is 'high' | 'medium' | 'low' {
 }
 
 /**
- * Scan all ```json``` blocks in the markdown and return the first one that
- * has the expected Arbeitszeugnis schema (overallGrade + sections). This is
- * MUCH safer than blindly taking the last block, because the model sometimes
- * embeds example JSON snippets in the prose.
+ * Sucht den JSON-Block mit dem erwarteten Zeugnis-Schema.
+ *
+ * Geprueft wird das Schema, nicht die Position: Modelle zitieren gern das
+ * Beispiel-JSON aus dem Prompt mit, und blind den letzten Block zu nehmen
+ * liefert dann das Beispiel statt der Antwort.
  */
 function findValidArbeitszeugnisJson(markdown: string): Record<string, unknown> | null {
-  const blocks = [...markdown.matchAll(/```json\s*([\s\S]*?)```/gi)]
-  // Iterate from last to first (the real answer is usually at the end)
-  for (let i = blocks.length - 1; i >= 0; i--) {
-    const raw = blocks[i][1].trim()
-    try {
-      const parsed = JSON.parse(raw) as Record<string, unknown>
-      if (
-        parsed &&
-        typeof parsed === 'object' &&
-        Array.isArray(parsed.sections) &&
-        // Accept either the new dual-grade schema (contentGrade) or the legacy
-        // single-grade schema (overallGrade). This preserves backwards compat
-        // so old persisted analyses still render.
-        ((parsed.contentGrade && typeof parsed.contentGrade === 'object') ||
-          (parsed.overallGrade && typeof parsed.overallGrade === 'object'))
-      ) {
-        return parsed
-      }
-    } catch {
-      // Invalid JSON, keep scanning
-    }
-  }
-  return null
+  return findJson(
+    markdown,
+    (parsed) =>
+      Array.isArray(parsed.sections) &&
+      // Neues Schema mit getrennten Noten oder das alte mit einer - sonst
+      // wuerden gespeicherte Altanalysen nicht mehr angezeigt.
+      ((typeof parsed.contentGrade === 'object' && parsed.contentGrade !== null) ||
+        (typeof parsed.overallGrade === 'object' && parsed.overallGrade !== null))
+  )
 }
 
 /**
