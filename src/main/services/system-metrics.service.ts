@@ -1,4 +1,5 @@
 import os from 'os'
+import { usableVramGb } from '@shared/hardware-profile'
 import {
   getActiveStreamCount,
   listLoadedModels,
@@ -55,7 +56,10 @@ async function getGpuVramTotalMb(): Promise<number> {
   if (gpuVramTotalMb < 0) {
     try {
       const hw = await detectHardware()
-      gpuVramTotalMb = hw.gpu?.vramMb ?? 0
+      // Gleiche Regel wie bei der Einstufung: nur beschleunigte Karten
+      // zaehlen. Sonst zeigt ein Buero-Laptop eine VRAM-Leiste an, die nie
+      // ausschlaegt, weil das Modell in Wahrheit auf der CPU laeuft.
+      gpuVramTotalMb = Math.round(usableVramGb(hw.gpu) * 1024)
     } catch {
       gpuVramTotalMb = 0
     }

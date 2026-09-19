@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { determineProfile, fitsInVram, VRAM_HEADROOM_GB } from './hardware-profile'
+import { determineProfile, fitsInVram, usableVramGb, VRAM_HEADROOM_GB } from './hardware-profile'
 import { modelForProfile, profileModelSizes } from './model-catalog'
 
 // Die echten Groessen aus dem Katalog - geprueft wird das, was die App
@@ -83,5 +83,33 @@ describe('fitsInVram', () => {
 
   it('ohne GPU passt nichts', () => {
     expect(fitsInVram(1, 0)).toBe(false)
+  })
+})
+
+describe('usableVramGb', () => {
+  it('zaehlt NVIDIA und AMD', () => {
+    expect(usableVramGb({ name: 'RTX 4070', vramMb: 12288, vendor: 'nvidia' })).toBeCloseTo(12)
+    expect(usableVramGb({ name: 'RX 7800', vramMb: 16384, vendor: 'amd' })).toBeCloseTo(16)
+  })
+
+  it('zaehlt eine Intel-iGPU nicht mit', () => {
+    // Der eigentliche Grund fuer diese Funktion: die Windows-Registry meldet
+    // fuer Intel-Grafik den geteilten Arbeitsspeicher. Aus 32 GB RAM wurden so
+    // "16 GB VRAM" - und der Buero-Laptop bekam das groesste Modell empfohlen.
+    const igpu = { name: 'Intel(R) Iris(R) Xe Graphics', vramMb: 16384, vendor: 'intel' } as const
+    expect(usableVramGb(igpu)).toBe(0)
+    expect(determineProfile({ ramGb: 32, vramGb: usableVramGb(igpu) }, SIZES)).toBe('medium')
+  })
+
+  it('zaehlt unerkannte Adapter nicht mit', () => {
+    expect(usableVramGb({ name: 'Microsoft Basic Display', vramMb: 8192, vendor: 'unknown' })).toBe(
+      0
+    )
+  })
+
+  it('haelt kaputten Werkzeugausgaben stand', () => {
+    expect(usableVramGb(null)).toBe(0)
+    expect(usableVramGb({ name: 'x', vramMb: Number.NaN, vendor: 'nvidia' })).toBe(0)
+    expect(usableVramGb({ name: 'x', vramMb: -1, vendor: 'nvidia' })).toBe(0)
   })
 })

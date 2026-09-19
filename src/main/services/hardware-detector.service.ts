@@ -2,20 +2,44 @@ import os from 'os'
 import { execFile } from 'child_process'
 import { promisify } from 'util'
 import type { GpuInfo, HardwareInfo } from '@shared/types'
-import { determineProfile } from '@shared/hardware-profile'
+import { determineProfile, usableVramGb } from '@shared/hardware-profile'
 import { modelForProfile, profileModelSizes } from '@shared/model-catalog'
 import { logger } from './logger.service'
 
 const execFileAsync = promisify(execFile)
 
+/**
+ * Wo nvidia-smi zu finden ist. Der Treiber legt es normalerweise nach
+ * System32 und damit in den PATH - bei aelteren Installationen liegt es aber
+ * nur im Programmverzeichnis. Ohne diesen zweiten Pfad faellt die Erkennung
+ * auf die Registry zurueck, die den Hersteller nur ueber den Namen raet.
+ */
+const NVIDIA_SMI_PATHS = [
+  'nvidia-smi',
+  'C:\Windows\System32\nvidia-smi.exe',
+  'C:\Program Files\NVIDIA Corporation\NVSMI\nvidia-smi.exe'
+]
+
+async function runNvidiaSmi(): Promise<string | null> {
+  for (const bin of NVIDIA_SMI_PATHS) {
+    if (bin !== 'nvidia-smi' && process.platform !== 'win32') continue
+    try {
+      const { stdout } = await execFileAsync(
+        bin,
+        ['--query-gpu=name,memory.total', '--format=csv,noheader,nounits'],
+        { encoding: 'utf8', timeout: 5000 }
+      )
+      if (stdout.trim()) return stdout.trim()
+    } catch {
+      // Naechsten Pfad probieren; das Ergebnis wird unten protokolliert.
+    }
+  }
+  return null
+}
+
 async function detectNvidiaGpu(): Promise<GpuInfo | null> {
   try {
-    const { stdout } = await execFileAsync(
-      'nvidia-smi',
-      ['--query-gpu=name,memory.total', '--format=csv,noheader,nounits'],
-      { encoding: 'utf8', timeout: 5000 }
-    )
-    const output = stdout.trim()
+    const output = await runNvidiaSmi()
     if (!output) return null
 
     // nvidia-smi gibt EINE ZEILE PRO GPU aus. Frueher wurde die gesamte
@@ -206,9 +230,9 @@ export async function detectHardware(): Promise<HardwareInfo> {
   const threads = logicalCpus
 
   const gpu = await detectGpuCached()
-  // Ungueltige VRAM-Angaben (NaN aus einer kaputten Werkzeugausgabe) duerfen
-  // die Einstufung nicht verfaelschen.
-  const vramGb = gpu && Number.isFinite(gpu.vramMb) ? gpu.vramMb / 1024 : 0
+  // Zaehlt nur, was Ollama auch benutzen kann - und nur, wenn die Zahl
+  // ueberhaupt plausibel ist.
+  const vramGb = usableVramGb(gpu)
   const profile = determineProfile({ ramGb: totalGb, vramGb }, profileModelSizes())
 
   const info: HardwareInfo = {

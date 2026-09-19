@@ -4,6 +4,7 @@
  * bleibt im Hauptprozess.
  */
 
+import type { GpuInfo, GpuVendor } from './types'
 import type { HardwareProfile } from './types'
 
 /**
@@ -23,6 +24,27 @@ export const VRAM_HEADROOM_GB = 1.5
  * Quelle bleibt und dieses Modul rein und ohne Importzirkel testbar ist.
  */
 export type ProfileModelSizes = Record<HardwareProfile, number>
+
+/**
+ * Nur diese Hersteller beschleunigt Ollama wirklich: NVIDIA ueber CUDA, AMD
+ * ueber ROCm. Intel-Karten und unerkannte Adapter laufen auf der CPU.
+ */
+const ACCELERATED_VENDORS: ReadonlySet<GpuVendor> = new Set<GpuVendor>(['nvidia', 'amd'])
+
+/**
+ * Wie viel Videospeicher fuer die Einstufung tatsaechlich zaehlt.
+ *
+ * Eine Intel-iGPU meldet ueber die Windows-Registry haeufig den GETEILTEN
+ * Arbeitsspeicher als eigenen: auf einem Buero-Laptop mit 32 GB RAM stehen da
+ * schnell 16 "GB VRAM". Gezaehlt haette das die hoechste Stufe ergeben - und
+ * genau der Laptop, der die Masse der Nutzer abbildet, bekaeme das groesste
+ * Modell empfohlen und liefe damit auf der CPU im Schneckentempo.
+ */
+export function usableVramGb(gpu: GpuInfo | null): number {
+  if (!gpu || !ACCELERATED_VENDORS.has(gpu.vendor)) return 0
+  if (!Number.isFinite(gpu.vramMb) || gpu.vramMb <= 0) return 0
+  return gpu.vramMb / 1024
+}
 
 export interface ProfileInput {
   ramGb: number
