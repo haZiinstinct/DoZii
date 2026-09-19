@@ -143,6 +143,10 @@ Alles, worauf sich ein Nutzer verlässt — Fristberechnung, Schwärzen, Belegzu
 Textaufteilung, Glossar-Treffer — liegt als reine, getestete Funktion in `src/shared/`
 und kommt **nicht** vom Sprachmodell.
 
+Der Start bleibt schlank: Seiten werden per Route nachgeladen, das Glossar hängt am
+Analyse-Chunk, und von den neun Übersetzungen liegen nur Deutsch und Englisch im
+Start-Bundle — die übrigen sieben kommen beim Umschalten dazu.
+
 ```bash
 npm install
 npm run dev          # Dev-Server mit Hot-Reload (Ollama muss laufen)

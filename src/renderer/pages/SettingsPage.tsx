@@ -25,7 +25,7 @@ import {
   Save
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import i18n from 'i18next'
+import { switchLanguage } from '@/i18n'
 import type {
   AppSettings,
   FontScale,
@@ -326,7 +326,8 @@ export function SettingsPage() {
   }
 
   const handleSetLanguage = async (language: AppSettings['language']) => {
-    i18n.changeLanguage(language)
+    // Nachladen vor dem Umschalten - sonst blitzt kurz Englisch auf.
+    await switchLanguage(language)
     applyLanguageDirection(language)
     const next = await window.api.settings.update({ language })
     setSettings(next)
