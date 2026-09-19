@@ -55,7 +55,9 @@ function todayIsoLocal(): string {
 export function DocumentViewPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  // Zahlen folgen der UI-Sprache: 12.345 (de) vs 12,345 (en) vs ١٢٬٣٤٥ (ar).
+  const numberFormat = useMemo(() => new Intl.NumberFormat(i18n.language), [i18n.language])
   const [doc, setDoc] = useState<DoziiDocument | null>(null)
   const [loading, setLoading] = useState(true)
   const [reImporting, setReImporting] = useState(false)
@@ -404,7 +406,7 @@ export function DocumentViewPage() {
         {doc.wordCount && (
           <span className="inline-flex items-center gap-1.5 rounded-lg border border-brand-border bg-brand-card/50 px-3 py-1 text-xs text-brand-text-dim">
             <Hash size={12} aria-hidden="true" />
-            {doc.wordCount.toLocaleString()} {t('common.words')}
+            {numberFormat.format(doc.wordCount)} {t('common.words')}
           </span>
         )}
         <span className="inline-flex items-center gap-1.5 rounded-lg border border-brand-border bg-brand-card/50 px-3 py-1 text-xs text-brand-text-dim">

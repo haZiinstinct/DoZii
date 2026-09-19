@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useId, useRef } from 'react'
+import { useState, useCallback, useEffect, useId, useMemo, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   Upload,
@@ -44,7 +44,9 @@ function basename(path: string): string {
 
 export function UploadPage() {
   const navigate = useNavigate()
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  // Zahlen folgen der UI-Sprache: 12.345 (de) vs 12,345 (en) vs ١٢٬٣٤٥ (ar).
+  const numberFormat = useMemo(() => new Intl.NumberFormat(i18n.language), [i18n.language])
   const [dragging, setDragging] = useState(false)
   const [importing, setImporting] = useState(false)
   const [imported, setImported] = useState<ImportedDoc[]>([])
@@ -516,7 +518,7 @@ export function UploadPage() {
                   <CheckCircle2 size={16} className="text-brand-green" aria-hidden="true" />
                   <span className="flex-1 truncate text-sm text-brand-text">{doc.filename}</span>
                   <span className="text-xs text-brand-text-dim">
-                    {doc.wordCount.toLocaleString()} {t('common.words')}
+                    {numberFormat.format(doc.wordCount)} {t('common.words')}
                   </span>
                 </button>
               </li>
