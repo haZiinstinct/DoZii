@@ -11,7 +11,17 @@ describe('determineProfile mit GPU', () => {
     expect(determineProfile({ ramGb: 32, vramGb: 10 }, SIZES)).toBe('strong')
     expect(determineProfile({ ramGb: 32, vramGb: 8 }, SIZES)).toBe('medium')
     expect(determineProfile({ ramGb: 32, vramGb: 4 }, SIZES)).toBe('light')
-    expect(determineProfile({ ramGb: 32, vramGb: 2.5 }, SIZES)).toBe('minimal')
+  })
+
+  it('eine Karte, die kein Modell traegt, faellt auf den RAM zurueck', () => {
+    // 2,5 GB VRAM reichen samt Puffer fuer kein einziges Modell.
+    expect(determineProfile({ ramGb: 32, vramGb: 2.5 }, SIZES)).toBe('medium')
+    expect(determineProfile({ ramGb: 6, vramGb: 2.5 }, SIZES)).toBe('minimal')
+  })
+
+  it('auch die unterste Stufe bekommt ein Modell, das alles kann', () => {
+    // Der Boden ist bewusst kein 1B-Modell: langsamer ja, schlechter nein.
+    expect(modelForProfile('minimal')).toBe('granite4.1:3b')
   })
 
   it('eine leere Stufe faengt nicht alles ab', () => {

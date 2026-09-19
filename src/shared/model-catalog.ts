@@ -36,11 +36,20 @@ export interface CatalogModel {
    * eine Warnung, bevor er sich auf eine Note verlaesst.
    */
   heavyModeCapable: boolean
-  /** Kurzbeschreibung fuer die Auswahlliste (deutsch, eine Zeile). */
-  strengths: string
+  /**
+   * Laeuft das Modell in vertretbarer Zeit auch ohne Grafikkarte? Entscheidet
+   * ueber die Einordnung in der Auswahlliste (Reiter CPU / GPU).
+   */
+  cpuFriendly: boolean
   /** Fuer welche Hardware-Stufe dieses Modell die Empfehlung ist. */
   recommendedFor?: HardwareProfile
 }
+
+/**
+ * Die Beschreibungstexte stehen bewusst NICHT hier, sondern unter
+ * `settings.strengths.<tag>` in den Uebersetzungen - sie muessen in neun
+ * Sprachen vorliegen. Hier stehen nur Fakten.
+ */
 
 /**
  * Wie viel Arbeitsspeicher der reine CPU-Betrieb braucht: Modell plus
@@ -93,7 +102,13 @@ export function modelForProfile(profile: HardwareProfile): string {
   return match ? match.name : DEFAULT_MODEL
 }
 
-/** Fallback, wenn zur Stufe nichts hinterlegt ist. */
+/**
+ * Fallback, wenn zur Stufe nichts hinterlegt ist - und zugleich der Boden des
+ * Katalogs. Bewusst ein Modell, das ALLE Modi kann: ein schwacher Rechner soll
+ * langsamer sein, nicht schlechter. Ein 1B-Modell waere zwar noch kleiner,
+ * wuerde beim Zeugnis-Decoder aber Unsinn liefern - und eine falsche Note ist
+ * schlimmer als eine langsame.
+ */
 export const DEFAULT_MODEL = 'granite4.1:3b'
 
 export const MODEL_CATALOG: readonly CatalogModel[] = [
@@ -103,7 +118,7 @@ export const MODEL_CATALOG: readonly CatalogModel[] = [
     sizeGb: 2.1,
     contextK: 128,
     heavyModeCapable: true,
-    strengths: 'Leicht, Deutsch und JSON ab Werk - laeuft auch ohne Grafikkarte',
+    cpuFriendly: true,
     recommendedFor: 'light'
   },
   {
@@ -112,7 +127,7 @@ export const MODEL_CATALOG: readonly CatalogModel[] = [
     sizeGb: 5.3,
     contextK: 128,
     heavyModeCapable: true,
-    strengths: 'Der Allrounder: alle Modi zuverlaessig, passt auf 8-GB-Karten',
+    cpuFriendly: false,
     recommendedFor: 'medium'
   },
   {
@@ -121,7 +136,7 @@ export const MODEL_CATALOG: readonly CatalogModel[] = [
     sizeGb: 7.6,
     contextK: 256,
     heavyModeCapable: true,
-    strengths: 'Beste Qualitaet fuer Zeugnis und Vertrag, passt auf 10-GB-Karten',
+    cpuFriendly: false,
     recommendedFor: 'strong'
   },
   {
@@ -130,7 +145,7 @@ export const MODEL_CATALOG: readonly CatalogModel[] = [
     sizeGb: 2.5,
     contextK: 256,
     heavyModeCapable: true,
-    strengths: 'Sehr grosser Kontext bei kleiner Groesse - gut fuer lange Vertraege'
+    cpuFriendly: true
   },
   {
     name: 'qwen2.5:7b',
@@ -138,7 +153,7 @@ export const MODEL_CATALOG: readonly CatalogModel[] = [
     sizeGb: 4.7,
     contextK: 32,
     heavyModeCapable: true,
-    strengths: 'Bewaehrt bei Deutsch und JSON'
+    cpuFriendly: false
   },
   {
     name: 'llama3.2:3b',
@@ -146,15 +161,6 @@ export const MODEL_CATALOG: readonly CatalogModel[] = [
     sizeGb: 2.0,
     contextK: 128,
     heavyModeCapable: false,
-    strengths: 'Schnell und genuegsam - fuer Zeugnis und Vertrag aber zu klein'
-  },
-  {
-    name: 'gemma3:1b',
-    displayName: 'Gemma 3 (1B)',
-    sizeGb: 0.8,
-    contextK: 32,
-    heavyModeCapable: false,
-    strengths: 'Notnagel fuer sehr alte Rechner - nur Zusammenfassung und Fragen',
-    recommendedFor: 'minimal'
+    cpuFriendly: true
   }
 ]

@@ -31,92 +31,23 @@ import type {
   FontScale,
   HardwareInfo,
   OllamaModel,
-  SuggestedModel,
   ThemeMode,
   UpdateStatus
 } from '@shared/types'
 import { SUPPORTED_LANGUAGES } from '@shared/languages'
+import { MODEL_CATALOG, minRamGb, minVramGb } from '@shared/model-catalog'
 import { useOllamaStatus } from '@/hooks/useOllamaStatus'
 import { useTheme } from '@/hooks/useTheme'
 import { useAppearance } from '@/hooks/useAppearance'
 import { applyLanguageDirection } from '@/hooks/useLanguageDirection'
 
-// budgetLaptopFriendly: runs on 8 GB RAM CPU-only, ~30-90s per Arbeitszeugnis.
-const cpuModels: SuggestedModel[] = [
-  {
-    name: 'gemma3:1b',
-    displayName: 'Gemma 3 (1B)',
-    size: '~0.8 GB',
-    minRamGb: 4,
-    runtime: 'cpu',
-    strengths: 'Ultraleicht - läuft auf jedem alten Laptop'
-  },
-  {
-    name: 'gemma2:2b',
-    displayName: 'Gemma 2 (2B)',
-    size: '~1.6 GB',
-    minRamGb: 6,
-    runtime: 'cpu',
-    strengths: 'Googles bestes Deutsch-Mini'
-  },
-  {
-    name: 'llama3.2:3b',
-    displayName: 'Llama 3.2 (3B)',
-    size: '~2 GB',
-    minRamGb: 8,
-    runtime: 'cpu',
-    strengths: 'Bewährt, zuverlässig, Meta-Qualität',
-    budgetLaptopFriendly: true
-  },
-  {
-    name: 'qwen2.5:3b',
-    displayName: 'Qwen 2.5 (3B)',
-    size: '~2 GB',
-    minRamGb: 8,
-    runtime: 'cpu',
-    strengths: 'Stark bei Deutsch + JSON (Empfehlung)',
-    budgetLaptopFriendly: true
-  }
-]
-
-const gpuModels: SuggestedModel[] = [
-  {
-    name: 'qwen2.5:7b',
-    displayName: 'Qwen 2.5 (7B)',
-    size: '~4.7 GB',
-    minRamGb: 10,
-    minVramGb: 8,
-    runtime: 'gpu',
-    strengths: 'Top Deutsch + JSON (Empfehlung Mittel)'
-  },
-  {
-    name: 'llama3.1:8b',
-    displayName: 'Llama 3.1 (8B)',
-    size: '~4.9 GB',
-    minRamGb: 12,
-    minVramGb: 8,
-    runtime: 'gpu',
-    strengths: 'Meta-Klassiker, bewährt'
-  },
-  {
-    name: 'mistral-small:24b',
-    displayName: 'Mistral Small (24B)',
-    size: '~14 GB',
-    minRamGb: 24,
-    minVramGb: 16,
-    runtime: 'gpu',
-    strengths: 'Primär für Arbeitszeugnisse (Empfehlung Stark)'
-  },
-  {
-    name: 'llama3.1:70b',
-    displayName: 'Llama 3.1 (70B)',
-    size: '~40 GB',
-    minRamGb: 64,
-    minVramGb: 48,
-    runtime: 'gpu',
-    strengths: 'Power-User Maximum'
-  }
-]
+/**
+ * Die Auswahlliste kommt aus dem zentralen Modellkatalog. Frueher standen die
+ * Eintraege hier als zweite, handgepflegte Kopie - und liefen der Empfehlung
+ * in der Hardware-Erkennung davon.
+ */
+const cpuModels = MODEL_CATALOG.filter((m) => m.cpuFriendly)
+const gpuModels = MODEL_CATALOG.filter((m) => !m.cpuFriendly)
 
 /** Nur diese beiden Sprachdaten sind gebuendelt - Reihenfolge = Reihenfolge fuer Tesseract. */
 const OCR_LANGUAGES = ['deu', 'eng'] as const
@@ -934,15 +865,18 @@ export function SettingsPage() {
             const isInstalled = installedNames.has(m.name)
             const isPulling = pulling === m.name
             const isRecommended = hardware?.recommendedModel === m.name
-            const hasEnoughRam = hardware ? hardware.ram.totalGb >= m.minRamGb : true
-            const hasEnoughVram =
-              m.minVramGb === undefined ||
-              (hardware?.gpu ? hardware.gpu.vramMb / 1024 >= m.minVramGb : false)
-            const canRun = hasEnoughRam && hasEnoughVram
+            const neededRam = minRamGb(m)
+            const neededVram = minVramGb(m)
+            const hasEnoughRam = hardware ? hardware.ram.totalGb >= neededRam : true
+            // Fehlendes VRAM sperrt den Download nicht: ein GPU-Modell laeuft
+            // notfalls auch auf der CPU, nur langsam. Es wird nur darauf
+            // hingewiesen. Zu wenig Arbeitsspeicher ist dagegen ein echtes Aus.
+            const hasEnoughVram = hardware?.gpu ? hardware.gpu.vramMb / 1024 >= neededVram : false
+            const canRun = hasEnoughRam
             const insufficientReason = !hasEnoughRam
-              ? t('settings.requiresRam', { n: m.minRamGb })
-              : !hasEnoughVram
-                ? t('settings.requiresVram', { n: m.minVramGb })
+              ? t('settings.requiresRam', { n: neededRam })
+              : !m.cpuFriendly && !hasEnoughVram
+                ? t('settings.requiresVram', { n: neededVram })
                 : null
 
             return (
@@ -953,7 +887,7 @@ export function SettingsPage() {
                 } ${!canRun && !isInstalled ? 'opacity-50' : ''}`}
               >
                 <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg bg-brand-card text-brand-text-dim">
-                  {m.runtime === 'cpu' ? (
+                  {m.cpuFriendly ? (
                     <Cpu size={12} aria-hidden="true" />
                   ) : (
                     <Monitor size={12} aria-hidden="true" />
@@ -967,7 +901,7 @@ export function SettingsPage() {
                         {t('settings.recommended')}
                       </span>
                     )}
-                    {m.budgetLaptopFriendly && (
+                    {m.cpuFriendly && (
                       <span
                         className="inline-flex items-center gap-1 rounded bg-brand-amber/20 px-1.5 py-0.5 text-[10px] font-semibold text-brand-amber"
                         title={t('settings.budgetTitle')}
@@ -978,7 +912,8 @@ export function SettingsPage() {
                     )}
                   </div>
                   <p className="text-xs text-brand-text-dim">
-                    {m.size} | {t(`settings.strengths.${m.name}`)}
+                    {m.sizeGb} GB &middot; {m.contextK}K &middot;{' '}
+                    {t(`settings.strengths.${m.name}`)}
                   </p>
                   {!canRun && !isInstalled && (
                     <p className="mt-1 text-xs text-brand-amber">{insufficientReason}</p>
