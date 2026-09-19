@@ -17,7 +17,7 @@ import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { afterAll, describe, expect, it } from 'vitest'
-import { DEFAULT_NUM_CTX } from '../src/main/config/constants'
+import { evalNumCtx } from './lib/context'
 import { buildContractCheckPrompt } from '../src/main/prompts/contract-check.prompt'
 import { isInDocument } from '../src/renderer/lib/parse-analysis'
 import { parseContractCheck, type ContractClause } from '../src/renderer/lib/parse-contract'
@@ -88,7 +88,8 @@ suite(`Vertrags-Eval (${EVAL_MODEL})`, () => {
     const prompt = buildContractCheckPrompt(fixture.text, 'de')
     const answer = await chat(prompt.system, prompt.user, {
       temperature: TEMPERATURE,
-      numCtx: DEFAULT_NUM_CTX
+      // Dasselbe Fenster, das die App fuer dieses Dokument waehlen wuerde.
+      numCtx: evalNumCtx('contract', fixture.text)
     })
 
     const result = parseContractCheck(answer.content, fixture.text)

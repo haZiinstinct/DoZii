@@ -79,6 +79,8 @@ suite(`Fristen-Eval (${EVAL_MODEL})`, () => {
     const prompt = buildDeadlineExtractPrompt(fixture.text)
     const answer = await chat(prompt.system, prompt.user, {
       temperature: TEMPERATURE,
+      // Die Fristen-Extraktion ist kein Analyse-Modus: eigener, kurzer
+      // Prompt und eine kurze Antwort - 8192 reichen hier wirklich.
       numCtx: DEFAULT_NUM_CTX
     })
 

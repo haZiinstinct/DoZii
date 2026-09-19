@@ -14,7 +14,7 @@ import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { afterAll, describe, expect, it } from 'vitest'
-import { DEFAULT_NUM_CTX } from '../src/main/config/constants'
+import { evalNumCtx } from './lib/context'
 import { buildArbeitszeugnisPrompt } from '../src/main/prompts/arbeitszeugnis.prompt'
 import {
   isInDocument,
@@ -99,7 +99,8 @@ suite(`Arbeitszeugnis-Eval (${EVAL_MODEL})`, () => {
     const prompt = buildArbeitszeugnisPrompt(fixture.text)
     const answer = await chat(prompt.system, prompt.user, {
       temperature: TEMPERATURE,
-      numCtx: DEFAULT_NUM_CTX
+      // Dasselbe Fenster, das die App fuer dieses Dokument waehlen wuerde.
+      numCtx: evalNumCtx('arbeitszeugnis', fixture.text)
     })
 
     // Zweimal parsen mit Absicht: ohne Dokumenttext sehen wir die ROHEN
