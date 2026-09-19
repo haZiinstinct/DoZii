@@ -167,6 +167,20 @@ export interface TextImportPayload {
 // Analysis results (mirrors DB schema)
 // ============================================================================
 
+/**
+ * Vorbehalt zum Ergebnis - als Daten, nicht als Fliesstext. Ein an das
+ * Markdown gehaengter Satz waere in den Karten-Ansichten (Zeugnis-Decoder,
+ * Vertrags-Check) unsichtbar, und genau dort sind die Aussagen am schaerfsten.
+ */
+export interface AnalysisNotice {
+  /** Dokument passte nicht ins Kontextfenster und wurde gekuerzt. */
+  truncated: boolean
+  /** In so viele Abschnitte geteilt und danach zusammengefuehrt (0 = nicht geteilt). */
+  chunks: number
+  /** So viele Abschnitte mussten zusaetzlich gekuerzt werden. */
+  truncatedChunks: number
+}
+
 export interface Analysis {
   id: string
   documentId: string
@@ -176,6 +190,8 @@ export interface Analysis {
   structuredResult: string | null
   modelUsed: string
   durationMs: number | null
+  /** JSON-serialisierte `AnalysisNotice`, oder null wenn es nichts anzumerken gibt. */
+  notice: string | null
   createdAt: string
 }
 
@@ -437,6 +453,19 @@ export interface Deadline {
 
 export interface DeadlineWithDocument extends Deadline {
   filename: string
+}
+
+/**
+ * Ergebnis einer Fristensuche. Bewusst mit `ok`: ein leeres Array allein ist
+ * zweideutig - "im Dokument steht keine Frist" und "die Suche ist gescheitert"
+ * sehen dann gleich aus, und die Oberflaeche behauptet faelschlich, es gebe
+ * keine Frist. Bei einer Frist ist das der teuerste denkbare Irrtum.
+ */
+export interface DeadlineScanResult {
+  ok: boolean
+  deadlines: Deadline[]
+  /** Nur gesetzt, wenn ok === false. */
+  error?: string
 }
 
 // ============================================================================

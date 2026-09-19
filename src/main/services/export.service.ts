@@ -76,9 +76,7 @@ export async function exportAnalysis(
   if (!analysis) return { ok: false, error: 'Analyse nicht gefunden' }
 
   if (request.format === 'pdf') {
-    // Die PDF-Variante kennt das Schwaerzen (noch) nicht - bewusst getrennt
-    // gehalten, damit der bestehende, funktionierende Pfad unangetastet bleibt.
-    return exportAnalysisAsPdf(request.analysisId, parent)
+    return exportAnalysisAsPdf(request.analysisId, parent, request.redact)
   }
 
   const meta = FORMAT_META[request.format]

@@ -34,7 +34,10 @@ export async function preprocessImage(
 ): Promise<Buffer> {
   const profile = QUALITY_PROFILES[quality] ?? QUALITY_PROFILES.balanced
   try {
-    const input = sharp(filePath, { limitInputPixels: 100_000_000 })
+    // .rotate() ohne Argument dreht nach dem EXIF-Orientierungs-Flag. Ohne das
+    // landet ein Hochformat-Handyfoto quer in der Texterkennung - Tesseract
+    // liest dann praktisch nichts, und der Nutzer sieht nur "kein Text gefunden".
+    const input = sharp(filePath, { limitInputPixels: 100_000_000 }).rotate()
 
     // Nur bei 'best': zu kleine Vorlagen (Handy-Foto) vor dem OCR hochziehen.
     let targetWidth = profile.maxDimension

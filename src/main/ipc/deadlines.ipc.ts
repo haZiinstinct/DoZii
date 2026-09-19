@@ -20,13 +20,21 @@ export function registerDeadlinesIpc(): void {
   })
 
   ipcMain.handle('deadlines:scan', async (_event, documentId: string) => {
-    if (!isValidId(documentId)) return []
+    if (!isValidId(documentId)) {
+      return { ok: false, deadlines: [], error: 'Ungueltige Dokument-ID' }
+    }
     const resolution = await resolveActiveModel()
     if (resolution.kind !== 'ok') {
       logger.warn('deadlines.ipc', 'Fristensuche ohne Modell nicht moeglich', {
         reason: resolution.kind
       })
-      return []
+      // Kein leeres Ergebnis vortaeuschen - sonst behauptet die Oberflaeche,
+      // im Dokument stehe keine Frist, obwohl nur kein Modell lief.
+      return {
+        ok: false,
+        deadlines: getDeadlinesForDocument(documentId),
+        error: resolution.message
+      }
     }
     return scanDeadlines(documentId, resolution.model)
   })

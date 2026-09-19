@@ -30,6 +30,8 @@ export const analyses = sqliteTable('analyses', {
   structuredResult: text('structured_result'), // JSON string
   modelUsed: text('model_used').notNull(),
   durationMs: integer('duration_ms'),
+  // JSON-Vorbehalt zum Ergebnis (AnalysisNotice), z.B. gekuerzt oder gechunkt.
+  notice: text('notice'),
   createdAt: text('created_at').notNull()
 })
 

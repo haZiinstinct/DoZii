@@ -7,7 +7,7 @@ vi.mock('./logger.service', () => ({
 }))
 vi.mock('electron-store', () => ({ default: class {} }))
 
-import { sanitizeSettings } from './settings.service'
+import { isValidOllamaUrl, sanitizeSettings } from './settings.service'
 import { DEFAULT_SETTINGS } from '@shared/types'
 
 describe('sanitizeSettings', () => {
@@ -44,5 +44,32 @@ describe('sanitizeSettings', () => {
     expect(sanitizeSettings(null)).toEqual(DEFAULT_SETTINGS)
     expect(sanitizeSettings('kaputt')).toEqual(DEFAULT_SETTINGS)
     expect(sanitizeSettings(undefined)).toEqual(DEFAULT_SETTINGS)
+  })
+})
+
+describe('isValidOllamaUrl', () => {
+  it('erlaubt den eigenen Rechner', () => {
+    expect(isValidOllamaUrl('http://localhost:11434')).toBe(true)
+    expect(isValidOllamaUrl('http://127.0.0.1:11434')).toBe(true)
+    expect(isValidOllamaUrl('https://localhost:8443')).toBe(true)
+  })
+
+  it('lehnt fremde Hosts ab - Dokumente duerfen den Rechner nicht verlassen', () => {
+    expect(isValidOllamaUrl('http://192.168.1.50:11434')).toBe(false)
+    expect(isValidOllamaUrl('https://ollama.example.com')).toBe(false)
+    expect(isValidOllamaUrl('http://evil.test/api')).toBe(false)
+  })
+
+  it('lehnt andere Protokolle und Muell ab', () => {
+    expect(isValidOllamaUrl('file:///etc/passwd')).toBe(false)
+    expect(isValidOllamaUrl('ftp://localhost')).toBe(false)
+    expect(isValidOllamaUrl('localhost:11434')).toBe(false)
+    expect(isValidOllamaUrl('')).toBe(false)
+    expect(isValidOllamaUrl(null)).toBe(false)
+  })
+
+  it('eine fremde Adresse in der Settings-Datei faellt auf den Default zurueck', () => {
+    const result = sanitizeSettings({ ollamaUrl: 'https://irgendwo.example.com' })
+    expect(result.ollamaUrl).toBe(DEFAULT_SETTINGS.ollamaUrl)
   })
 })

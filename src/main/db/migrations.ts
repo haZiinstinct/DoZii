@@ -108,6 +108,14 @@ const IMPORT_WARNING_SQL = `
   ALTER TABLE documents ADD COLUMN import_warning TEXT;
 `
 
+// v5: Vorbehalte zum Ergebnis als Daten statt als angehaengter Fliesstext.
+// Der Hinweis "gekuerzt" bzw. "in N Abschnitten analysiert" hing bisher hinten
+// am Markdown - die strukturierten Karten-Ansichten (Zeugnis, Vertrag) zeigen
+// aber gar kein Markdown, dort war der Vorbehalt unsichtbar.
+const ANALYSIS_NOTICE_SQL = `
+  ALTER TABLE analyses ADD COLUMN notice TEXT;
+`
+
 export const MIGRATIONS: Migration[] = [
   {
     version: 1,
@@ -131,6 +139,12 @@ export const MIGRATIONS: Migration[] = [
     version: 4,
     up: (db) => {
       db.exec(IMPORT_WARNING_SQL)
+    }
+  },
+  {
+    version: 5,
+    up: (db) => {
+      db.exec(ANALYSIS_NOTICE_SQL)
     }
   }
 ]

@@ -70,6 +70,7 @@ export function DocumentViewPage() {
   const [garbledDismissed, setGarbledDismissed] = useState(false)
   const [deadlines, setDeadlines] = useState<Deadline[]>([])
   const [deadlinesLoading, setDeadlinesLoading] = useState(false)
+  const [scanFailed, setScanFailed] = useState(false)
   const [icsError, setIcsError] = useState<string | null>(null)
   const [icsSavedPath, setIcsSavedPath] = useState<string | null>(null)
 
@@ -163,9 +164,13 @@ export function DocumentViewPage() {
   const handleScanDeadlines = useCallback(async () => {
     if (!id) return
     setDeadlinesLoading(true)
+    setScanFailed(false)
     try {
-      const found = await window.api.deadlines.scan(id)
-      setDeadlines(found)
+      const result = await window.api.deadlines.scan(id)
+      setDeadlines(result.deadlines)
+      // Eine gescheiterte Suche darf NICHT als "keine Frist gefunden"
+      // durchgehen - bei einer Frist ist das der teuerste Irrtum.
+      setScanFailed(!result.ok)
     } finally {
       setDeadlinesLoading(false)
     }
@@ -477,6 +482,17 @@ export function DocumentViewPage() {
         onScan={handleScanDeadlines}
         onAddToCalendar={handleAddToCalendar}
       />
+
+      {scanFailed && (
+        <div className="flex items-start gap-3 rounded-xl border border-brand-red/30 bg-brand-red/5 p-4">
+          <AlertTriangle
+            size={16}
+            className="mt-0.5 flex-shrink-0 text-brand-red"
+            aria-hidden="true"
+          />
+          <p className="text-sm leading-relaxed text-brand-text">{t('deadlines.scanFailed')}</p>
+        </div>
+      )}
 
       {icsSavedPath && (
         <p className="text-xs text-brand-green">

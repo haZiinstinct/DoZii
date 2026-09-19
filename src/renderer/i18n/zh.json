@@ -114,7 +114,9 @@
     "redactBeforeExport": "涂黑个人信息",
     "redactBeforeExportHint": "导出前会把银行账号（IBAN）、案卷号、电话号码和电子邮箱涂掉。",
     "redactedCount": "已涂黑 {{count}} 处",
-    "writeLetter": "写回信"
+    "writeLetter": "写回信",
+    "noticeTruncated": "文档超出上下文窗口，已被截短——结果并未覆盖整个文档。",
+    "noticeChunksTruncated": "其中 {{count}} 个片段还被额外截短，这部分内容未被读取。"
   },
   "document": {
     "back": "返回",
@@ -226,8 +228,8 @@
     "autoContextWindow": "自动调整上下文窗口",
     "autoContextWindowHint": "使用模型的完整上下文窗口，这样长文档不会被截断。需要更多内存。",
     "ollamaUrl": "Ollama 地址",
-    "ollamaUrlHint": "只有当 Ollama 运行在其他端口或另一台电脑上时才需要改。",
-    "ollamaUrlInvalid": "这不是有效的地址（应为：http://host:port）。",
+    "ollamaUrlHint": "仅当 Ollama 运行在其他端口时才需要修改。只允许本机，你的文档不应离开这台电脑。",
+    "ollamaUrlInvalid": "只允许本机地址（例如 http://localhost:11434）。",
     "ollamaUrlSaved": "地址已保存。",
     "ocr": "文字识别（OCR）",
     "ocrLanguages": "文字识别的语言",
@@ -489,7 +491,8 @@
       "kuendigung": "解约",
       "mitwirkung": "配合义务",
       "sonstige": "期限"
-    }
+    },
+    "scanFailed": "期限搜索失败。这不代表文档中没有期限，请核对原件。"
   },
   "glossary": {
     "explain": "这是什么意思？",

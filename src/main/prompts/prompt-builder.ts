@@ -41,6 +41,12 @@ const MODE_PARAMS: Record<AnalysisMode, { temperature: number; numCtx: number }>
   letter: { temperature: 0.35, numCtx: DEFAULT_NUM_CTX }
 }
 
+/**
+ * So viel Dokument bekommt das Modell mindestens zu sehen, auch wenn das
+ * Prompt-Geruest rechnerisch schon das ganze Fenster fuellt. ~1750 Zeichen.
+ */
+const MIN_DOCUMENT_TOKENS = 500
+
 /** Zusatzinformationen, die nur einzelne Modi brauchen. */
 export interface BuildPromptOptions {
   userQuestion?: string
@@ -111,7 +117,12 @@ export function buildPrompt(
   const totalTokens =
     estimateTokens(pair.system) + estimateTokens(pair.user) + RESPONSE_RESERVE_TOKENS
   if (totalTokens > numCtx) {
-    const textBudget = numCtx - RESPONSE_RESERVE_TOKENS - templateOverheadTokens(pair, text)
+    // Untergrenze: ohne sie kann das Budget bei grossem Prompt-Geruest null
+    // oder negativ werden - das Modell bekaeme dann NUR die Anweisungen und
+    // gar kein Dokument und wuerde munter etwas erfinden. Lieber ein kurzer
+    // Ausschnitt plus der sichtbare Kuerzungs-Hinweis.
+    const rawBudget = numCtx - RESPONSE_RESERVE_TOKENS - templateOverheadTokens(pair, text)
+    const textBudget = Math.max(MIN_DOCUMENT_TOKENS, rawBudget)
     const fitted = fitTextToTokenBudget(text, textBudget)
     pair = buildPair(mode, fitted.text, language, options)
     truncated = fitted.truncated
@@ -126,8 +137,27 @@ function templateOverheadTokens(pair: PromptPair, text: string): number {
 }
 
 /**
+ * Tokens, die Prompt-Geruest und Zusatzangaben belegen - gemessen an einem
+ * Prompt mit LEEREM Dokument, also ohne die Kuerzungs-Nebenwirkung von
+ * buildPrompt().
+ */
+export function promptOverheadTokens(
+  mode: AnalysisMode,
+  language: string,
+  options: BuildPromptOptions = {}
+): number {
+  const skeleton = buildPair(mode, '', language, options)
+  return estimateTokens(skeleton.system) + estimateTokens(skeleton.user)
+}
+
+/**
  * Wie viele Tokens das Dokument bei diesem Modus hoechstens belegen darf.
  * Der Aufrufer entscheidet damit, ob gechunkt werden muss.
+ *
+ * Kann 0 werden, wenn das Prompt-Geruest allein schon groesser ist als das
+ * Kontextfenster (der Arbeitszeugnis-Prompt misst rund 4300 Tokens). Der
+ * Aufrufer muss das abfangen - ein Budget von 0 hiesse, dass das Modell das
+ * Dokument gar nicht zu sehen bekommt.
  */
 export function documentTokenBudget(
   mode: AnalysisMode,
@@ -135,8 +165,8 @@ export function documentTokenBudget(
   numCtx: number,
   options: BuildPromptOptions = {}
 ): number {
-  // Prompt-Geruest einmal mit leerem Dokument bauen, um den Overhead zu messen.
-  const skeleton = buildPair(mode, '', language, options)
-  const overhead = estimateTokens(skeleton.system) + estimateTokens(skeleton.user)
-  return Math.max(0, numCtx - RESPONSE_RESERVE_TOKENS - overhead)
+  return Math.max(
+    0,
+    numCtx - RESPONSE_RESERVE_TOKENS - promptOverheadTokens(mode, language, options)
+  )
 }

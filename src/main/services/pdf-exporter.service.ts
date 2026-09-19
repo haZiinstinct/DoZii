@@ -4,11 +4,14 @@ import { eq } from 'drizzle-orm'
 import { getDb, schema } from '../db'
 import { getDocumentById } from './document-store.service'
 import { logger } from './logger.service'
+import { redactText } from '@shared/redaction'
 
 export interface PdfExportResult {
   ok: boolean
   path?: string
   error?: string
+  /** Anzahl geschwaerzter Fundstellen, wenn `redact` aktiv war. */
+  redactedCount?: number
 }
 
 /**
@@ -18,7 +21,13 @@ export interface PdfExportResult {
  */
 export async function exportAnalysisAsPdf(
   analysisId: string,
-  parent: BrowserWindow
+  parent: BrowserWindow,
+  /**
+   * Personenbezogene Daten vor dem Export maskieren. Wurde frueher fuer PDF
+   * stillschweigend ignoriert - der Nutzer sah das Haekchen, bekam aber ein
+   * PDF mit ungeschwaerzter IBAN und gab es so an die Beratungsstelle weiter.
+   */
+  redact = false
 ): Promise<PdfExportResult> {
   const db = getDb()
   const analysis = db.select().from(schema.analyses).where(eq(schema.analyses.id, analysisId)).get()
@@ -40,12 +49,14 @@ export async function exportAnalysisAsPdf(
     return { ok: false, error: 'Abgebrochen' }
   }
 
+  const redaction = redact ? redactText(analysis.result) : null
   const html = buildAnalysisHtml({
     documentName: docName,
+    redactedCount: redaction?.spans.length,
     mode: analysis.mode,
     modelUsed: analysis.modelUsed,
     createdAt: analysis.createdAt,
-    resultMarkdown: analysis.result
+    resultMarkdown: redaction?.text ?? analysis.result
   })
 
   // Render in an offscreen window
@@ -74,7 +85,11 @@ export async function exportAnalysisAsPdf(
     // Show in file explorer
     shell.showItemInFolder(saveResult.filePath)
 
-    return { ok: true, path: saveResult.filePath }
+    return {
+      ok: true,
+      path: saveResult.filePath,
+      ...(redaction ? { redactedCount: redaction.spans.length } : {})
+    }
   } catch (err) {
     logger.error('pdf-exporter', 'PDF export failed', {
       analysisId,
@@ -209,16 +224,21 @@ interface BuildParams {
   modelUsed: string
   createdAt: string
   resultMarkdown: string
+  /** Gesetzt, wenn geschwaerzt wurde - steht dann sichtbar im Export. */
+  redactedCount?: number
 }
 
 function buildAnalysisHtml(params: BuildParams): string {
-  const { documentName, mode, modelUsed, createdAt, resultMarkdown } = params
+  const { documentName, mode, modelUsed, createdAt, resultMarkdown, redactedCount } = params
   const modeLabel: Record<string, string> = {
+    plain: 'Einfach erklaert',
     grammar: 'Rechtschreibung & Grammatik',
     formulation: 'Bessere Formulierungen',
     arbeitszeugnis: 'Arbeitszeugnis-Decoder',
+    contract: 'Vertrags-Check',
     summary: 'Zusammenfassung',
-    freeform: 'Freie Frage'
+    freeform: 'Freie Frage',
+    letter: 'Briefentwurf'
   }
   const formatted = new Date(createdAt).toLocaleString('de-DE', {
     dateStyle: 'long',
@@ -323,6 +343,11 @@ function buildAnalysisHtml(params: BuildParams): string {
     <div><strong>Dokument:</strong> ${escapeHtml(documentName)}</div>
     <div><strong>Modell:</strong> ${escapeHtml(modelUsed)}</div>
     <div><strong>Erstellt:</strong> ${escapeHtml(formatted)}</div>
+    ${
+      redactedCount !== undefined
+        ? `<div><strong>Geschwärzt:</strong> ${redactedCount} Stelle(n) unkenntlich gemacht</div>`
+        : ''
+    }
   </div>
 </header>
 <main>

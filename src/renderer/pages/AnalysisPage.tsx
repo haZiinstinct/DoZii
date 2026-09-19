@@ -22,6 +22,7 @@ import {
 import type {
   AnalysisExtra,
   AnalysisMode,
+  AnalysisNotice,
   AnalysisPhaseEvent,
   AnalysisRunResult,
   ChatMessage,
@@ -133,12 +134,6 @@ export function AnalysisPage() {
   const [documentType, setDocumentType] = useState<string | null>(null)
   const [letterNotes, setLetterNotes] = useState('')
   const [showOriginal, setShowOriginal] = useState(false)
-  /**
-   * Wie viele Abschnitte dieser Lauf hatte. Der Hinweis im gespeicherten Text
-   * ist deutsch (wie der Kuerzungs-Hinweis auch, er gehoert zum Export); in der
-   * Oberflaeche zeigen wir ihn uebersetzt.
-   */
-  const [chunkTotal, setChunkTotal] = useState(0)
   const [activeQuoteId, setActiveQuoteId] = useState<string | null>(null)
   const speech = useSpeech()
 
@@ -215,7 +210,6 @@ export function AnalysisPage() {
   // zurueckgesetzt: die saubere Endausgabe ersetzt die Zwischenstaende.
   useEffect(() => {
     const unsub = window.api.analysis.onPhase((phase) => {
-      if (phase.kind === 'chunk') setChunkTotal(phase.total)
       setAnalysis((s) => {
         if (s.kind !== 'streaming') return s
         if (phase.kind === 'verifying' || phase.kind === 'merging') {
@@ -233,7 +227,6 @@ export function AnalysisPage() {
       setAskedQuestion(question ?? null)
       setExportError(null)
       setShowOriginal(false)
-      setChunkTotal(0)
       setAnalysis({ kind: 'streaming', text: '', phase: { kind: 'analyzing' } })
 
       await analysisStream.run(() => window.api.analysis.run(docId, mode, question, extra), {
@@ -267,10 +260,20 @@ export function AnalysisPage() {
 
   // Automatisch starten - ausser bei Modi, die erst eine Eingabe brauchen:
   // 'freeform' braucht die Frage, 'letter' die Briefart.
+  //
+  // Der Moduswechsel laeuft ueber denselben Router-Pfad, die Komponente bleibt
+  // also montiert. Ohne das Zuruecksetzen blieb das vorherige Ergebnis stehen -
+  // wer aus einer fertigen Analyse heraus "Antwort schreiben" waehlte, sah nie
+  // die Briefart-Auswahl, sondern weiter das alte Ergebnis.
   useEffect(() => {
-    if (docId && mode !== 'freeform' && mode !== 'letter') {
-      startAnalysis()
+    if (!docId) return
+    if (mode === 'freeform' || mode === 'letter') {
+      setAnalysis({ kind: 'idle' })
+      setAskedQuestion(null)
+      setShowOriginal(false)
+      return
     }
+    startAnalysis()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [docId, mode])
 
@@ -455,6 +458,21 @@ export function AnalysisPage() {
     },
     [highlightQueries]
   )
+
+  /**
+   * Vorbehalt zum Ergebnis (gekuerzt / in Abschnitten analysiert). Kommt als
+   * JSON aus dem Hauptprozess; kaputtes JSON wird still ignoriert - ein
+   * fehlender Hinweis ist besser als eine kaputte Seite.
+   */
+  const notice = useMemo<AnalysisNotice | null>(() => {
+    if (analysis.kind !== 'done' || !analysis.result?.analysis.notice) return null
+    try {
+      const parsed = JSON.parse(analysis.result.analysis.notice) as AnalysisNotice
+      return typeof parsed?.chunks === 'number' ? parsed : null
+    } catch {
+      return null
+    }
+  }, [analysis])
 
   /** Was vorgelesen wird: die Kernaussagen, nicht das rohe Markdown. */
   const speakableText = useMemo(() => {
@@ -690,17 +708,28 @@ export function AnalysisPage() {
         </div>
       )}
 
-      {/* Das Dokument war zu lang fuer einen Durchgang - das gehoert gesagt. */}
-      {analysis.kind === 'done' && chunkTotal > 1 && (
+      {/*
+        Vorbehalte zum Ergebnis. Kommen als Daten aus dem Hauptprozess, nicht
+        als angehaengter Text - sonst waeren sie in den Karten-Ansichten
+        (Zeugnis-Decoder, Vertrags-Check) unsichtbar, und genau dort sind die
+        Aussagen am schaerfsten.
+      */}
+      {notice && (
         <div className="flex items-start gap-2 rounded-xl border border-brand-amber/30 bg-brand-amber/5 px-4 py-3">
           <AlertCircle
             size={14}
             className="mt-0.5 flex-shrink-0 text-brand-amber"
             aria-hidden="true"
           />
-          <p className="text-xs leading-relaxed text-brand-text-dim">
-            {t('analysis.chunkedNotice', { count: chunkTotal })}
-          </p>
+          <div className="space-y-1 text-xs leading-relaxed text-brand-text-dim">
+            {notice.truncated && <p>{t('analysis.noticeTruncated')}</p>}
+            {notice.chunks > 1 && <p>{t('analysis.chunkedNotice', { count: notice.chunks })}</p>}
+            {notice.truncatedChunks > 0 && (
+              <p className="font-semibold text-brand-amber">
+                {t('analysis.noticeChunksTruncated', { count: notice.truncatedChunks })}
+              </p>
+            )}
+          </div>
         </div>
       )}
 

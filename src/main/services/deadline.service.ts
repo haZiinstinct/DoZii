@@ -8,7 +8,12 @@ import { parseDeadlineAnchors } from '../lib/parse-deadline-anchors'
 import { computeDeadline } from '@shared/deadline-calc'
 import { logger } from './logger.service'
 import { DEFAULT_NUM_CTX } from '../config/constants'
-import type { Deadline, DeadlineAnchor, DeadlineWithDocument } from '@shared/types'
+import type {
+  Deadline,
+  DeadlineAnchor,
+  DeadlineScanResult,
+  DeadlineWithDocument
+} from '@shared/types'
 
 const SOURCE = 'deadline.service'
 
@@ -157,9 +162,14 @@ export function anchorsToDeadlines(
  *
  * Wirft nicht - eine fehlgeschlagene Fristensuche darf nie die Analyse kippen.
  */
-export async function scanDeadlines(documentId: string, modelName: string): Promise<Deadline[]> {
+export async function scanDeadlines(
+  documentId: string,
+  modelName: string
+): Promise<DeadlineScanResult> {
   const doc = getDocumentById(documentId)
-  if (!doc || !doc.extractedText) return []
+  if (!doc || !doc.extractedText) {
+    return { ok: false, deadlines: [], error: 'Dokument hat keinen Text.' }
+  }
 
   try {
     const { system, user } = buildDeadlineExtractPrompt(focusOnDeadlineParts(doc.extractedText))
@@ -171,7 +181,9 @@ export async function scanDeadlines(documentId: string, modelName: string): Prom
       numCtx: DEFAULT_NUM_CTX
     })
 
-    const anchors = parseDeadlineAnchors(raw)
+    const anchors = parseDeadlineAnchors(raw, doc.extractedText, (unverified) => {
+      logger.warn(SOURCE, 'Fristen ohne Beleg im Dokument verworfen', { documentId, unverified })
+    })
     const deadlines = anchorsToDeadlines(
       documentId,
       anchors,
@@ -186,12 +198,12 @@ export async function scanDeadlines(documentId: string, modelName: string): Prom
       anchors: anchors.length,
       deadlines: deadlines.length
     })
-    return deadlines
+    return { ok: true, deadlines }
   } catch (err) {
-    logger.warn(SOURCE, 'Fristensuche fehlgeschlagen', {
-      documentId,
-      error: err instanceof Error ? err.message : String(err)
-    })
-    return []
+    // Wichtig: KEIN persist() im Fehlerfall. Ein gescheiterter zweiter Lauf
+    // haette sonst die beim ersten Lauf gefundenen Fristen geloescht.
+    const message = err instanceof Error ? err.message : String(err)
+    logger.warn(SOURCE, 'Fristensuche fehlgeschlagen', { documentId, error: message })
+    return { ok: false, deadlines: getDeadlinesForDocument(documentId), error: message }
   }
 }

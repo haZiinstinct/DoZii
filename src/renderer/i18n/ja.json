@@ -114,7 +114,9 @@
     "redactBeforeExport": "個人情報を伏せる",
     "redactBeforeExportHint": "IBAN（銀行口座番号）、整理番号、電話番号、メールアドレスはエクスポート前に読めないようにします。",
     "redactedCount": "{{count}} 箇所を伏せました",
-    "writeLetter": "返信を書く"
+    "writeLetter": "返信を書く",
+    "noticeTruncated": "文書がコンテキストウィンドウに収まらず短縮されました。結果は文書全体をカバーしていません。",
+    "noticeChunksTruncated": "そのうち {{count}} 個の区間はさらに短縮されました。その部分は読み取られていません。"
   },
   "document": {
     "back": "戻る",
@@ -226,8 +228,8 @@
     "autoContextWindow": "コンテキストウィンドウを自動で調整",
     "autoContextWindowHint": "モデルのコンテキストウィンドウをすべて使い、長いドキュメントが切り詰められないようにします。メモリを多く使います。",
     "ollamaUrl": "Ollama のアドレス",
-    "ollamaUrlHint": "Ollama が別のポートや別のパソコンで動いているときだけ変更してください。",
-    "ollamaUrlInvalid": "有効なアドレスではありません（形式: http://host:port）。",
+    "ollamaUrlHint": "Ollama が別のポートで動いている場合のみ変更してください。許可されるのは自分のパソコンだけです - 文書を外に出さないためです。",
+    "ollamaUrlInvalid": "自分のパソコン上のアドレスのみ使用できます（例: http://localhost:11434）。",
     "ollamaUrlSaved": "アドレスを保存しました。",
     "ocr": "文字認識 (OCR)",
     "ocrLanguages": "文字認識の言語",
@@ -489,7 +491,8 @@
       "kuendigung": "解約",
       "mitwirkung": "協力義務（書類の提出など）",
       "sonstige": "期限"
-    }
+    },
+    "scanFailed": "期限の検索に失敗しました。文書に期限がないという意味ではありません。原本を確認してください。"
   },
   "glossary": {
     "explain": "どういう意味？",

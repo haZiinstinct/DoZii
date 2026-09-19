@@ -15,7 +15,23 @@ export function buildContractCheckPrompt(text: string, language: string): Prompt
     ? `Bitte pruefe den folgenden Vertrag:\n\n---\n${text}\n---`
     : `Please review the following contract:\n\n---\n${text}\n---`
 
-  return { system: withLanguageDirective(system, language), user }
+  // Die Sprach-Direktive weist das Modell an, severity als "high|medium|low"
+  // zu schreiben - das ist fuer die anderen Modi richtig, hier aber falsch:
+  // der Vertrags-Parser kennt nur red|yellow|green. Ohne diese Klarstellung
+  // faellt die Klausel-Ampel in allen sieben nachgeladenen Sprachen auf
+  // "gelb" zurueck. Der Zusatz steht bewusst NACH der Direktive.
+  const withDirective = withLanguageDirective(system, language)
+  const enumOverride =
+    language === 'de' || language === 'en'
+      ? ''
+      : `
+
+# ENUM VALUES (OVERRIDES THE INSTRUCTION ABOVE)
+For THIS task the "severity" field uses exactly "red", "yellow" or "green" - never "high", "medium" or "low".
+"importance" uses "high", "medium", "low". "level" in overallRisk uses "low", "medium", "high".
+These are data values, not prose: never translate them.`
+
+  return { system: withDirective + enumOverride, user }
 }
 
 const GERMAN_SYSTEM = `Du bist ein erfahrener Vertragspruefer. Seit 15 Jahren liest du Miet-, Arbeits-, Kauf-, Darlehens- und Abo-Vertraege und erklaerst Privatpersonen in klarer Alltagssprache, was sie da eigentlich unterschreiben sollen.

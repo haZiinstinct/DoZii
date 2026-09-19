@@ -87,18 +87,54 @@ const MONTH_NAMES: Record<string, number> = {
  * Liest die Anker aus einer Modell-Antwort. Alles, was nicht sauber validiert,
  * faellt raus - im Zweifel lieber eine leere Liste.
  */
-export function parseDeadlineAnchors(raw: string): DeadlineAnchor[] {
+/**
+ * Normalisiert fuer den Belegabgleich: Kleinschreibung, Whitespace vereinheitlicht.
+ * Dieselbe Idee wie die Evidence-Pruefung im Zeugnis-Decoder.
+ */
+function normalizeForMatch(value: string): string {
+  return value.toLowerCase().replace(/\s+/g, ' ').trim()
+}
+
+/**
+ * Anker aus der Modellantwort lesen.
+ *
+ * `documentText` schaltet die Belegpruefung scharf: ein Zitat, das so nicht im
+ * Dokument steht, wird verworfen. Ohne diese Pruefung war "Evidence-or-Abstain"
+ * nur eine Behauptung im Prompt - ein halluziniertes Zitat reichte, damit eine
+ * erfundene Frist mit Countdown in der Oberflaeche steht. Eine erfundene Frist
+ * ist der schlimmste Fehler, den diese App machen kann.
+ */
+export function parseDeadlineAnchors(
+  raw: string,
+  documentText?: string,
+  /**
+   * Wird mit der Anzahl verworfener Anker gerufen. Callback statt Logger,
+   * damit dieses Modul frei von Electron-Abhaengigkeiten bleibt und ohne
+   * Mocks getestet werden kann.
+   */
+  onUnverified?: (count: number) => void
+): DeadlineAnchor[] {
   if (!raw) return []
+  const haystack = documentText ? normalizeForMatch(documentText) : null
 
   const parsed = extractJsonObject(raw)
   if (!parsed || !Array.isArray(parsed.anchors)) return []
 
   const entries: unknown[] = parsed.anchors
   const anchors: DeadlineAnchor[] = []
+  let unverified = 0
   for (const entry of entries) {
     const anchor = toAnchor(entry)
-    if (anchor) anchors.push(anchor)
+    if (!anchor) continue
+    // Belegpflicht: das Zitat muss so im Dokument stehen.
+    if (haystack !== null && !haystack.includes(normalizeForMatch(anchor.quote))) {
+      unverified++
+      continue
+    }
+    anchors.push(anchor)
   }
+  // Privacy: nur die Anzahl nach aussen, niemals das Zitat selbst.
+  if (unverified > 0) onUnverified?.(unverified)
   return anchors
 }
 

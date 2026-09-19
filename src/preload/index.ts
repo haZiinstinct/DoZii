@@ -7,6 +7,7 @@ import type {
   AppSettings,
   ChatMessage,
   Deadline,
+  DeadlineScanResult,
   DeadlineWithDocument,
   DocumentSummary,
   DoziiDocument,
@@ -155,8 +156,11 @@ export const api = {
       ipcRenderer.invoke('deadlines:forDocument', documentId),
     /** Alle noch offenen Fristen, nach Faelligkeit sortiert - fuer die Sidebar. */
     upcoming: (): Promise<DeadlineWithDocument[]> => ipcRenderer.invoke('deadlines:upcoming'),
-    /** Dokument erneut nach Fristen durchsuchen (ein kleiner Modell-Durchlauf). */
-    scan: (documentId: string): Promise<Deadline[]> =>
+    /**
+     * Dokument erneut nach Fristen durchsuchen (ein kleiner Modell-Durchlauf).
+     * `ok: false` heisst "Suche gescheitert", nicht "keine Frist vorhanden".
+     */
+    scan: (documentId: string): Promise<DeadlineScanResult> =>
       ipcRenderer.invoke('deadlines:scan', documentId),
     /** Fristen als Kalenderdatei speichern. documentId weglassen = alle offenen. */
     exportIcs: (documentId?: string): Promise<ExportResult> =>

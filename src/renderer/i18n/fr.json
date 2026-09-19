@@ -114,7 +114,9 @@
     "redactBeforeExport": "Masquer les données personnelles",
     "redactBeforeExportHint": "IBAN, numéro de dossier, numéro de téléphone et e-mail sont rendus illisibles avant l'export.",
     "redactedCount": "{{count}} passages masqués",
-    "writeLetter": "Rédiger une réponse"
+    "writeLetter": "Rédiger une réponse",
+    "noticeTruncated": "Le document était trop long pour la fenêtre de contexte et a été raccourci : le résultat ne couvre pas tout le document.",
+    "noticeChunksTruncated": "{{count}} de ces sections ont dû être raccourcies elles aussi. Cette partie du document n’a pas été lue."
   },
   "document": {
     "back": "Retour",
@@ -227,8 +229,8 @@
     "autoContextWindow": "Adapter automatiquement la fenêtre de contexte",
     "autoContextWindowHint": "Utilise toute la fenêtre de contexte du modèle pour que les longs documents ne soient pas tronqués. Demande plus de mémoire vive.",
     "ollamaUrl": "Adresse d'Ollama",
-    "ollamaUrlHint": "À modifier uniquement si Ollama tourne sur un autre port ou un autre ordinateur.",
-    "ollamaUrlInvalid": "Ce n'est pas une adresse valide (format attendu : http://hôte:port).",
+    "ollamaUrlHint": "À modifier uniquement si Ollama tourne sur un autre port. Seul ton propre ordinateur est autorisé : tes documents ne doivent pas le quitter.",
+    "ollamaUrlInvalid": "Seules les adresses sur ton propre ordinateur sont autorisées (p. ex. http://localhost:11434).",
     "ollamaUrlSaved": "Adresse enregistrée.",
     "ocr": "Reconnaissance de texte (OCR)",
     "ocrLanguages": "Langues de la reconnaissance de texte",
@@ -494,7 +496,8 @@
       "kuendigung": "Résiliation",
       "mitwirkung": "Obligation de coopérer",
       "sonstige": "Délai"
-    }
+    },
+    "scanFailed": "La recherche de délais a échoué. Cela ne veut pas dire qu’il n’y a pas de délai dans le document : vérifie l’original."
   },
   "glossary": {
     "explain": "Ça veut dire quoi ?",

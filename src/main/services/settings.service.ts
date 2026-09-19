@@ -28,15 +28,28 @@ const FONT_SCALES: FontScale[] = ['normal', 'large', 'xlarge']
 export const AVAILABLE_OCR_LANGUAGES = ['deu', 'eng'] as const
 
 /**
- * Akzeptiert nur http(s)-URLs mit Host. Verhindert, dass eine vertippte oder
- * manipulierte Einstellung die App auf ein fremdes Ziel zeigen laesst -
- * DoZii verspricht, ausser Ollama nichts zu kontaktieren.
+ * Hosts, die als "der eigene Rechner" gelten. Alles andere ist ein fremder
+ * Server - und dorthin gehen die Dokumente nicht.
+ */
+const LOOPBACK_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]', '::1', '0.0.0.0'])
+
+/**
+ * Akzeptiert nur http(s)-URLs auf den eigenen Rechner.
+ *
+ * Das Kernversprechen der App ist, dass Dokumente den Rechner nicht verlassen.
+ * Eine frei setzbare Adresse haette genau das ausgehebelt: wer (versehentlich
+ * oder durch eine manipulierte Einstellungsdatei) einen fremden Host eintraegt,
+ * schickt jeden Bescheid und jedes Arbeitszeugnis dorthin - ohne dass die
+ * Oberflaeche es sagt. Ollama auf einem anderen Rechner im Heimnetz ist ein
+ * nachvollziehbarer Wunsch, aber er gehoert bewusst entschieden und nicht in
+ * ein Textfeld, das auch ein Tippfehler treffen kann.
  */
 export function isValidOllamaUrl(value: unknown): value is string {
   if (typeof value !== 'string' || value.length === 0 || value.length > 300) return false
   try {
     const url = new URL(value)
-    return (url.protocol === 'http:' || url.protocol === 'https:') && url.hostname.length > 0
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') return false
+    return LOOPBACK_HOSTS.has(url.hostname.toLowerCase())
   } catch {
     return false
   }

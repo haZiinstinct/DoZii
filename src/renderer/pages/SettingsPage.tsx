@@ -205,6 +205,19 @@ function SegmentedChoice<T extends string>({
   )
 }
 
+/** Hosts, die als "eigener Rechner" gelten - identisch zur Pruefung im Hauptprozess. */
+const LOOPBACK_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]', '::1', '0.0.0.0'])
+
+function isLoopbackUrl(value: string): boolean {
+  try {
+    const url = new URL(value)
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') return false
+    return LOOPBACK_HOSTS.has(url.hostname.toLowerCase())
+  } catch {
+    return false
+  }
+}
+
 export function SettingsPage() {
   const { t } = useTranslation()
   const [hardware, setHardware] = useState<HardwareInfo | null>(null)
@@ -286,14 +299,11 @@ export function SettingsPage() {
     const value = ollamaUrlDraft.trim()
     if (value === persistedOllamaUrl.current) return
 
-    let protocol: string
-    try {
-      protocol = new URL(value).protocol
-    } catch {
-      setOllamaUrlInvalid(true)
-      return
-    }
-    if (protocol !== 'http:' && protocol !== 'https:') {
+    // Muss zur Pruefung im Hauptprozess passen (settings.service:
+    // isValidOllamaUrl): nur der eigene Rechner. Ein fremder Host wuerde
+    // saemtliche Dokumente dorthin schicken - das Gegenteil dessen, wofuer
+    // die App da ist.
+    if (!isLoopbackUrl(value)) {
       setOllamaUrlInvalid(true)
       return
     }

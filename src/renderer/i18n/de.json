@@ -114,7 +114,9 @@
     "redactBeforeExport": "Persönliche Daten schwärzen",
     "redactBeforeExportHint": "IBAN, Aktenzeichen, Telefonnummer und E-Mail werden vor dem Export unkenntlich gemacht.",
     "redactedCount": "{{count}} Stellen geschwärzt",
-    "writeLetter": "Antwort schreiben"
+    "writeLetter": "Antwort schreiben",
+    "noticeTruncated": "Das Dokument war zu lang für das Kontextfenster und wurde gekürzt – das Ergebnis deckt nicht das ganze Dokument ab.",
+    "noticeChunksTruncated": "{{count}} dieser Abschnitte mussten zusätzlich gekürzt werden. Dieser Teil des Dokuments wurde nicht gelesen."
   },
   "document": {
     "back": "Zurück",
@@ -227,8 +229,8 @@
     "autoContextWindow": "Kontextfenster automatisch anpassen",
     "autoContextWindowHint": "Nutzt das volle Kontextfenster des Modells, damit lange Dokumente nicht gekürzt werden. Braucht mehr Arbeitsspeicher.",
     "ollamaUrl": "Ollama-Adresse",
-    "ollamaUrlHint": "Nur ändern, wenn Ollama auf einem anderen Port oder Rechner läuft.",
-    "ollamaUrlInvalid": "Das ist keine gültige Adresse (erwartet: http://host:port).",
+    "ollamaUrlHint": "Nur ändern, wenn Ollama auf einem anderen Port läuft. Nur der eigene Rechner ist erlaubt – deine Dokumente sollen ihn nicht verlassen.",
+    "ollamaUrlInvalid": "Nur Adressen auf dem eigenen Rechner sind erlaubt (z.B. http://localhost:11434).",
     "ollamaUrlSaved": "Adresse gespeichert.",
     "ocr": "Texterkennung (OCR)",
     "ocrLanguages": "Sprachen der Texterkennung",
@@ -494,7 +496,8 @@
       "kuendigung": "Kündigung",
       "mitwirkung": "Mitwirkung",
       "sonstige": "Frist"
-    }
+    },
+    "scanFailed": "Die Fristensuche ist fehlgeschlagen. Das heißt nicht, dass keine Frist im Dokument steht – bitte am Original prüfen."
   },
   "glossary": {
     "explain": "Was heißt das?",

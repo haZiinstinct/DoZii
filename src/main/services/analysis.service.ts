@@ -10,6 +10,7 @@ import { scanDeadlines, todayIso } from './deadline.service'
 import {
   buildPrompt,
   documentTokenBudget,
+  promptOverheadTokens,
   type AnalysisMode,
   type BuildPromptOptions
 } from '../prompts/prompt-builder'
@@ -21,9 +22,20 @@ import { splitIntoChunks } from '@shared/chunk-text'
 import { pickNumCtx } from '@shared/context-window-calc'
 import { extractJsonObject } from '../lib/extract-json'
 import { logger } from './logger.service'
-import { CHUNK_OVERLAP_TOKENS, MAX_CHUNKS, RESPONSE_RESERVE_TOKENS } from '../config/constants'
+import {
+  CHARS_PER_TOKEN,
+  CHUNK_OVERLAP_TOKENS,
+  MAX_CHUNKS,
+  RESPONSE_RESERVE_TOKENS
+} from '../config/constants'
 import { freemem } from 'os'
-import type { Analysis, AnalysisExtra, AnalysisPhaseEvent, AnalysisRunResult } from '@shared/types'
+import type {
+  Analysis,
+  AnalysisExtra,
+  AnalysisNotice,
+  AnalysisPhaseEvent,
+  AnalysisRunResult
+} from '@shared/types'
 
 const TRUNCATION_NOTICE =
   '\n\n---\n*Hinweis: Das Dokument überschreitet das Kontextfenster des Modells. ' +
@@ -96,6 +108,32 @@ async function resolveNumCtx(modelName: string, neededTokens: number): Promise<n
   return decision.numCtx
 }
 
+/** Grober Aufschlag fuer das Geruest des Zusammenfuehren-Prompts. */
+const REDUCE_OVERHEAD_TOKENS = 900
+
+/**
+ * Nimmt so viele Teilergebnisse, wie ins Budget passen - von vorne, damit der
+ * Anfang des Dokuments erhalten bleibt. Passt nicht einmal das erste hinein,
+ * wird es gekuerzt: ein gekuerztes erstes Teilergebnis ist immer noch besser
+ * als eine Antwort, aus der Ollama den halben Prompt geworfen hat.
+ */
+function fitPartialsToBudget(partials: string[], budgetTokens: number): string[] {
+  if (budgetTokens <= 0) return partials.slice(0, 1)
+  const kept: string[] = []
+  let used = 0
+  for (const partial of partials) {
+    const cost = estimateTokens(partial)
+    if (used + cost > budgetTokens) break
+    kept.push(partial)
+    used += cost
+  }
+  if (kept.length === 0) {
+    const maxChars = Math.floor(budgetTokens * CHARS_PER_TOKEN)
+    return [partials[0].slice(0, Math.max(0, maxChars))]
+  }
+  return kept
+}
+
 /** Ueberschriften-Geruest fuer das Zusammenfuehren von Markdown-Teilergebnissen. */
 function markdownFormatReminder(mode: AnalysisMode, language: string): string {
   if (mode === 'plain') {
@@ -142,7 +180,7 @@ async function runChunked(params: {
   numCtx: number
   win: BrowserWindow
   options: BuildPromptOptions
-}): Promise<{ text: string; aborted: boolean; chunkCount: number }> {
+}): Promise<{ text: string; aborted: boolean; chunkCount: number; truncatedChunks: number }> {
   const { mode, text, language, modelName, numCtx, win, options } = params
 
   const budget = documentTokenBudget(mode, language, numCtx, options)
@@ -160,9 +198,16 @@ async function runChunked(params: {
   })
 
   const partials: string[] = []
+  // splitIntoChunks haelt MAX_CHUNKS ein, indem es die Abschnitte VERGROESSERT.
+  // Bei sehr langen Dokumenten sind sie danach groesser als das Token-Budget
+  // und buildPrompt kuerzt sie erneut. Das wurde frueher verschluckt - das
+  // Ergebnis behauptete Vollstaendigkeit, obwohl mehr als die Haelfte des
+  // Vertrags nie beim Modell ankam.
+  let truncatedChunks = 0
   for (const chunk of chunks) {
     sendPhase(win, { kind: 'chunk', current: chunk.index + 1, total: chunks.length })
     const prompt = buildPrompt(mode, chunk.text, language, { ...options, numCtx })
+    if (prompt.truncated) truncatedChunks++
     try {
       const partial = await chatOnce({
         model: modelName,
@@ -185,7 +230,8 @@ async function runChunked(params: {
         return {
           text: partials.join(CHUNK_SEPARATOR),
           aborted: true,
-          chunkCount: chunks.length
+          chunkCount: chunks.length,
+          truncatedChunks
         }
       }
       throw err
@@ -193,16 +239,29 @@ async function runChunked(params: {
   }
 
   if (partials.length === 0) {
-    return { text: '', aborted: false, chunkCount: chunks.length }
+    return { text: '', aborted: false, chunkCount: chunks.length, truncatedChunks }
   }
   if (partials.length === 1) {
-    return { text: partials[0], aborted: false, chunkCount: chunks.length }
+    return { text: partials[0], aborted: false, chunkCount: chunks.length, truncatedChunks }
   }
 
   sendPhase(win, { kind: 'merging' })
+  // Auch das Zusammenfuehren muss ins Kontextfenster passen. Zwoelf
+  // Teilergebnisse koennen zusammen groesser sein als das Fenster - Ollama
+  // wuerde dann die ERSTEN stillschweigend verwerfen, also ausgerechnet den
+  // Anfang des Dokuments. Lieber vorher kuerzen und es sagen.
+  const reduceBudget = numCtx - RESPONSE_RESERVE_TOKENS - REDUCE_OVERHEAD_TOKENS
+  const fittedPartials = fitPartialsToBudget(partials, reduceBudget)
+  if (fittedPartials.length < partials.length) {
+    logger.warn('analysis.service', 'Teilergebnisse fuers Zusammenfuehren gekuerzt', {
+      von: partials.length,
+      auf: fittedPartials.length,
+      reduceBudget
+    })
+  }
   const reduce = JSON_MODES.has(mode)
-    ? buildJsonReducePrompt(partials, language)
-    : buildMarkdownReducePrompt(partials, language, markdownFormatReminder(mode, language))
+    ? buildJsonReducePrompt(fittedPartials, language)
+    : buildMarkdownReducePrompt(fittedPartials, language, markdownFormatReminder(mode, language))
 
   const merged = await streamChat({
     model: modelName,
@@ -221,10 +280,16 @@ async function runChunked(params: {
     return {
       text: partials.join(CHUNK_SEPARATOR),
       aborted: merged.aborted,
-      chunkCount: chunks.length
+      chunkCount: chunks.length,
+      truncatedChunks
     }
   }
-  return { text: merged.text, aborted: merged.aborted, chunkCount: chunks.length }
+  return {
+    text: merged.text,
+    aborted: merged.aborted,
+    chunkCount: chunks.length,
+    truncatedChunks
+  }
 }
 
 /** Ergebnis einer frueheren Analyse als Beleg-Basis fuer den Brief. */
@@ -261,9 +326,13 @@ export async function runAnalysis(
   }
 
   // Kontextfenster bestimmen: erst den Bedarf messen, dann das Fenster waehlen.
-  const probe = buildPrompt(mode, doc.extractedText, language, options)
-  const neededTokens =
-    estimateTokens(probe.system) + estimateTokens(probe.user) + RESPONSE_RESERVE_TOKENS
+  //
+  // Wichtig: der Bedarf wird am UNGEKUERZTEN Dokument gemessen. Frueher lief
+  // dafuer buildPrompt() - das kuerzt aber bereits auf den Default von 8192,
+  // sodass der gemessene Bedarf nie darueber lag und die Automatik das Fenster
+  // nie vergroessert hat. Die Funktion war damit wirkungslos.
+  const promptOverhead = promptOverheadTokens(mode, language, options)
+  const neededTokens = promptOverhead + estimateTokens(doc.extractedText) + RESPONSE_RESERVE_TOKENS
   const numCtx = await resolveNumCtx(modelName, neededTokens)
 
   // Small model on heavy mode: warn but don't block. User may have chosen it intentionally.
@@ -289,6 +358,11 @@ export async function runAnalysis(
   let aborted: boolean
   let truncated = false
   let chunkCount = 0
+  let truncatedChunks = 0
+  // Der tatsaechlich benutzte User-Prompt - wird zur Nachvollziehbarkeit
+  // mitgespeichert. Im Chunk-Pfad steht dort nur eine Notiz statt zwoelf
+  // vollstaendiger Prompts.
+  let promptForRecord: string
 
   if (useChunking) {
     const chunked = await runChunked({
@@ -303,9 +377,20 @@ export async function runAnalysis(
     finalResponse = chunked.text
     aborted = chunked.aborted
     chunkCount = chunked.chunkCount
+    truncatedChunks = chunked.truncatedChunks
+    promptForRecord = `[${chunked.chunkCount} Abschnitte, Modus ${mode}]`
+    if (truncatedChunks > 0) {
+      logger.warn('analysis.service', 'Abschnitte mussten zusaetzlich gekuerzt werden', {
+        docId,
+        mode,
+        truncatedChunks,
+        chunkCount
+      })
+    }
   } else {
     const prompt = buildPrompt(mode, doc.extractedText, language, { ...options, numCtx })
     truncated = prompt.truncated
+    promptForRecord = prompt.user
     if (truncated) {
       logger.warn('analysis.service', 'Document truncated to fit context window', {
         docId,
@@ -332,7 +417,15 @@ export async function runAnalysis(
 
     // If aborted during pass 1, save what we have and return immediately
     if (pass1.aborted) {
-      return persistAnalysis(docId, mode, prompt.user, pass1.text, modelName, startTime, true)
+      return persistAnalysis({
+        docId,
+        mode,
+        prompt: prompt.user,
+        response: pass1.text,
+        modelName,
+        startTime,
+        aborted: true
+      })
     }
 
     if (pass1.text.trim().length === 0) {
@@ -380,16 +473,16 @@ export async function runAnalysis(
     finalResponse += TRUNCATION_NOTICE
   }
 
-  const result = persistAnalysis(
+  const result = persistAnalysis({
     docId,
     mode,
-    probe.user,
-    finalResponse,
+    prompt: promptForRecord,
+    response: finalResponse,
     modelName,
     startTime,
     aborted,
-    chunkCount
-  )
+    notice: { truncated, chunks: chunkCount, truncatedChunks }
+  })
 
   // Fristen im Hintergrund suchen - das Analyseergebnis steht schon und soll
   // nicht darauf warten. Die UI bekommt Bescheid, sobald es Ergebnisse gibt.
@@ -456,36 +549,55 @@ async function scanDeadlinesInBackground(
   win: BrowserWindow
 ): Promise<void> {
   sendPhase(win, { kind: 'deadlines' })
-  const deadlines = await scanDeadlines(docId, modelName)
+  const result = await scanDeadlines(docId, modelName)
   if (!win.isDestroyed()) {
-    win.webContents.send('deadlines:updated', { documentId: docId, count: deadlines.length })
+    win.webContents.send('deadlines:updated', {
+      documentId: docId,
+      count: result.deadlines.length,
+      ok: result.ok
+    })
   }
 }
 
-function persistAnalysis(
-  docId: string,
-  mode: AnalysisMode,
-  prompt: string,
-  response: string,
-  modelName: string,
-  startTime: number,
-  aborted: boolean,
-  chunkCount = 0
-): AnalysisRunResult {
+function persistAnalysis(params: {
+  docId: string
+  mode: AnalysisMode
+  prompt: string
+  response: string
+  modelName: string
+  startTime: number
+  aborted: boolean
+  notice?: AnalysisNotice
+}): AnalysisRunResult {
+  const { docId, mode, prompt, response, modelName, startTime, aborted, notice } = params
   const durationMs = Date.now() - startTime
   const db = getDb()
   const id = randomUUID()
   const now = new Date().toISOString()
 
   let finalResult = response
-  if (chunkCount > 1) {
-    // Ehrlichkeit gegenueber dem Nutzer: ein zusammengefuehrtes Ergebnis ist
-    // nicht dasselbe wie eine Analyse in einem Durchgang.
-    finalResult += `\n\n---\n*Hinweis: Das Dokument war zu lang für einen Durchgang und wurde in ${chunkCount} Abschnitten analysiert und anschließend zusammengeführt.*`
+  if (notice && notice.chunks > 1) {
+    // Der Vorbehalt steht zusaetzlich im Text, damit er auch im Export
+    // (PDF, RTF, Markdown) mitgeht - die Oberflaeche zeigt ihn uebersetzt
+    // aus dem `notice`-Feld.
+    finalResult += `
+
+---
+*Hinweis: Das Dokument war zu lang für einen Durchgang und wurde in ${notice.chunks} Abschnitten analysiert und anschließend zusammengeführt.*`
+    if (notice.truncatedChunks > 0) {
+      finalResult += `
+*${notice.truncatedChunks} dieser Abschnitte mussten zusätzlich gekürzt werden - dieser Teil des Dokuments wurde nicht gelesen.*`
+    }
   }
   if (aborted) {
-    finalResult += '\n\n[Analyse vom Nutzer abgebrochen]'
+    finalResult += `
+
+[Analyse vom Nutzer abgebrochen]`
   }
+
+  // Nur speichern, wenn es wirklich etwas anzumerken gibt.
+  const hasNotice =
+    notice !== undefined && (notice.truncated || notice.chunks > 1 || notice.truncatedChunks > 0)
 
   const analysisRow: typeof schema.analyses.$inferInsert = {
     id,
@@ -496,6 +608,7 @@ function persistAnalysis(
     structuredResult: null,
     modelUsed: modelName,
     durationMs,
+    notice: hasNotice ? JSON.stringify(notice) : null,
     createdAt: now
   }
 

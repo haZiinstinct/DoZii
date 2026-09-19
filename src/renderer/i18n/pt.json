@@ -114,7 +114,9 @@
     "redactBeforeExport": "Ocultar dados pessoais",
     "redactBeforeExportHint": "O IBAN, o número de processo, o telefone e o e-mail são tornados ilegíveis antes da exportação.",
     "redactedCount": "{{count}} passagens ocultadas",
-    "writeLetter": "Escrever resposta"
+    "writeLetter": "Escrever resposta",
+    "noticeTruncated": "O documento era demasiado longo para a janela de contexto e foi encurtado – o resultado não cobre o documento inteiro.",
+    "noticeChunksTruncated": "{{count}} dessas secções também tiveram de ser encurtadas. Essa parte do documento não foi lida."
   },
   "document": {
     "back": "Voltar",
@@ -227,8 +229,8 @@
     "autoContextWindow": "Ajustar automaticamente a janela de contexto",
     "autoContextWindowHint": "Usa toda a janela de contexto do modelo, para que documentos longos não sejam cortados. Precisa de mais memória.",
     "ollamaUrl": "Endereço do Ollama",
-    "ollamaUrlHint": "Altere apenas se o Ollama estiver a correr noutra porta ou noutro computador.",
-    "ollamaUrlInvalid": "Isto não é um endereço válido (esperado: http://host:porta).",
+    "ollamaUrlHint": "Só altera isto se o Ollama correr noutra porta. Apenas o teu próprio computador é permitido – os teus documentos não devem sair dele.",
+    "ollamaUrlInvalid": "Só são permitidos endereços no teu próprio computador (p. ex. http://localhost:11434).",
     "ollamaUrlSaved": "Endereço guardado.",
     "ocr": "Reconhecimento de texto (OCR)",
     "ocrLanguages": "Idiomas do reconhecimento de texto",
@@ -494,7 +496,8 @@
       "kuendigung": "Rescisão",
       "mitwirkung": "Colaboração",
       "sonstige": "Prazo"
-    }
+    },
+    "scanFailed": "A procura de prazos falhou. Isso não significa que não exista prazo no documento – verifica o original."
   },
   "glossary": {
     "explain": "O que quer isto dizer?",

@@ -114,7 +114,9 @@
     "redactBeforeExport": "Redact personal data",
     "redactBeforeExportHint": "IBAN, case number, phone number and email are blacked out before the export.",
     "redactedCount": "{{count}} spots redacted",
-    "writeLetter": "Write a reply"
+    "writeLetter": "Write a reply",
+    "noticeTruncated": "The document was too long for the context window and was shortened – the result does not cover the whole document.",
+    "noticeChunksTruncated": "{{count}} of those sections had to be shortened as well. That part of the document was not read."
   },
   "document": {
     "back": "Back",
@@ -227,8 +229,8 @@
     "autoContextWindow": "Adjust context window automatically",
     "autoContextWindowHint": "Uses the model's full context window so long documents don't get cut off. Needs more memory.",
     "ollamaUrl": "Ollama address",
-    "ollamaUrlHint": "Only change this if Ollama runs on a different port or machine.",
-    "ollamaUrlInvalid": "That is not a valid address (expected: http://host:port).",
+    "ollamaUrlHint": "Only change this if Ollama runs on a different port. Only your own computer is allowed – your documents should not leave it.",
+    "ollamaUrlInvalid": "Only addresses on your own computer are allowed (e.g. http://localhost:11434).",
     "ollamaUrlSaved": "Address saved.",
     "ocr": "Text recognition (OCR)",
     "ocrLanguages": "Text recognition languages",
@@ -494,7 +496,8 @@
       "kuendigung": "Termination",
       "mitwirkung": "Duty to cooperate",
       "sonstige": "Deadline"
-    }
+    },
+    "scanFailed": "The deadline search failed. That does not mean there is no deadline in the document – please check the original."
   },
   "glossary": {
     "explain": "What does that mean?",
