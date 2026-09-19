@@ -101,6 +101,13 @@ const OCR_FLAG_SQL = `
   ALTER TABLE documents ADD COLUMN ocr_used INTEGER NOT NULL DEFAULT 0;
 `
 
+// v4: Hinweis aus dem Import (z.B. "3 von 20 Seiten konnten nicht erkannt
+// werden"). Stand vorher nur im Logfile - der Nutzer sah ein scheinbar
+// vollstaendiges Dokument, dem in Wahrheit Seiten fehlten.
+const IMPORT_WARNING_SQL = `
+  ALTER TABLE documents ADD COLUMN import_warning TEXT;
+`
+
 export const MIGRATIONS: Migration[] = [
   {
     version: 1,
@@ -118,6 +125,12 @@ export const MIGRATIONS: Migration[] = [
     version: 3,
     up: (db) => {
       db.exec(OCR_FLAG_SQL)
+    }
+  },
+  {
+    version: 4,
+    up: (db) => {
+      db.exec(IMPORT_WARNING_SQL)
     }
   }
 ]

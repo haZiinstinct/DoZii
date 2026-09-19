@@ -146,7 +146,8 @@
     "ocrUsed": "スキャンされたドキュメントです - テキストは文字認識で読み取りました。数字と名前は原本で確認してください。",
     "ocrPartial": "{{total}} ページのうち {{done}} ページを文字認識で読み取れました。",
     "modePickerTitle": "DoZii に何をさせますか？",
-    "modeRecommended": "おすすめ"
+    "modeRecommended": "おすすめ",
+    "importIncomplete": "この文書は完全には読み取れませんでした: {{warning}}"
   },
   "settings": {
     "title": "設定",

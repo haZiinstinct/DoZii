@@ -269,6 +269,24 @@ export function DocumentViewPage() {
         </div>
       )}
 
+      {/*
+        Unvollstaendiger Import (uebersprungene Seiten, Seiten-Deckel). Stand
+        frueher nur im Logfile - der Nutzer sah ein scheinbar vollstaendiges
+        Dokument, dem in Wahrheit Seiten fehlten.
+      */}
+      {doc.importWarning && (
+        <div className="flex items-start gap-3 rounded-xl border border-brand-red/30 bg-brand-red/5 p-4">
+          <AlertTriangle
+            size={16}
+            className="mt-0.5 flex-shrink-0 text-brand-red"
+            aria-hidden="true"
+          />
+          <p className="text-sm leading-relaxed text-brand-text">
+            {t('document.importIncomplete', { warning: doc.importWarning })}
+          </p>
+        </div>
+      )}
+
       {/* Garbage-warning banner */}
       {isGarbled && (
         <div className="flex items-start gap-3 rounded-xl border border-brand-amber/30 bg-brand-amber/5 p-4">

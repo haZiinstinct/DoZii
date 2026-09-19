@@ -23,6 +23,7 @@ import {
 } from '@shared/file-types'
 import { checkPrintability } from '@shared/text-validators'
 import { detectScannedPdf } from '@shared/scan-detect'
+import { escapeLikePattern, LIKE_ESCAPE_CHAR } from '@shared/like-pattern'
 import type { DocumentSummary, DoziiDocument } from '@shared/types'
 
 function getDocumentsDir(): string {
@@ -133,9 +134,17 @@ async function extractPdfWithOcrFallback(
   })
 
   const ocr = await ocrPdf(destPath, settings.ocrLanguages, settings.ocrQuality, onProgress)
-  // Falls die Textebene doch mehr hergab als das OCR (seltener Grenzfall),
-  // gewinnt der laengere Text - er enthaelt mit hoher Wahrscheinlichkeit mehr Inhalt.
-  if (ocr.text.trim().length <= text.trim().length) {
+
+  // Bei 'gibberish' ist die vorhandene Textebene Muell (kaputtes Font-Encoding
+  // oder eine misslungene Fremd-OCR). Sie darf dann NICHT gewinnen, nur weil
+  // sie mehr Zeichen hat - genau das waere ein stiller Rueckfall auf Kauderwelsch.
+  const textLayerUsable = verdict.kind !== 'gibberish'
+  if (textLayerUsable && ocr.text.trim().length <= text.trim().length) {
+    return { text, pageCount, ocrUsed: false, ocrWarning: ocr.warning }
+  }
+  if (ocr.text.trim().length === 0) {
+    // OCR hat nichts geliefert - dann lieber die (schlechte) Textebene als nichts,
+    // die Pruefung auf Lesbarkeit weiter unten faengt den Rest ab.
     return { text, pageCount, ocrUsed: false, ocrWarning: ocr.warning }
   }
   return {
@@ -226,16 +235,18 @@ export async function importDocument(
   let extractedText: string
   let pageCount: number | null
   let ocrUsed: boolean
+  let importWarning: string | null
 
   try {
     const extracted = await extractTextByType(destPath, ext, onProgress)
     extractedText = extracted.text.trim()
     pageCount = extracted.pageCount
     ocrUsed = extracted.ocrUsed
-    if (extracted.ocrWarning) {
+    importWarning = extracted.ocrWarning ?? null
+    if (importWarning) {
       logger.warn('document-store', 'Texterkennung unvollstaendig', {
         filename,
-        warning: extracted.ocrWarning
+        warning: importWarning
       })
     }
   } catch (err) {
@@ -315,6 +326,7 @@ export async function importDocument(
     extractedText,
     thumbnailPath: null,
     ocrUsed: ocrUsed ? 1 : 0,
+    importWarning,
     createdAt: now,
     updatedAt: now
   }
@@ -378,11 +390,13 @@ export async function reImportDocument(id: string): Promise<DoziiDocument> {
   let extractedText: string
   let pageCount: number | null
   let ocrUsed: boolean
+  let reImportWarning: string | null
   try {
     const extracted = await extractTextByType(doc.originalPath, ext)
     extractedText = extracted.text.trim()
     pageCount = extracted.pageCount
     ocrUsed = extracted.ocrUsed
+    reImportWarning = extracted.ocrWarning ?? null
   } catch (err) {
     logger.error('document-store', 'Re-import extraction failed', {
       id,
@@ -424,6 +438,7 @@ export async function reImportDocument(id: string): Promise<DoziiDocument> {
     .set({
       extractedText,
       ocrUsed: ocrUsed ? 1 : 0,
+      importWarning: reImportWarning,
       wordCount,
       detectedLanguage,
       pageCount,
@@ -529,15 +544,14 @@ export function searchDocuments(query: string): DocumentSummary[] {
   if (needle.length === 0) return listDocumentSummaries()
 
   const db = getDb()
-  // LIKE-Sonderzeichen entschaerfen, damit eine Suche nach "50%" nicht alles trifft.
-  const pattern = `%${needle.replace(/[%_\\]/g, (match) => `\\${match}`)}%`
+  const pattern = `%${escapeLikePattern(needle)}%`
   return db
     .select(SUMMARY_COLUMNS)
     .from(schema.documents)
     .where(
       or(
-        sql`lower(${schema.documents.filename}) LIKE ${pattern} ESCAPE '\'`,
-        sql`lower(${schema.documents.extractedText}) LIKE ${pattern} ESCAPE '\'`
+        sql`lower(${schema.documents.filename}) LIKE ${pattern} ESCAPE ${LIKE_ESCAPE_CHAR}`,
+        sql`lower(${schema.documents.extractedText}) LIKE ${pattern} ESCAPE ${LIKE_ESCAPE_CHAR}`
       )
     )
     .orderBy(desc(schema.documents.createdAt))
@@ -625,6 +639,7 @@ export async function importTextDocument(payload: {
     extractedText,
     thumbnailPath: null,
     ocrUsed: 0,
+    importWarning: null,
     createdAt: now,
     updatedAt: now
   }

@@ -147,7 +147,8 @@
     "ocrUsed": "Documento digitalizado - o texto foi lido por reconhecimento ótico. Confirme os números e os nomes no original.",
     "ocrPartial": "De {{total}} páginas, {{done}} puderam ser lidas por reconhecimento de texto.",
     "modePickerTitle": "O que deve o DoZii fazer com isto?",
-    "modeRecommended": "Recomendado"
+    "modeRecommended": "Recomendado",
+    "importIncomplete": "O documento não foi lido na totalidade: {{warning}}"
   },
   "settings": {
     "title": "Definições",

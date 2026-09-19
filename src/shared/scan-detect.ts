@@ -51,8 +51,16 @@ export function isMostlyGibberish(text: string, sampleSize = 5000): boolean {
   return wordChars / compact.length < WORD_CHAR_RATIO_MIN
 }
 
+/**
+ * Warum ein PDF als Scan gilt. Der Aufrufer braucht die Unterscheidung:
+ * bei 'gibberish' ist die vorhandene Textebene MUELL, also darf sie nicht
+ * gegen ein kuerzeres, aber lesbares OCR-Ergebnis gewinnen.
+ */
+export type ScanReasonKind = 'empty' | 'sparse' | 'gibberish' | 'readable'
+
 export interface ScanVerdict {
   isScanned: boolean
+  kind: ScanReasonKind
   reason: string
   charsPerPage: number
 }
@@ -68,12 +76,18 @@ export function detectScannedPdf(text: string, pageCount: number | null): ScanVe
   const charsPerPage = Math.round(trimmed.length / pages)
 
   if (trimmed.length === 0) {
-    return { isScanned: true, reason: 'Keine Textebene im PDF - reiner Scan', charsPerPage: 0 }
+    return {
+      isScanned: true,
+      kind: 'empty',
+      reason: 'Keine Textebene im PDF - reiner Scan',
+      charsPerPage: 0
+    }
   }
 
   if (charsPerPage < SCANNED_PDF_MIN_CHARS_PER_PAGE) {
     return {
       isScanned: true,
+      kind: 'sparse',
       reason:
         `Nur ${charsPerPage} Zeichen pro Seite (Mindestwert ${SCANNED_PDF_MIN_CHARS_PER_PAGE}) - ` +
         'vermutlich ein Scan mit Mini-Textebene aus Seitenzahlen/Kopfzeilen',
@@ -86,6 +100,7 @@ export function detectScannedPdf(text: string, pageCount: number | null): ScanVe
   if (isMostlyGibberish(trimmed)) {
     return {
       isScanned: true,
+      kind: 'gibberish',
       reason: `Textebene ist unlesbar (${charsPerPage} Zeichen/Seite, kaum Wort-Zeichen)`,
       charsPerPage
     }
@@ -93,6 +108,7 @@ export function detectScannedPdf(text: string, pageCount: number | null): ScanVe
 
   return {
     isScanned: false,
+    kind: 'readable',
     reason: `Verwertbare Textebene vorhanden (${charsPerPage} Zeichen/Seite)`,
     charsPerPage
   }

@@ -147,7 +147,8 @@
     "ocrUsed": "Documento escaneado: el texto se leyó con reconocimiento de caracteres. Comprueba las cifras y los nombres en el original.",
     "ocrPartial": "De {{total}} páginas se pudieron leer {{done}} con el reconocimiento de texto.",
     "modePickerTitle": "¿Qué quieres que haga DoZii con esto?",
-    "modeRecommended": "Recomendado"
+    "modeRecommended": "Recomendado",
+    "importIncomplete": "El documento no se leyó por completo: {{warning}}"
   },
   "settings": {
     "title": "Ajustes",

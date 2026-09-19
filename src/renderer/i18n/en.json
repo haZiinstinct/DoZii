@@ -147,7 +147,8 @@
     "ocrUsed": "Scanned document - the text was read with text recognition. Please check numbers and names against the original.",
     "ocrPartial": "{{done}} of {{total}} pages could be read with text recognition.",
     "modePickerTitle": "What should DoZii do with it?",
-    "modeRecommended": "Recommended"
+    "modeRecommended": "Recommended",
+    "importIncomplete": "The document was not read completely: {{warning}}"
   },
   "settings": {
     "title": "Settings",

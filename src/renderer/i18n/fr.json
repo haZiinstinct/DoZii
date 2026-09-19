@@ -147,7 +147,8 @@
     "ocrUsed": "Document numérisé - le texte a été lu par reconnaissance de caractères. Vérifie les chiffres et les noms sur l'original.",
     "ocrPartial": "Sur {{total}} pages, {{done}} ont pu être lues par reconnaissance de caractères.",
     "modePickerTitle": "Qu'est-ce que DoZii doit en faire ?",
-    "modeRecommended": "Recommandé"
+    "modeRecommended": "Recommandé",
+    "importIncomplete": "Le document n’a pas été lu en entier : {{warning}}"
   },
   "settings": {
     "title": "Paramètres",

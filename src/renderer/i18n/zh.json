@@ -146,7 +146,8 @@
     "ocrUsed": "这是扫描件 — 文本是通过文字识别读出来的。数字和姓名请对照原件再核对一遍。",
     "ocrPartial": "共 {{total}} 页，其中 {{done}} 页通过文字识别读取成功。",
     "modePickerTitle": "要让 DoZii 用它做什么？",
-    "modeRecommended": "推荐"
+    "modeRecommended": "推荐",
+    "importIncomplete": "该文档未被完整读取：{{warning}}"
   },
   "settings": {
     "title": "设置",

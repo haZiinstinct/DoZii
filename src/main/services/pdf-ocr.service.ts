@@ -8,6 +8,9 @@ import { OCR_MAX_PAGES, OCR_MIN_IMAGE_PIXELS } from '../config/constants'
 
 const SOURCE = 'pdf-ocr.service'
 
+/** Zeilenumbruch zwischen mehreren Bildstreifen derselben Seite. */
+const LINE_BREAK = String.fromCharCode(10)
+
 /** Massstab fuer das Render-Fallback: 1.0 waere ~72 dpi und fuer OCR zu grob. */
 const RENDER_SCALE = 2.0
 
@@ -27,20 +30,15 @@ interface PdfPageImage {
 }
 
 /**
- * Ein Scan besteht aus genau einem grossen Seitenbild; alles Kleinere sind
- * Logos, Unterschriften oder Stempel. Bei mehreren grossen Bildern gewinnt
- * das flaechenmaessig groesste.
+ * Alles unterhalb von OCR_MIN_IMAGE_PIXELS sind Logos, Unterschriften oder
+ * Stempel und werden verworfen. Der Rest wird KOMPLETT erkannt, nicht nur das
+ * groesste Bild: manche Scanner zerlegen eine Seite in mehrere Streifen, und
+ * nur den groessten zu lesen hiesse, den Rest der Seite stillschweigend
+ * wegzuwerfen. Die Reihenfolge ist die des PDF-Inhalts, was bei Streifen-Scans
+ * der Leserichtung entspricht.
  */
-function pickPageImage(images: PdfPageImage[]): PdfPageImage | null {
-  let best: PdfPageImage | null = null
-  let bestArea = 0
-  for (const img of images) {
-    const area = img.width * img.height
-    if (area < OCR_MIN_IMAGE_PIXELS || area <= bestArea) continue
-    best = img
-    bestArea = area
-  }
-  return best
+function pickPageImages(images: PdfPageImage[]): PdfPageImage[] {
+  return images.filter((img) => img.width * img.height >= OCR_MIN_IMAGE_PIXELS)
 }
 
 /** Rohpixel aus dem PDF in einen PNG-Buffer, den Tesseract lesen kann. */
@@ -122,13 +120,16 @@ export async function ocrPdf(
     for (let page = 1; page <= pagesToDo; page++) {
       onProgress?.(page, pagesToDo)
 
-      let png: Buffer | null = null
+      let pngs: Buffer[] = []
       let method: 'embedded-image' | 'rendered' = 'embedded-image'
 
-      // 1. Eingebettetes Seitenbild - der Normalfall bei Scans.
+      // 1. Eingebettete Seitenbilder - der Normalfall bei Scans.
       try {
-        const best = pickPageImage(await extractImages(pdf, page))
-        if (best) png = await rawToPng(best)
+        const candidates = pickPageImages(await extractImages(pdf, page))
+        pngs = []
+        for (const img of candidates) {
+          pngs.push(await rawToPng(img))
+        }
       } catch (err) {
         logger.warn(SOURCE, 'Bildextraktion fehlgeschlagen', {
           page,
@@ -140,10 +141,10 @@ export async function ocrPdf(
       //    '@napi-rs/canvas', das NICHT installiert ist - schlaegt also
       //    erwartbar fehl. Bleibt drin, damit es sofort greift, sobald das
       //    Paket verfuegbar ist, und darf niemals die ganze OCR reissen.
-      if (!png) {
+      if (pngs.length === 0) {
         try {
           const buf = await renderPageAsImage(pdf, page, { scale: RENDER_SCALE })
-          png = Buffer.from(buf)
+          pngs = [Buffer.from(buf)]
           method = 'rendered'
         } catch (err) {
           logger.debug(SOURCE, 'Seiten-Rendering nicht verfügbar', {
@@ -153,16 +154,25 @@ export async function ocrPdf(
         }
       }
 
-      if (!png) {
+      if (pngs.length === 0) {
         skippedPages.push(page)
         continue
       }
 
       try {
-        const tmpPath = join(tmpDir, `page-${page}.png`)
-        await writeFile(tmpPath, png)
-        const { text } = await recognizeImage(tmpPath, languages, quality)
-        if (text.length > 0) pageTexts.push(text)
+        const parts: string[] = []
+        for (let i = 0; i < pngs.length; i++) {
+          const tmpPath = join(tmpDir, `page-${page}-${i}.png`)
+          await writeFile(tmpPath, pngs[i])
+          const { text } = await recognizeImage(tmpPath, languages, quality)
+          if (text.length > 0) parts.push(text)
+          // Temp-Datei sofort wieder weg: bei 40 Seiten in hoher Aufloesung
+          // summieren sich die PNGs sonst auf hunderte Megabyte.
+          await rm(tmpPath, { force: true }).catch(() => {
+            /* wird spaetestens mit dem Verzeichnis entfernt */
+          })
+        }
+        if (parts.length > 0) pageTexts.push(parts.join(LINE_BREAK))
         pagesProcessed++
         if (method === 'embedded-image') usedEmbedded = true
         else usedRendered = true
@@ -172,9 +182,20 @@ export async function ocrPdf(
           page,
           error: err instanceof Error ? err.message : String(err)
         })
+      } finally {
+        // Puffer der Seite freigeben, bevor die naechste geladen wird.
+        pngs = []
       }
     }
   } finally {
+    // pdf.js haelt dekodierte Seiten im Speicher, bis das Dokument zerstoert
+    // wird. Bei 40 Seiten Scan ist das der Unterschied zwischen ein paar
+    // hundert Megabyte und dem Ende des Arbeitsspeichers.
+    await pdf.destroy().catch((err: unknown) => {
+      logger.debug(SOURCE, 'PDF-Proxy konnte nicht zerstoert werden', {
+        error: err instanceof Error ? err.message : String(err)
+      })
+    })
     await rm(tmpDir, { recursive: true, force: true }).catch((err) => {
       logger.warn(SOURCE, 'Temp-Verzeichnis konnte nicht aufgeräumt werden', {
         tmpDir,

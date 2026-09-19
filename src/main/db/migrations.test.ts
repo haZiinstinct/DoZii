@@ -136,6 +136,24 @@ describe('runMigrations', () => {
     db.close()
   })
 
+  it('v4: Import-Hinweis wird am Dokument gespeichert', () => {
+    const db = createLegacyDb()
+    runMigrations(db)
+
+    const columns = db
+      .prepare('PRAGMA table_info(documents)')
+      .all()
+      .map((r) => (r as { name: string }).name)
+    expect(columns).toContain('import_warning')
+
+    db.exec("UPDATE documents SET import_warning = '3 von 20 Seiten fehlen' WHERE id = 'doc-1'")
+    const row = db.prepare("SELECT import_warning FROM documents WHERE id = 'doc-1'").get() as {
+      import_warning: string
+    }
+    expect(row.import_warning).toBe('3 von 20 Seiten fehlen')
+    db.close()
+  })
+
   it('MIGRATIONS sind aufsteigend und lückenlos versioniert', () => {
     MIGRATIONS.forEach((m, i) => {
       expect(m.version).toBe(i + 1)

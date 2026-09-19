@@ -147,7 +147,8 @@
     "ocrUsed": "Gescanntes Dokument - Text wurde per Texterkennung gelesen. Zahlen und Namen bitte am Original prüfen.",
     "ocrPartial": "Von {{total}} Seiten konnten {{done}} per Texterkennung gelesen werden.",
     "modePickerTitle": "Was soll DoZii damit machen?",
-    "modeRecommended": "Empfohlen"
+    "modeRecommended": "Empfohlen",
+    "importIncomplete": "Das Dokument wurde nicht vollständig eingelesen: {{warning}}"
   },
   "settings": {
     "title": "Einstellungen",

@@ -13,6 +13,8 @@ export const documents = sqliteTable('documents', {
   thumbnailPath: text('thumbnail_path'),
   // 0/1 - SQLite kennt kein boolean. true = Text kam aus der Texterkennung.
   ocrUsed: integer('ocr_used').notNull().default(0),
+  // Hinweis aus dem Import, z.B. uebersprungene Seiten bei der Texterkennung.
+  importWarning: text('import_warning'),
   createdAt: text('created_at').notNull(),
   updatedAt: text('updated_at').notNull()
 })

@@ -125,6 +125,12 @@ export interface DoziiDocument {
    * verwechselt Ziffern, und bei einem Bescheid haengt daran viel.
    */
   ocrUsed: boolean
+  /**
+   * Was beim Import nicht geklappt hat, z.B. uebersprungene Seiten bei der
+   * Texterkennung. Wird dem Nutzer angezeigt - ein unvollstaendiges Dokument,
+   * das wie ein vollstaendiges aussieht, waere schlimmer als eine Fehlermeldung.
+   */
+  importWarning: string | null
   createdAt: string
   updatedAt: string
 }
