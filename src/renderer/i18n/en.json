@@ -210,8 +210,6 @@
       "gemma4:12b": "Best results in our tests: reference grades and deadlines without a single error. For graphics cards from 10 GB.",
       "granite4.1:3b": "The smallest download. Less accurate than Qwen 3 (4B) on grades and deadlines – only pick it if space is really tight.",
       "granite4.1:8b": "Finds the most critical contract clauses. Needs a graphics card – on the CPU a reference takes about twenty minutes.",
-      "llama3.2:3b": "Only for the simple modes. Too small for the reference decoder and contract check – those produce contradictory grades.",
-      "qwen2.5:7b": "Proven and versatile, but with 32K the smallest context window here – long contracts get split up.",
       "qwen3:4b": "Most reliable at finding deadlines in our tests and judges contract risk correctly. Small enough for a laptop."
     },
     "accessibility": "Display & Accessibility",

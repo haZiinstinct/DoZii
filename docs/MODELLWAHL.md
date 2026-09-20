@@ -18,6 +18,30 @@ zur Zeit. Die Eval-Suiten liegen unter `eval/`, gestartet mit
 `granite4.1:3b`, `gemma3:4b`, `qwen2.5:7b` und `llama3.2:3b` bleiben wählbar, werden aber
 nicht mehr empfohlen. Eine Stufe für Riesenmodelle führt DoZii bewusst nicht.
 
+## Gibt es einen Boden unter qwen3:4b?
+
+Nein. Gemessen, weil Rechner mit 4 bis 6 GB RAM sonst ein Modell empfohlen bekommen, das
+die App selbst als zu gross markiert:
+
+| Modell | Größe | Note | Halluzination | Fristen Recall / Precision |
+| --- | --- | --- | --- | --- |
+| qwen3:1.7b | 1,4 GB | 1,83 · 3 von 6 | **40 %** | 57,1 % / 80 % |
+| llama3.2:3b | 2,0 GB | 1,33 · 4 von 6 | **50 %** | 42,9 % / 50 % |
+| granite4.1:3b | 2,1 GB | 1,17 · 4 von 6 | 31 % | 42,9 % |
+| **qwen3:4b** | 2,5 GB | **0,33 · 6 von 6** | **10 %** | **100 % / 100 %** |
+
+`qwen3:1.7b` erfindet zwei von fünf Belegzitaten. `llama3.2:3b` die Hälfte, und es dichtet
+dem Bescheid ohne Rechtsbehelfsbelehrung eine Frist an — dessen `heavyModeCapable: false`
+stand bis dahin als ungeprüfte Annahme im Katalog und ist damit bestätigt. Beide sind
+nicht mehr im Katalog, ebenso wenig `qwen2.5:7b` (32K Kontext, von 2024, durch
+granite4.1:8b in jeder Hinsicht ersetzt).
+
+Die Folge für schwache Rechner: Es gibt nichts Besseres als `qwen3:4b`, also wird es auch
+dort empfohlen — und der RAM-Hinweis **warnt**, statt den Download zu sperren. Die 8 GB
+sind eine Komfortschätzung (Modellgröße mal zwei, mindestens 8), kein hartes Limit: 2,5 GB
+Modell laufen auf einem 6-GB-Rechner. Gesperrt wurde vorher ausgerechnet das Modell, das
+dieselbe App demselben Rechner als Empfehlung anzeigte.
+
 ## Die Leitlinie
 
 Das schwächste Modell muss **alle** Funktionen bedienen können. Ein schwacher Rechner soll
