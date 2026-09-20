@@ -42,6 +42,15 @@ export function getOllamaUrl(): string {
  * net.fetch aus Electron kennt dieses Zeitlimit nicht und braucht keine
  * zusaetzliche Abhaengigkeit. Es steht erst nach app.whenReady bereit -
  * der Client wird ohnehin erst beim ersten Gebrauch gebaut.
+ *
+ * Dass die ollama-Bibliothek mit net.fetch ueberhaupt zurechtkommt, laesst
+ * sich aus Vitest heraus NICHT pruefen - net.fetch gibt es nur innerhalb
+ * von Electron. Deshalb scripts/netfetch-probe.cjs: startet ein echtes
+ * Electron ohne Fenster und macht beide Aufrufarten, die hier vorkommen.
+ * Nachgewiesen fuer 1.3.8 - list() liefert, chat({stream:true}) liefert 40
+ * Stuecke in 5 s. Wer an dieser Zeile etwas aendert, sollte es erneut
+ * laufen lassen, denn dieser Aufruf haengt an allen elf Aufrufstellen: faellt
+ * er aus, ist nicht der CPU-Pfad kaputt, sondern die ganze App.
  */
 function getClient(): Ollama {
   const host = getOllamaUrl()
