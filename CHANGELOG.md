@@ -3,6 +3,22 @@
 Alle nennenswerten Änderungen an DoZii werden in dieser Datei dokumentiert.
 Das Format orientiert sich an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [1.3.7] – 2026-09-20
+
+### Behoben
+
+- **Lange Dokumente brachen auf Rechnern ohne Grafikkarte ab** – Node beendet eine nicht
+  gestreamte Antwort, wenn nach fünf Minuten noch keine Kopfzeilen da sind. Genau so lange
+  dauert auf der CPU ein Abschnitt eines langen Vertrags: bei rund zehn Token pro Sekunde
+  und einigen tausend Tokens Antwort sind das 200 bis 500 Sekunden. Statt eines Ergebnisses
+  erschien „fetch failed".
+
+  Betroffen war die Abschnitts-Analyse langer Dokumente — und zwar ausgerechnet auf der
+  schwachen Hardware, für die DoZii gedacht ist. Auf einer Grafikkarte tritt der Fehler
+  nie auf, weil derselbe Abschnitt dort zwanzig Sekunden braucht; deshalb ist er bis jetzt
+  niemandem aufgefallen. Diese Aufrufe streamen nun ebenfalls, dann kommen die Kopfzeilen
+  sofort und kein Zeitlimit greift mehr
+
 ## [1.3.6] – 2026-09-20
 
 ### Hinzugefügt
