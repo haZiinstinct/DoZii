@@ -209,7 +209,6 @@
     "strengths": {
       "gemma4:12b": "Beste Ergebnisse im Test: Zeugnisnoten und Fristen fehlerfrei. Für Grafikkarten ab 10 GB.",
       "granite4.1:3b": "Der kleinste Download. Ungenauer als Qwen 3 (4B) bei Note und Fristen – nimm es nur, wenn der Platz wirklich knapp ist.",
-      "granite4.1:8b": "Findet die meisten kritischen Vertragsklauseln. Braucht eine Grafikkarte – auf der CPU dauert ein Zeugnis rund zwanzig Minuten.",
       "qwen3:4b": "Erkennt Fristen am zuverlässigsten im Test und schätzt das Vertragsrisiko richtig ein. Klein genug für einen Laptop."
     },
     "accessibility": "Darstellung & Barrierefreiheit",
