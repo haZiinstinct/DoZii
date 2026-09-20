@@ -1,5 +1,5 @@
-import { lazy, Suspense, useEffect } from 'react'
-import { HashRouter, Routes, Route } from 'react-router-dom'
+import { lazy, Suspense, useEffect, useState } from 'react'
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { Loader2 } from 'lucide-react'
 import i18n from 'i18next'
 import { MainLayout } from './components/layout/MainLayout'
@@ -35,6 +35,19 @@ function RouteFallback() {
 }
 
 export function App() {
+  /*
+   * Erststart-Weiche.
+   *
+   * Der Willkommens-Assistent existierte seit jeher, aber niemand navigierte
+   * je dorthin - 216 Zeilen Onboarding, die kein Nutzer gesehen hat. Wer
+   * DoZii zum ersten Mal oeffnete, landete direkt auf der Hochlade-Seite,
+   * ohne Ollama und ohne Modell.
+   *
+   * null = noch nicht geprueft. Solange wird nichts gerendert, sonst blitzt
+   * die Hochlade-Seite fuer einen Moment auf, bevor umgeleitet wird.
+   */
+  const [firstLaunchDone, setFirstLaunchDone] = useState<boolean | null>(null)
+
   // Persistierte UI-Sprache laden und auf i18n + Schreibrichtung anwenden.
   useEffect(() => {
     // Richtung fuer die Default-Sprache sofort setzen (vermeidet RTL-Flackern).
@@ -45,19 +58,35 @@ export function App() {
         if (s.language && s.language !== i18n.language) void switchLanguage(s.language)
         if (s.language) applyLanguageDirection(s.language)
         applyAppearance(s.fontScale, s.highContrast)
+        setFirstLaunchDone(s.firstLaunchDone)
       })
       .catch(() => {
-        /* Default-Sprache bleibt aktiv */
+        // Einstellungen nicht lesbar: lieber die App zeigen als jemanden im
+        // Assistenten festhalten.
+        setFirstLaunchDone(true)
       })
   }, [])
+
+  if (firstLaunchDone === null) return <RouteFallback />
 
   return (
     <HashRouter>
       <Suspense fallback={<RouteFallback />}>
         <Routes>
-          <Route path="/welcome" element={<WelcomeWizard />} />
+          <Route
+            path="/welcome"
+            element={<WelcomeWizard onDone={() => setFirstLaunchDone(true)} />}
+          />
           <Route element={<MainLayout />}>
-            <Route path="/" element={<UploadPage />} />
+            {/*
+              Beim allerersten Start zuerst durch den Assistenten. Danach
+              setzt er firstLaunchDone und meldet es hier hoch - sonst wuerde
+              diese Weiche ihn sofort wieder zurueckwerfen.
+            */}
+            <Route
+              path="/"
+              element={firstLaunchDone ? <UploadPage /> : <Navigate to="/welcome" replace />}
+            />
             <Route path="/document/:id" element={<DocumentViewPage />} />
             <Route path="/analysis" element={<AnalysisPage />} />
             <Route path="/history" element={<HistoryPage />} />

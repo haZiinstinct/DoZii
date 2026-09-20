@@ -13,10 +13,11 @@ import {
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import type { HardwareInfo } from '@shared/types'
+import { findModel } from '@shared/model-catalog'
 
 type OllamaState = 'checking' | 'connected' | 'installed-not-running' | 'not-installed'
 
-export function WelcomeWizard() {
+export function WelcomeWizard({ onDone }: { onDone?: () => void }) {
   const navigate = useNavigate()
   const { t } = useTranslation()
   const [hardware, setHardware] = useState<HardwareInfo | null>(null)
@@ -24,6 +25,11 @@ export function WelcomeWizard() {
   const [scanning, setScanning] = useState(true)
   const [starting, setStarting] = useState(false)
   const [startError, setStartError] = useState<string | null>(null)
+  /** null = noch nicht geprueft (Ollama war nicht erreichbar). */
+  const [modelInstalled, setModelInstalled] = useState<boolean | null>(null)
+  const [pulling, setPulling] = useState(false)
+  const [pullPercent, setPullPercent] = useState(0)
+  const [pullError, setPullError] = useState<string | null>(null)
 
   const refreshOllama = async (): Promise<OllamaState> => {
     const [status, installation] = await Promise.all([
@@ -35,15 +41,51 @@ export function WelcomeWizard() {
     return 'not-installed'
   }
 
+  /** Liegt das empfohlene Modell schon lokal? */
+  const refreshModel = async (recommended: string): Promise<void> => {
+    try {
+      const models = await window.api.ollama.listModels()
+      const wanted = recommended.replace(/:latest$/, '')
+      setModelInstalled(models.some((m) => m.name.replace(/:latest$/, '') === wanted))
+    } catch {
+      setModelInstalled(null)
+    }
+  }
+
   useEffect(() => {
     async function scan() {
       const [hw, ollama] = await Promise.all([window.api.hardware.detect(), refreshOllama()])
       setHardware(hw)
       setOllamaState(ollama)
+      if (ollama === 'connected') await refreshModel(hw.recommendedModel)
       setScanning(false)
     }
     scan()
   }, [])
+
+  // Fortschritt des Downloads. Ollama meldet completed/total in Bytes.
+  useEffect(() => {
+    return window.api.ollama.onPullProgress((p) => {
+      if (p.total && p.total > 0 && typeof p.completed === 'number') {
+        setPullPercent(Math.min(100, Math.round((p.completed / p.total) * 100)))
+      }
+    })
+  }, [])
+
+  const handlePullModel = async (): Promise<void> => {
+    if (!hardware) return
+    setPulling(true)
+    setPullError(null)
+    setPullPercent(0)
+    try {
+      await window.api.ollama.pullModel(hardware.recommendedModel)
+      await refreshModel(hardware.recommendedModel)
+    } catch (err) {
+      setPullError(err instanceof Error ? err.message : t('welcome.modelFailed'))
+    } finally {
+      setPulling(false)
+    }
+  }
 
   const handleStartOllama = async () => {
     setStarting(true)
@@ -68,6 +110,7 @@ export function WelcomeWizard() {
 
   const handleContinue = async () => {
     await window.api.settings.update({ firstLaunchDone: true })
+    onDone?.()
     navigate('/')
   }
 
@@ -200,10 +243,63 @@ export function WelcomeWizard() {
             {startError && <p className="text-xs text-brand-red">{startError}</p>}
           </div>
 
+          {/*
+            Der eigentliche Abgrund beim Erststart: Ollama laeuft, aber es
+            ist kein Modell da - und die App kann trotzdem nichts. Deshalb
+            steht der Download hier und nicht erst in den Einstellungen.
+          */}
+          {ollamaState === 'connected' && hardware && modelInstalled === false && (
+            <div className="space-y-2 rounded-xl border border-brand-border bg-brand-card/40 px-4 py-3">
+              <p className="text-sm text-brand-text">
+                {t('welcome.modelMissing', {
+                  model: hardware.recommendedModel,
+                  size: findModel(hardware.recommendedModel)?.sizeGb ?? '?'
+                })}
+              </p>
+              <p className="text-xs text-brand-text-dim">{t('welcome.modelOnce')}</p>
+
+              {pulling ? (
+                <div className="space-y-1">
+                  <div className="h-1.5 overflow-hidden rounded-full bg-brand-darker">
+                    <div
+                      className="h-full bg-brand-cyan transition-all duration-300"
+                      style={{ width: `${pullPercent}%` }}
+                    />
+                  </div>
+                  <p className="text-xs text-brand-text-dim">
+                    {t('welcome.modelLoading', { percent: pullPercent })}
+                  </p>
+                </div>
+              ) : (
+                <button
+                  onClick={handlePullModel}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl border border-brand-cyan/30 bg-brand-cyan/10 px-4 py-3 text-sm font-semibold text-brand-cyan transition-all hover:bg-brand-cyan/20"
+                >
+                  <Download size={14} aria-hidden="true" />
+                  {t('welcome.modelDownload')}
+                </button>
+              )}
+
+              {pullError && <p className="text-xs text-brand-red">{pullError}</p>}
+            </div>
+          )}
+
+          {ollamaState === 'connected' && modelInstalled === true && (
+            <p className="text-center text-xs text-brand-green">{t('welcome.modelReady')}</p>
+          )}
+
           {/* Continue button */}
+          {/*
+            Wer ohne Modell weitergeht, soll wissen, was ihn erwartet -
+            statt auf einer Seite zu landen, die nichts tut.
+          */}
+          {!scanning && modelInstalled !== true && (
+            <p className="text-center text-xs text-brand-amber">{t('welcome.continueWithout')}</p>
+          )}
+
           <button
             onClick={handleContinue}
-            disabled={scanning}
+            disabled={scanning || pulling}
             className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand-cyan px-8 py-4 text-lg font-semibold text-brand-dark transition-all duration-200 hover:bg-brand-cyan-dim hover:shadow-[0_0_40px_rgba(0,212,255,0.3)] disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {t('welcome.continue')}
