@@ -439,6 +439,13 @@ export function ArbeitszeugnisDecoder({ result, documentText }: Props): React.Re
         <FormelCheck documentText={documentText} contentGrade={result.contentGrade.grade} />
       )}
 
+      {/*
+        Haftungshinweis. Die Fristen und die Briefe hatten ihn laengst, die
+        Note nicht - ausgerechnet die Aussage, mit der jemand zum Arbeitgeber
+        geht.
+      */}
+      <p className="text-xs leading-relaxed text-brand-text-dim">{t('results.az.disclaimer')}</p>
+
       <div className="flex items-center gap-2 text-xs text-brand-text-dim">
         <span className="rounded-lg border border-brand-border bg-brand-darker/60 px-2 py-0.5 font-mono text-[10px] uppercase">
           {result.documentType}

@@ -386,7 +386,8 @@
       "formelBetter": "Careful: the grade above is {{grade}}, but the wording only supports grade {{formel}}. A reference is never better than its standard phrase – the assessment is wrong here.",
       "formelAmbiguous": "The text contains several satisfaction phrases with different grades. While that is the case, no grade can be derived from them.",
       "formelHint": "Computed without AI – fixed reference wording",
-      "formelMissing": "The text contains none of the customary satisfaction phrases. Either this is not a work reference, or it is a simple reference without an assessment. The grade above therefore rests on the model’s judgement alone – treat it with caution."
+      "formelMissing": "The text contains none of the customary satisfaction phrases. Either this is not a work reference, or it is a simple reference without an assessment. The grade above therefore rests on the model’s judgement alone – treat it with caution.",
+      "disclaimer": "This grade is an assessment, not legal advice. It follows the customary reference wording – only proper counsel can tell you how your reference would hold up."
     },
     "plain": {
       "headline": "The most important part",
@@ -440,7 +441,8 @@
         "ueberstundenPauschal": "All overtime covered by the salary",
         "verlaengerungZuLang": "Automatic renewal for a full year",
         "wettbewerbOhneKarenz": "Non-compete without compensation"
-      }
+      },
+      "disclaimer": "This check is not legal advice. It points out known pitfalls – whether a clause is valid in your case is ultimately decided by a court."
     },
     "letter": {
       "notice": "Note",
@@ -523,5 +525,17 @@
     "explain": "What does that mean?",
     "close": "Close",
     "hint": "DoZii explains underlined words - just click them."
+  },
+  "diagnostics": {
+    "copied": "Copied",
+    "copy": "Copy",
+    "create": "Create diagnostic report",
+    "creating": "creating …",
+    "desc": "If something is not working: this report shows what hardware DoZii runs on and which errors occurred last. It makes the problem reproducible.",
+    "privacyNote": "DoZii sends nothing on its own. You see the whole report before deciding whether to pass it on – document contents and file names are not in it.",
+    "report": "Report on GitHub",
+    "save": "Save as file",
+    "saved": "Saved: {{path}}",
+    "title": "Diagnostic report"
   }
 }

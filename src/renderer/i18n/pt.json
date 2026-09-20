@@ -386,7 +386,8 @@
       "formelBetter": "Atenção: acima está a nota {{grade}}, mas a redacção só permite a nota {{formel}}. Um certificado nunca é melhor do que a sua fórmula padrão – a avaliação erra aqui.",
       "formelAmbiguous": "O texto contém várias fórmulas de satisfação com notas diferentes. Enquanto assim for, não é possível deduzir uma nota.",
       "formelHint": "Calculado sem IA – linguagem fixa de certificados",
-      "formelMissing": "O texto não contém nenhuma das fórmulas de satisfação habituais. Ou não é um certificado de trabalho, ou é um certificado simples sem avaliação. A nota acima assenta assim apenas no juízo do modelo – use-a com cautela."
+      "formelMissing": "O texto não contém nenhuma das fórmulas de satisfação habituais. Ou não é um certificado de trabalho, ou é um certificado simples sem avaliação. A nota acima assenta assim apenas no juízo do modelo – use-a com cautela.",
+      "disclaimer": "A nota é uma estimativa, não aconselhamento jurídico. Baseia-se nas fórmulas habituais; só uma consulta dirá se o seu certificado se sustentaria."
     },
     "plain": {
       "headline": "O mais importante",
@@ -440,7 +441,8 @@
         "ueberstundenPauschal": "Todas as horas extra incluídas no salário",
         "verlaengerungZuLang": "Renovação automática por um ano inteiro",
         "wettbewerbOhneKarenz": "Cláusula de não concorrência sem compensação"
-      }
+      },
+      "disclaimer": "Esta análise não é aconselhamento jurídico. Aponta armadilhas conhecidas; a validade de uma cláusula no seu caso cabe a um tribunal."
     },
     "letter": {
       "notice": "Nota",
@@ -523,5 +525,17 @@
     "explain": "O que quer isto dizer?",
     "close": "Fechar",
     "hint": "O DoZii explica-lhe as palavras sublinhadas - clique nelas."
+  },
+  "diagnostics": {
+    "copied": "Copiado",
+    "copy": "Copiar",
+    "create": "Criar relatório de diagnóstico",
+    "creating": "a criar …",
+    "desc": "Se algo não funciona: este relatório mostra em que hardware o DoZii corre e que erros ocorreram por último. Permite reproduzir o problema.",
+    "privacyNote": "O DoZii não envia nada por si. Vê o relatório completo antes de decidir se o partilha – não contém conteúdos de documentos nem nomes de ficheiros.",
+    "report": "Reportar no GitHub",
+    "save": "Guardar como ficheiro",
+    "saved": "Guardado: {{path}}",
+    "title": "Relatório de diagnóstico"
   }
 }

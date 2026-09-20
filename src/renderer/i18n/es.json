@@ -386,7 +386,8 @@
       "formelBetter": "Atención: arriba figura la nota {{grade}}, pero la redacción solo da para la nota {{formel}}. Un certificado nunca es mejor que su fórmula estándar; aquí la valoración se equivoca.",
       "formelAmbiguous": "El texto contiene varias fórmulas de satisfacción con notas distintas. Mientras sea así, no puede deducirse ninguna nota.",
       "formelHint": "Calculado sin IA: lenguaje fijo de certificados",
-      "formelMissing": "El texto no contiene ninguna de las fórmulas de satisfacción habituales. O no es un certificado laboral, o es un certificado simple sin valoración. La nota de arriba se basa entonces solo en el criterio del modelo: tómala con cautela."
+      "formelMissing": "El texto no contiene ninguna de las fórmulas de satisfacción habituales. O no es un certificado laboral, o es un certificado simple sin valoración. La nota de arriba se basa entonces solo en el criterio del modelo: tómala con cautela.",
+      "disclaimer": "La nota es una estimación, no asesoramiento jurídico. Se basa en las fórmulas habituales; solo un asesor puede decirte si tu certificado se sostendría."
     },
     "plain": {
       "headline": "Lo más importante",
@@ -440,7 +441,8 @@
         "ueberstundenPauschal": "Todas las horas extra incluidas en el sueldo",
         "verlaengerungZuLang": "Prórroga automática por un año entero",
         "wettbewerbOhneKarenz": "Pacto de no competencia sin compensación"
-      }
+      },
+      "disclaimer": "Esta revisión no es asesoramiento jurídico. Señala trampas conocidas; si una cláusula es válida en tu caso lo decide un tribunal."
     },
     "letter": {
       "notice": "Aviso",
@@ -523,5 +525,17 @@
     "explain": "¿Qué significa esto?",
     "close": "Cerrar",
     "hint": "DoZii te explica las palabras subrayadas: haz clic en ellas."
+  },
+  "diagnostics": {
+    "copied": "Copiado",
+    "copy": "Copiar",
+    "create": "Crear informe de diagnóstico",
+    "creating": "creándolo …",
+    "desc": "Si algo no funciona: este informe muestra en qué hardware se ejecuta DoZii y qué errores ocurrieron últimamente. Permite reproducir el problema.",
+    "privacyNote": "DoZii no envía nada por su cuenta. Ves el informe completo antes de decidir si lo compartes: no contiene contenidos de documentos ni nombres de archivo.",
+    "report": "Informar en GitHub",
+    "save": "Guardar como archivo",
+    "saved": "Guardado: {{path}}",
+    "title": "Informe de diagnóstico"
   }
 }

@@ -142,6 +142,14 @@ export const api = {
   },
 
   // Logs
+  diagnostics: {
+    create: (): Promise<string> => ipcRenderer.invoke('diagnostics:create'),
+    copy: (report: string): Promise<boolean> => ipcRenderer.invoke('diagnostics:copy', report),
+    save: (report: string): Promise<string | null> =>
+      ipcRenderer.invoke('diagnostics:save', report),
+    report: (report: string): Promise<boolean> => ipcRenderer.invoke('diagnostics:report', report)
+  },
+
   logs: {
     write: (level: LogLevel, source: string, message: string, meta?: unknown): Promise<void> =>
       ipcRenderer.invoke('logs:write', level, source, message, meta),
