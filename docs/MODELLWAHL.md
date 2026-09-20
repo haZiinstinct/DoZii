@@ -198,7 +198,7 @@ Modellanalyse nicht, es sichert einen Boden.
 
 ## Tempo
 
-Identischer Prompt, Token pro Sekunde:
+### Kurzer Prompt, Token pro Sekunde
 
 | Modell | GPU Ausgabe / Prompt | CPU Ausgabe / Prompt |
 | --- | --- | --- |
@@ -208,16 +208,53 @@ Identischer Prompt, Token pro Sekunde:
 | granite4.1:8b | 59,9 / 361 | 5,1 / 49 |
 | gemma4:12b | 17,3 / 90 (unplausibel, siehe unten) | 4,2 / 36 |
 
-Ein Arbeitszeugnis sind rund 4000 Token hinein und, mit dem zweiten Prüfdurchlauf, gut
-5000 hinaus. Auf der CPU heißt das:
+### Echtes Arbeitszeugnis, ganzer Durchlauf
 
-- 3B/4B: gut eine Minute pro Zeugnis, zwei bis drei Minuten pro Vertrag — zumutbar
-- 8B: rund neunzehn Minuten pro Zeugnis, eine halbe Stunde pro Vertrag — nicht zumutbar
+Die Tabelle oben misst einen kurzen Prompt. Das ist nicht die Arbeit, die DoZii macht,
+und der Unterschied ist groß genug, dass die daraus abgeleiteten Zeiten falsch waren.
+Deshalb dasselbe noch einmal mit einem echten Zeugnis, `qwen3:4b`, `num_gpu: 0`,
+`num_ctx: 12288`:
 
-Daher gilt: **ohne brauchbare Grafikkarte höchstens die leichte Stufe**, unabhängig davon,
-wie viel Arbeitsspeicher der Rechner hat (`determineProfile` in
-`src/shared/hardware-profile.ts`). Vorher bekam ein Rechner mit 32 GB RAM und ohne Karte
-das 8B empfohlen.
+| | |
+| --- | --- |
+| Prompt | 5216 Token in 72 s (72 Token/s) |
+| Ausgabe | 7220 Token in 1338 s (**5,4 Token/s**) |
+| Gesamt | **1414 s, rund 24 Minuten** |
+
+Die Ausgabe ist damit nur halb so schnell wie im kurzen Test — bei 12288 Kontext muss
+jedes Token über mehrere tausend vorherige hinwegsehen, und genau das kostet auf der CPU.
+Wer aus einem kurzen Prompt hochrechnet, unterschätzt die Laufzeit um den Faktor zwei;
+wer zusätzlich die Ausgabelänge unterschätzt, um deutlich mehr. Eine frühere Fassung
+dieses Dokuments nannte hier „gut eine Minute pro Zeugnis". Das war um mehr als den
+Faktor zwanzig daneben.
+
+Dazu kommt die Ladezeit. Zwei Läufe auf derselben Maschine:
+
+- Modelldatei im Dateicache: erste Antwortkopfzeile nach **76 s**
+- Modelldatei kalt von der Platte: nach **250 s**
+
+Der zweite Fall ist der Normalfall nach dem Hochfahren — und er liegt vier Sekunden unter
+dem Fünf-Minuten-Limit von Nodes `fetch`. Das erklärt, warum der CPU-Pfad mal lief und
+mal mit „fetch failed" abbrach; siehe `getClient()` in
+`src/main/services/ollama-client.service.ts`.
+
+### Was daraus folgt
+
+**Ohne brauchbare Grafikkarte höchstens die leichte Stufe**, unabhängig davon, wie viel
+Arbeitsspeicher der Rechner hat (`determineProfile` in `src/shared/hardware-profile.ts`).
+Vorher bekam ein Rechner mit 32 GB RAM und ohne Karte das 8B empfohlen — das wäre nach
+dem Verhältnis der kurzen Tests (5,1 gegen 10,6) noch einmal rund doppelt so langsam,
+also etwa eine Dreiviertelstunde pro Zeugnis. Diese Zahl ist hochgerechnet, nicht
+gemessen; gemessen ist nur, dass schon die leichte Stufe 24 Minuten braucht.
+
+Ehrlich bleibt damit: **reiner CPU-Betrieb ist benutzbar, aber nicht angenehm.** Ein
+Zeugnis ist eine Kaffeepause, kein Knopfdruck. Die Alternative wäre, den CPU-Pfad ganz zu
+sperren — dann bliebe der, der keine Karte hat, mit seinem Bescheid allein. Deshalb
+bleibt er drin, und deshalb sagt die App vorher, woran sie ist.
+
+Gemessen auf einer Maschine mit Grafikkarte, bei der die Karte per `num_gpu: 0`
+abgeschaltet wurde. Ein Rechner, der nie eine hatte, kann langsamer oder schneller sein —
+genau dafür gibt es den Diagnosebericht.
 
 Der GPU-Wert für gemma4:12b widerspricht den Eval-Laufzeiten — dort lag gemma4 bei den
 Fristen sogar vor dem 8B. Vermutlich war das 8,4-GB-Modell während dieser einen Messung

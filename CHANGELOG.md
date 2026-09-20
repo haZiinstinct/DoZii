@@ -30,6 +30,25 @@ Das Format orientiert sich an [Keep a Changelog](https://keepachangelog.com/de/1
   erfunden, und es findet nur **42,9 % der Fristen** statt 100 %. Für wen wäre das der
   richtige Tausch? Für niemanden — also steht es auch nicht mehr zur Wahl
 
+- **Die App sagt jetzt, wie lange der CPU-Betrieb wirklich dauert** – bisher stand in den
+  Einstellungen „läuft ohne dedizierte Grafikkarte, nur RAM wird gebraucht" und beim
+  großen Modell „läuft sonst auf CPU-Fallback langsamer". Beides ist nach der Nachmessung
+  nicht mehr haltbar.
+
+  Ein echtes Arbeitszeugnis durch `qwen3:4b` ohne Grafikkarte, `num_ctx` 12288: 5216
+  Prompt-Token in 72 s, 7220 Ausgabe-Token in 1338 s — **zusammen 24 Minuten**. Die
+  Ausgabe läuft mit 5,4 Token/s, also halb so schnell wie im kurzen Durchsatztest, weil
+  bei vollem Kontext jedes Token über mehrere tausend vorherige hinwegsehen muss.
+
+  Die Doku nannte an dieser Stelle bisher „gut eine Minute pro Zeugnis". Das war aus dem
+  kurzen Test hochgerechnet und um mehr als den Faktor zwanzig daneben. Korrigiert sind
+  `docs/MODELLWAHL.md`, die Begründung in `determineProfile` und die beiden Hinweistexte
+  in allen neun Sprachen.
+
+  An der Entscheidung ändert das nichts — ohne Karte bleibt es bei der leichten Stufe,
+  alles andere wäre noch langsamer. Aber wer 2,5 GB herunterlädt, soll vorher wissen,
+  worauf er wartet
+
 ### Aufgeräumt
 
 - Sieben exportierte Funktionen und Konstanten entfernt, die nirgends mehr aufgerufen

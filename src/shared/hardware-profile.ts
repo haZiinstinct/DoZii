@@ -87,16 +87,20 @@ export function determineProfile(input: ProfileInput, sizes: ProfileModelSizes):
    * Reiner CPU-Betrieb. Mehr Arbeitsspeicher macht ein grosses Modell nicht
    * schnell, nur ladbar - deshalb ist hier bei 'light' Schluss.
    *
-   * Die Grenze ist gemessen, nicht geschaetzt. Auf derselben Maschine:
+   * Die Grenze ist gemessen, nicht geschaetzt. Ein echtes Arbeitszeugnis
+   * durch qwen3:4b, num_gpu 0, num_ctx 12288:
    *
-   *   granite4.1:3b   CPU  11,9 Token/s Ausgabe,  113 Token/s Prompt
-   *   granite4.1:8b   CPU   5,1 Token/s Ausgabe,   49 Token/s Prompt
+   *   Prompt   5216 Token in   72 s  (72 Token/s)
+   *   Ausgabe  7220 Token in 1338 s  (5,4 Token/s)
+   *   Gesamt              rund 24 Minuten
    *
-   * Ein Arbeitszeugnis sind rund 4000 Token hinein und - mit dem zweiten
-   * Pruefdurchlauf - gut 5000 hinaus. Das 3B braucht dafuer auf der CPU etwa
-   * eine Minute, das 8B rund neunzehn; ein Vertrag entsprechend eine halbe
-   * Stunde. Vorher bekam ein Rechner mit 32 GB RAM und ohne Grafikkarte
-   * genau dieses 8B empfohlen.
+   * Das 8B ist im Kurztest halb so schnell wie das 4B (5,1 gegen 10,6
+   * Token/s), also ueber eine Dreiviertelstunde pro Zeugnis - hochgerechnet,
+   * nicht gemessen, aber die Richtung reicht. Vorher bekam ein Rechner mit
+   * 32 GB RAM und ohne Grafikkarte genau dieses 8B empfohlen.
+   *
+   * Auch die leichte Stufe ist auf der CPU keine Freude; sie ist nur das
+   * Einzige, was ueberhaupt in vertretbarer Zeit fertig wird.
    */
   if (ramGb >= 8) return 'light'
   return 'minimal'

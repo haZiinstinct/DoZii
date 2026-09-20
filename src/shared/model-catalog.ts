@@ -128,8 +128,9 @@ export function modelForProfile(profile: HardwareProfile): string {
  *   qwen3:4b         0,33 · 6/6  10 %            100 %
  *
  * Auf der CPU ist granite4.1:3b 12 Prozent schneller (11,9 gegen 10,6
- * Token/s) und 0,4 GB kleiner. Das spart acht Sekunden pro Zeugnis und
- * kostet eine Notenstufe und jede zweite Frist - keine Nische, sondern eine
+ * Token/s im Kurztest) und 0,4 GB kleiner. Ein echtes Zeugnis dauert mit
+ * qwen3:4b gemessen 24 Minuten; 12 Prozent davon sind knapp drei Minuten.
+ * Dafuer eine Notenstufe und jede zweite Frist - keine Nische, sondern eine
  * Falle fuer den, der es waehlt. Deshalb ist es gar nicht mehr im Katalog.
  *
  * qwen3:4b erkennt ausserdem, wie sonst nur gemma4:12b, ein
