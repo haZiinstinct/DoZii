@@ -60,6 +60,31 @@ korrekt ablehnt.
 Deshalb steht es im Katalog als wählbar mit ehrlichem Hinweis, aber ohne Stufe. Wer weiß,
 dass er vor allem Verträge prüft, trifft die Wahl bewusst.
 
+### Die Mitte ist leer, weil dort nichts ist
+
+Vier Kandidaten aus vier verschiedenen Familien, alle in der passenden Größe (4,7 bis
+5,3 GB, also für 8-GB-Karten). Gesiebt wurde an den **Fristen**, weil dort ein Fehler am
+schwersten wiegt:
+
+| Modell | Größe | Fristen: Precision / Recall | |
+| --- | --- | --- | --- |
+| **qwen3:4b** | **2,5 GB** | **100 % / 100 %** | der Boden |
+| qwen3:8b | 4,9 GB | 100 % / 71,4 % | findet zwei von sieben nicht |
+| granite4.1:8b | 5,0 GB | 85,7 % / 85,7 % | erfindet eine Frist |
+| command-r7b | 4,7 GB | 66,7 % / 57,1 % | erfindet ein Zitat |
+| aya-expanse:8b | 4,7 GB | 50 % / 42,9 % | **erfindet eine Frist im Bescheid ohne Frist** |
+
+Keiner erreicht das Modell, das weniger als halb so groß ist. Drei von vieren erfinden
+Fristen oder Belegstellen — der gefährlichste Fehler, den dieses Werkzeug machen kann.
+
+Die Lehre: Modellqualität wächst nicht linear mit der Größe, und für die zwei Aufgaben,
+auf die es hier ankommt — wörtlich belegen und nichts erfinden — ist `qwen3:4b`
+außergewöhnlich gut. Eine mittlere Stufe aufzunehmen, nur damit die Tabelle vollständig
+aussieht, würde 8-GB-Karten schlechter stellen als heute.
+
+**Wer erneut sucht**, sollte an den Fristen sieben (`eval/deadlines.eval.ts`, drei Minuten
+pro Modell) und die anderen Suiten erst danach laufen lassen.
+
 ## Gibt es einen Boden unter qwen3:4b?
 
 Nein. Gemessen, weil Rechner mit 4 bis 6 GB RAM sonst ein Modell empfohlen bekommen, das
