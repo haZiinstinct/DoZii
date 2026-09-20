@@ -24,7 +24,13 @@ win:
     # Portable: laeuft ohne Installation von einem USB-Stick und umgeht damit
     # einen Teil der SmartScreen-Huerde. Kein Auto-Update.
     - portable
-  signAndEditExecutable: false
+  # signAndEditExecutable NICHT auf false setzen: die Option schaltet nicht
+  # nur das Signieren ab, sondern auch das Schreiben der Ressourcen in die
+  # Exe - Icon, Produktname und Version. Die installierte App hiess dann
+  # "Electron", zeigte dessen Symbol und meldete Version 33.4.11.
+  #
+  # Ohne Zertifikat wird ohnehin nicht signiert; electron-builder meldet
+  # "no signing info identified, signing is skipped" und macht weiter.
 
 portable:
   artifactName: DoZii-Portable.${ext}
