@@ -123,14 +123,17 @@ export function modelForProfile(profile: HardwareProfile): string {
  * langsamer sein, nicht schlechter. Gemessen an denselben Zeugnissen,
  * Vertraegen und Bescheiden:
  *
- *                   Note        Vertragsrisiko   Fristen
- *   granite4.1:3b   1,17 · 4/6  1 von 4          42,9 %
- *   qwen3:4b        0,33 · 6/6  4 von 4          100 %
+ *                    Note        Halluzination   Fristen
+ *   granite4.1:3b    1,17 · 4/6  31 %            42,9 %
+ *   qwen3:4b         0,33 · 6/6  10 %            100 %
  *
- * qwen3:4b ist 0,4 GB groesser und auf der CPU gleich schnell (10,6 gegen
- * 11,9 Token/s) - es gibt also keinen Grund, das schwaechere zu empfehlen.
- * Es erkennt ausserdem, wie sonst nur gemma4:12b, ein Kuendigungsschreiben
- * als Nicht-Zeugnis, statt ihm eine Note zu geben.
+ * Auf der CPU ist granite4.1:3b 12 Prozent schneller (11,9 gegen 10,6
+ * Token/s) und 0,4 GB kleiner. Das spart acht Sekunden pro Zeugnis und
+ * kostet eine Notenstufe und jede zweite Frist - keine Nische, sondern eine
+ * Falle fuer den, der es waehlt. Deshalb ist es gar nicht mehr im Katalog.
+ *
+ * qwen3:4b erkennt ausserdem, wie sonst nur gemma4:12b, ein
+ * Kuendigungsschreiben als Nicht-Zeugnis, statt ihm eine Note zu geben.
  */
 export const DEFAULT_MODEL = 'qwen3:4b'
 
@@ -181,21 +184,5 @@ export const MODEL_CATALOG: readonly CatalogModel[] = [
     contextK: 256,
     heavyModeCapable: true,
     cpuFriendly: false
-  },
-  {
-    // Der kleinste Download, der noch alle Modi bedient - bleibt waehlbar,
-    // wird aber nicht empfohlen: Note im Schnitt gut eine Stufe daneben und
-    // knapp ein Drittel der Belegzitate erfunden.
-    //
-    // Darunter gibt es nichts Brauchbares. Gemessen: qwen3:1.7b erfindet
-    // 40 % seiner Zitate, llama3.2:3b sogar 50 % und dichtet dem Bescheid
-    // ohne Rechtsbehelfsbelehrung eine Frist an. Beide deshalb nicht im
-    // Katalog.
-    name: 'granite4.1:3b',
-    displayName: 'Granite 4.1 (3B)',
-    sizeGb: 2.1,
-    contextK: 128,
-    heavyModeCapable: true,
-    cpuFriendly: true
   }
 ]

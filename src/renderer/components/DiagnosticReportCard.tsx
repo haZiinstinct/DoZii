@@ -83,7 +83,14 @@ export function DiagnosticReportCard({
               ) : (
                 <Copy size={14} aria-hidden="true" />
               )}
-              {copied ? t('diagnostics.copied') : t('diagnostics.copy')}
+              {/*
+                Der Wechsel auf "Kopiert" ist eine Rueckmeldung, die nur
+                sichtbar passiert - ohne aria-live bleibt sie fuer
+                Screenreader stumm.
+              */}
+              <span aria-live="polite">
+                {copied ? t('diagnostics.copied') : t('diagnostics.copy')}
+              </span>
             </button>
 
             <button
@@ -104,7 +111,7 @@ export function DiagnosticReportCard({
           </div>
 
           {savedPath && (
-            <p className="break-all text-xs text-brand-green">
+            <p aria-live="polite" className="break-all text-xs text-brand-green">
               {t('diagnostics.saved', { path: savedPath })}
             </p>
           )}

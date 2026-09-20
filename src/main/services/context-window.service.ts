@@ -21,10 +21,6 @@ export type ShowFn = (model: string) => Promise<unknown>
  */
 const cache = new Map<string, number | null>()
 
-export function clearContextLimitCache(): void {
-  cache.clear()
-}
-
 /** Map oder Plain-Object: das SDK typisiert model_info als Map, JSON liefert ein Objekt. */
 function toEntries(value: unknown): [string, unknown][] {
   if (value instanceof Map) return [...value.entries()]

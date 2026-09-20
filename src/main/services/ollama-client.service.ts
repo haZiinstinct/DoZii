@@ -1,5 +1,5 @@
 import { Ollama, type Message } from 'ollama'
-import { BrowserWindow } from 'electron'
+import { BrowserWindow, net } from 'electron'
 import { logger } from './logger.service'
 import { stripThinking } from '@shared/strip-thinking'
 import { getSettings } from './settings.service'
@@ -24,10 +24,29 @@ export function getOllamaUrl(): string {
   }
 }
 
+/**
+ * Electrons Netzwerk-Stack statt Nodes eingebautem fetch.
+ *
+ * Node bricht eine Anfrage ab, wenn nach fuenf Minuten keine Antwortkopf-
+ * zeilen da sind (UND_ERR_HEADERS_TIMEOUT). Ollama sendet die aber erst,
+ * wenn das Modell geladen UND der Prompt verarbeitet ist - und genau das
+ * dauert auf einem Rechner ohne Grafikkarte laenger: gemessen kam bei einem
+ * Arbeitszeugnis (5300 Prompt-Tokens, Kontext 12288) nach 300 Sekunden noch
+ * keine einzige Kopfzeile.
+ *
+ * Streamen allein reicht dagegen nicht, weil das Limit VOR dem ersten Token
+ * greift. Der Zeugnis-Modus war damit auf reinen CPU-Rechnern nicht bloss
+ * langsam, sondern unbenutzbar - auf einer Grafikkarte faellt es nie auf,
+ * weil dort nach wenigen Sekunden Tokens fliessen.
+ *
+ * net.fetch aus Electron kennt dieses Zeitlimit nicht und braucht keine
+ * zusaetzliche Abhaengigkeit. Es steht erst nach app.whenReady bereit -
+ * der Client wird ohnehin erst beim ersten Gebrauch gebaut.
+ */
 function getClient(): Ollama {
   const host = getOllamaUrl()
   if (!client || clientHost !== host) {
-    client = new Ollama({ host })
+    client = new Ollama({ host, fetch: net.fetch as unknown as typeof fetch })
     clientHost = host
     logger.info('ollama-client', 'Ollama-Client verbunden', { host })
   }
@@ -158,20 +177,14 @@ export async function chatOnce(options: {
   incrementActiveStreams()
   try {
     /*
-     * Gestreamt, obwohl der Aufrufer nur den fertigen Text will.
+     * Gestreamt, obwohl der Aufrufer nur den fertigen Text will: so laeuft
+     * die Antwort nicht in ein Zeitlimit zwischen zwei Datenpaketen.
      *
-     * Node bricht eine NICHT gestreamte Antwort ab, wenn nach fuenf Minuten
-     * noch keine Kopfzeilen da sind (UND_ERR_HEADERS_TIMEOUT). Auf einem
-     * Rechner ohne Grafikkarte dauert genau das: ein Abschnitt eines langen
-     * Vertrags braucht bei rund zehn Token pro Sekunde und einigen tausend
-     * Tokens Antwort 200 bis 500 Sekunden. Der Nutzer sah dann "fetch
-     * failed" statt eines Ergebnisses - ausgerechnet auf der schwachen
-     * Hardware, fuer die DoZii gedacht ist. Auf einer Grafikkarte faellt es
-     * nie auf, weil derselbe Abschnitt dort zwanzig Sekunden dauert.
-     *
-     * Beim Streamen kommen die Kopfzeilen sofort und danach laufend Tokens,
-     * damit greift kein Zeitlimit mehr. Zusammengesetzt wird hier; der
-     * Aufrufer merkt keinen Unterschied.
+     * Das eigentliche Problem auf Rechnern ohne Grafikkarte loest das aber
+     * NICHT - Ollama schickt die Antwortkopfzeilen erst, wenn Modell und
+     * Prompt durch sind, und das dauert dort laenger als Nodes fuenf
+     * Minuten. Dagegen hilft nur der Netzwerk-Stack von Electron; siehe
+     * getClient().
      */
     const stream = await withTransientRetry('chatOnce', () =>
       ollama.chat({
