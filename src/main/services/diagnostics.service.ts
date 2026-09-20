@@ -11,7 +11,12 @@ import os from 'os'
 import { app } from 'electron'
 import { readFileSync } from 'fs'
 import { detectHardware } from './hardware-detector.service'
-import { checkOllamaStatus, getOllamaUrl, listModels, listLoadedModels } from './ollama-client.service'
+import {
+  checkOllamaStatus,
+  getOllamaUrl,
+  listModels,
+  listLoadedModels
+} from './ollama-client.service'
 import { getSettings } from './settings.service'
 import { logger } from './logger.service'
 import { usableVramGb } from '@shared/hardware-profile'
