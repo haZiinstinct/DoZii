@@ -9,11 +9,13 @@ import {
   Shield,
   Play,
   Loader2,
-  Download
+  Download,
+  Clock
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import type { HardwareInfo } from '@shared/types'
 import { findModel } from '@shared/model-catalog'
+import { usableVramGb } from '@shared/hardware-profile'
 
 type OllamaState = 'checking' | 'connected' | 'installed-not-running' | 'not-installed'
 
@@ -108,6 +110,12 @@ export function WelcomeWizard({ onDone }: { onDone?: () => void }) {
     }
   }
 
+  /**
+   * Keine Karte, die Ollama beschleunigt. `hardware.profile` taugt dafuer
+   * nicht: 'light' kommt auch bei einer zu kleinen echten Karte heraus.
+   */
+  const cpuOnly = hardware ? usableVramGb(hardware.gpu) === 0 : false
+
   const handleContinue = async () => {
     await window.api.settings.update({ firstLaunchDone: true })
     onDone?.()
@@ -161,14 +169,31 @@ export function WelcomeWizard({ onDone }: { onDone?: () => void }) {
                       {t('settings.ramFree', { n: hardware.ram.freeGb })}
                     </span>
                   </div>
-                  {hardware.gpu && (
+                  {/*
+                    Ohne brauchbare Karte stand hier frueher gar nichts - der
+                    Nutzer sah CPU, RAM, Modell und direkt den Download. Die
+                    Zeile bleibt deshalb stehen und sagt, was Sache ist.
+                  */}
+                  {cpuOnly ? (
                     <div className="flex items-center gap-3">
-                      <Monitor size={16} className="text-brand-cyan" />
-                      <span className="text-sm text-brand-text">{hardware.gpu.name}</span>
-                      <span className="ms-auto text-xs text-brand-text-dim">
-                        {Math.round(hardware.gpu.vramMb / 1024)} GB VRAM
-                      </span>
+                      <Monitor size={16} className="text-brand-amber" />
+                      <span className="text-sm text-brand-text">{t('hardware.runsCpu')}</span>
+                      {hardware.gpu && (
+                        <span className="ms-auto truncate text-xs text-brand-text-dim">
+                          {hardware.gpu.name}
+                        </span>
+                      )}
                     </div>
+                  ) : (
+                    hardware.gpu && (
+                      <div className="flex items-center gap-3">
+                        <Monitor size={16} className="text-brand-cyan" />
+                        <span className="text-sm text-brand-text">{hardware.gpu.name}</span>
+                        <span className="ms-auto text-xs text-brand-text-dim">
+                          {Math.round(hardware.gpu.vramMb / 1024)} GB VRAM
+                        </span>
+                      </div>
+                    )
                   )}
 
                   <div className="mt-4 rounded-xl border border-brand-cyan/20 bg-brand-cyan/5 p-4">
@@ -180,6 +205,29 @@ export function WelcomeWizard({ onDone }: { onDone?: () => void }) {
                       {t('hardware.profile')}: {t(`profile.${hardware.profile}`)}
                     </p>
                   </div>
+
+                  {/*
+                    Die Zahl steht vor dem 2,5-GB-Download, nicht danach. Wer
+                    keine Karte hat, soll wissen, dass ein Zeugnis eine
+                    Kaffeepause ist - gesperrt wird trotzdem nichts.
+                  */}
+                  {cpuOnly && (
+                    <div className="flex items-start gap-2 rounded-xl border border-brand-amber/20 bg-brand-amber/5 p-3">
+                      <Clock
+                        size={12}
+                        className="mt-0.5 flex-shrink-0 text-brand-amber"
+                        aria-hidden="true"
+                      />
+                      <div className="space-y-1">
+                        <p className="text-xs font-medium text-brand-amber">
+                          {t('welcome.cpuOnly')}
+                        </p>
+                        <p className="text-xs leading-relaxed text-brand-text-dim">
+                          {t('welcome.cpuOnlyHint')}
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )
             )}

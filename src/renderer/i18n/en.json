@@ -277,6 +277,8 @@
   "welcome": {
     "continue": "Get started",
     "continueWithout": "Without a model you can add documents but not analyse them yet. You can catch up any time in the settings.",
+    "cpuOnly": "No graphics card detected that DoZii can use.",
+    "cpuOnlyHint": "Measured, a job reference then takes around 24 minutes, plus around four minutes of loading time on the first run after a reboot. Analysis works, it just takes a while.",
     "modelDownload": "Download model now",
     "modelFailed": "Download failed.",
     "modelLoading": "Downloading … {{percent}} %",
