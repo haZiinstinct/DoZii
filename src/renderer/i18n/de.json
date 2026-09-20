@@ -209,7 +209,8 @@
     "strengths": {
       "gemma4:12b": "Beste Ergebnisse im Test: Zeugnisnoten und Fristen fehlerfrei. Für Grafikkarten ab 10 GB.",
       "granite4.1:3b": "Der kleinste Download. Ungenauer als Qwen 3 (4B) bei Note und Fristen – nimm es nur, wenn der Platz wirklich knapp ist.",
-      "qwen3:4b": "Erkennt Fristen am zuverlässigsten im Test und schätzt das Vertragsrisiko richtig ein. Klein genug für einen Laptop."
+      "qwen3:4b": "Erkennt Fristen am zuverlässigsten im Test und schätzt das Vertragsrisiko richtig ein. Klein genug für einen Laptop.",
+      "qwen3:8b": "Stärker bei Noten und Vertragsklauseln als Qwen 3 (4B) – findet aber zwei von sieben Fristen nicht. Nur wählen, wenn es dir vor allem um Verträge geht."
     },
     "accessibility": "Darstellung & Barrierefreiheit",
     "fontScale": "Schriftgröße",
