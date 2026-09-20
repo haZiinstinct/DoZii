@@ -3,6 +3,31 @@
 Alle nennenswerten Änderungen an DoZii werden in dieser Datei dokumentiert.
 Das Format orientiert sich an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [1.3.1] – 2026-09-20
+
+Nachtrag zur Modellauswahl. Gemessen statt geschätzt — die Zahlen stehen in
+`docs/MODELLWAHL.md`.
+
+### Behoben
+
+- **Empfohlenes Modell ließ sich nicht installieren** – ein Rechner mit 6 GB RAM bekam
+  `qwen3:4b` als Empfehlung angezeigt, und derselbe Bildschirm sperrte den Download mit
+  „braucht 8 GB". Die 8 GB sind eine Komfortschätzung (Modellgröße mal zwei, mindestens
+  8), kein hartes Limit: ein 2,5-GB-Modell läuft auf 6 GB. Der Hinweis bleibt, die Sperre
+  ist weg — wie beim Grafikspeicher schon länger. Betroffen war ausgerechnet die
+  Zielgruppe mit schwacher Hardware
+
+### Geändert
+
+- **Modellliste auf vier Einträge** – `llama3.2:3b` und `qwen2.5:7b` sind raus.
+  `llama3.2:3b` erfindet die Hälfte seiner Belegzitate und dichtet einem Bescheid *ohne*
+  Rechtsbehelfsbelehrung eine Frist an, bei praktisch gleicher Größe wie `granite4.1:3b`.
+  `qwen2.5:7b` hat 32K Kontext, ist von 2024 und wird von `granite4.1:8b` in jeder
+  Hinsicht geschlagen
+- **Kein Modell unterhalb von `qwen3:4b`** – geprüft und verworfen: `qwen3:1.7b` (1,4 GB)
+  erfindet zwei von fünf Belegzitaten. Für ein Werkzeug, das jede Aussage mit einem Zitat
+  aus dem Dokument belegt, ist das disqualifizierend
+
 ## [1.3.0] – 2026-09-18
 
 Das große Verständlichkeits-Release. DoZii erklärt Behördenpost jetzt nicht nur, es sagt
