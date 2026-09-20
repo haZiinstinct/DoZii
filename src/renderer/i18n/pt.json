@@ -209,7 +209,6 @@
     "strengths": {
       "gemma4:12b": "Melhores resultados nos nossos testes: notas e prazos sem um único erro. Para placas gráficas a partir de 10 GB.",
       "granite4.1:3b": "O download mais pequeno. Menos preciso do que o Qwen 3 (4B) em notas e prazos – escolha-o só se o espaço for mesmo escasso.",
-      "granite4.1:8b": "Encontra a maioria das cláusulas críticas. Precisa de placa gráfica: no CPU um certificado demora cerca de vinte minutos.",
       "qwen3:4b": "O mais fiável a detetar prazos nos nossos testes e acerta no risco contratual. Cabe num portátil."
     },
     "accessibility": "Apresentação e acessibilidade",

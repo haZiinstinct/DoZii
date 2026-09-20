@@ -3,6 +3,26 @@
 Alle nennenswerten Änderungen an DoZii werden in dieser Datei dokumentiert.
 Das Format orientiert sich an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [1.3.5] – 2026-09-20
+
+### Geändert
+
+- **Die mittlere Modellstufe entfällt** – sie war mit `granite4.1:8b` besetzt. Nachdem alle
+  drei Prüfreihen mit korrektem Kontextfenster neu gemessen wurden, verliert es auf jeder
+  einzelnen gegen `qwen3:4b`, das weniger als halb so groß ist: Zeugnisnote 0,83 gegen
+  0,33, Vertragsklauseln 42,9 % gegen 57,1 %, Fristen 85,7 % gegen 100 %. Dazu benotet es
+  ein Kündigungsschreiben als Arbeitszeugnis, was die anderen beiden korrekt erkennen.
+
+  Wer eine 8-GB-Grafikkarte hat, bekommt deshalb jetzt `qwen3:4b` empfohlen statt eines
+  Modells, das 2,8 GB mehr belegt und nichts besser macht. Empfohlen werden nur noch zwei
+  Modelle: `qwen3:4b` für alles bis 10 GB VRAM, `gemma4:12b` darüber
+
+### Hinweise
+
+- Die Vertragszahlen aus den vorherigen Versionen waren zu niedrig: Sie stammten aus Läufen
+  mit zu kleinem Kontextfenster. `gemma4:12b` steigt damit von 57,1 % auf **100 %** der
+  kritischen Klauseln, `qwen3:4b` von 42,9 % auf 57,1 %. Die Fristen waren nie betroffen
+
 ## [1.3.4] – 2026-09-20
 
 ### Behoben

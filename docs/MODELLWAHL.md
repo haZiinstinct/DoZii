@@ -11,12 +11,32 @@ zur Zeit. Die Eval-Suiten liegen unter `eval/`, gestartet mit
 
 | Stufe | Modell | wofür |
 | --- | --- | --- |
-| minimal / leicht | **qwen3:4b** (2,5 GB) | der Boden: läuft ohne Grafikkarte, beste Fristen im Feld |
-| mittel | **granite4.1:8b** (5,3 GB) | findet die meisten Vertragsklauseln, braucht eine Karte |
+| minimal / leicht | **qwen3:4b** (2,5 GB) | der Boden: läuft ohne Grafikkarte |
+| mittel | *(leer)* | siehe unten |
 | stark | **gemma4:12b** (7,6 GB) | beste Ergebnisse überhaupt, ab 10 GB VRAM |
 
-`granite4.1:3b`, `gemma3:4b`, `qwen2.5:7b` und `llama3.2:3b` bleiben wählbar, werden aber
-nicht mehr empfohlen. Eine Stufe für Riesenmodelle führt DoZii bewusst nicht.
+`granite4.1:3b` bleibt als kleinster Download wählbar, wird aber nicht empfohlen.
+Eine Stufe für Riesenmodelle führt DoZii bewusst nicht.
+
+### Warum die Mitte leer ist
+
+Sie war mit `granite4.1:8b` besetzt — bis alle drei Suiten mit korrektem Kontextfenster
+neu gemessen wurden:
+
+| | Zeugnis | Verträge | Fristen |
+| --- | --- | --- | --- |
+| **qwen3:4b** (2,5 GB) | **0,33 · 6/6** | **57,1 % · 3/4** | **100 %** |
+| granite4.1:8b (5,3 GB) | 0,83 · 5/6 | 42,9 % · 2/4 | 85,7 %, eine erfundene Frist |
+| **gemma4:12b** (7,6 GB) | **0,00 · 6/6** | **100 % · 4/4** | **100 %** |
+
+Das 8B verliert auf **jeder** Suite gegen ein Modell von weniger als halber Größe und
+benotet zusätzlich ein Kündigungsschreiben als Zeugnis — was die beiden anderen korrekt
+als Nicht-Zeugnis erkennen. Eine Stufe, die 2,8 GB mehr kostet und nichts besser macht,
+ist keine Stufe.
+
+Praktische Folge: Wer eine 8-GB-Karte hat, bekommt jetzt `qwen3:4b` statt `granite4.1:8b`
+empfohlen. Das ist kein Rückschritt, sondern die Korrektur einer Empfehlung, die auf
+Zahlen aus einer Fehlkonfiguration beruhte.
 
 ## Gibt es einen Boden unter qwen3:4b?
 
@@ -71,9 +91,20 @@ Ergebnis ist drastisch — dieselbe Datei, dasselbe Modell, nur 12288 statt 8192
 | qwen3:4b | 0 von 6 auswertbar | **0,33 · 6 von 6** |
 | granite4.1:3b | 1,33 · 4 von 6 | 1,17 · 4 von 6 |
 
-Die Vertrags- und Fristenzahlen unten stammen noch aus den Läufen davor und sind damit
-eine **untere Schranke**. Was von den kleinen Modellen als Schwäche gemessen wurde, war
-zu einem guten Teil unsere eigene Fehlkonfiguration.
+Die Verträge sind inzwischen ebenfalls neu gemessen, und der Effekt ist derselbe:
+
+| Verträge, kritische Klauseln | mit 8192 | mit korrektem Fenster |
+| --- | --- | --- |
+| qwen3:4b | 42,9 % | 57,1 % |
+| gemma4:12b | 57,1 % | **100 %** |
+| granite4.1:8b | 71,4 % | 42,9 % |
+
+Beim 8B ging der Wert zurück. Ein Einzellauf bei Temperatur 0,15 streut; entscheidend ist,
+dass es auch im besten Fall keine Stufe rechtfertigt, wenn es auf den anderen beiden
+Suiten klar hinter dem halb so großen Modell liegt.
+
+Die **Fristen** brauchten keine Neumessung: dort fahren Eval und App beide mit 8192, weil
+die Extraktion ein eigener kurzer Prompt mit kurzer Antwort ist.
 
 ## Qualität
 

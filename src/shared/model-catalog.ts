@@ -16,6 +16,19 @@
  *    Oberflaeche auf rohes Markdown zurueck.
  * 4. Grosser Kontext hilft: lange Vertraege muessen sonst in Abschnitte
  *    zerlegt werden, was Qualitaet kostet.
+ *
+ * Die mittlere Stufe ist bewusst LEER. Sie war mit granite4.1:8b besetzt,
+ * bis alle drei Suiten mit korrektem Kontextfenster neu gemessen wurden:
+ *
+ *                   Zeugnis       Vertraege        Fristen
+ *   qwen3:4b        0,33 - 6/6    57,1 % - 3/4     100 %
+ *   granite4.1:8b   0,83 - 5/6    42,9 % - 2/4     85,7 % + Erfindung
+ *   gemma4:12b      0,00 - 6/6    100 %  - 4/4     100 %
+ *
+ * Das 8B verliert auf jeder Suite gegen ein Modell von weniger als halber
+ * Groesse und benotet zusaetzlich ein Kuendigungsschreiben als Zeugnis. Eine
+ * Stufe, die 2,8 GB mehr kostet und nichts besser macht, ist keine Stufe -
+ * deshalb geht es von der leichten direkt zur starken.
  */
 
 import type { HardwareProfile } from './types'
@@ -122,15 +135,6 @@ export function modelForProfile(profile: HardwareProfile): string {
 export const DEFAULT_MODEL = 'qwen3:4b'
 
 export const MODEL_CATALOG: readonly CatalogModel[] = [
-  {
-    name: 'granite4.1:8b',
-    displayName: 'Granite 4.1 (8B)',
-    sizeGb: 5.3,
-    contextK: 128,
-    heavyModeCapable: true,
-    cpuFriendly: false,
-    recommendedFor: 'medium'
-  },
   {
     name: 'gemma4:12b',
     displayName: 'Gemma 4 (12B)',

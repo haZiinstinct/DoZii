@@ -9,7 +9,10 @@ const SIZES = profileModelSizes()
 describe('determineProfile mit GPU', () => {
   it('nimmt die hoechste Stufe, deren Modell noch in den Speicher passt', () => {
     expect(determineProfile({ ramGb: 32, vramGb: 10 }, SIZES)).toBe('strong')
-    expect(determineProfile({ ramGb: 32, vramGb: 8 }, SIZES)).toBe('medium')
+    // 8 GB tragen gemma4:12b nicht (7,6 + 1,5 Puffer) - also die leichte
+    // Stufe. Dazwischen liegt bewusst nichts mehr: granite4.1:8b war auf
+    // allen drei Suiten schlechter als das kleinere qwen3:4b.
+    expect(determineProfile({ ramGb: 32, vramGb: 8 }, SIZES)).toBe('light')
     expect(determineProfile({ ramGb: 32, vramGb: 4 }, SIZES)).toBe('light')
   })
 
@@ -24,6 +27,13 @@ describe('determineProfile mit GPU', () => {
     // 0,4 GB kleiner und gleich schnell, fand aber bei zwei von sechs
     // Bescheiden gar keine Frist. Langsamer ja, schlechter nein.
     expect(modelForProfile('minimal')).toBe('qwen3:4b')
+  })
+
+  it('die mittlere Stufe ist leer und faengt nichts ab', () => {
+    // Sie war mit granite4.1:8b besetzt, bis die Messung zeigte, dass es auf
+    // allen drei Suiten hinter dem halb so grossen qwen3:4b liegt.
+    expect(SIZES.medium).toBe(Number.POSITIVE_INFINITY)
+    expect(modelForProfile('medium')).toBe('qwen3:4b')
   })
 
   it('eine leere Stufe faengt nicht alles ab', () => {
@@ -41,8 +51,8 @@ describe('determineProfile mit GPU', () => {
   })
 
   it('rechnet den Puffer fuer Kontext und Bildausgabe ab', () => {
-    const needed = SIZES.medium + VRAM_HEADROOM_GB
-    expect(determineProfile({ ramGb: 4, vramGb: needed }, SIZES)).toBe('medium')
+    const needed = SIZES.strong + VRAM_HEADROOM_GB
+    expect(determineProfile({ ramGb: 4, vramGb: needed }, SIZES)).toBe('strong')
     expect(determineProfile({ ramGb: 4, vramGb: needed - 0.1 }, SIZES)).toBe('light')
   })
 
@@ -73,6 +83,8 @@ describe('determineProfile ohne GPU', () => {
 describe('jede erreichbare Stufe hat ein Modell', () => {
   it('liefert fuer jede Stufe einen Ollama-Tag', () => {
     for (const profile of ['minimal', 'light', 'medium', 'strong'] as const) {
+      // Leere Stufen fallen auf DEFAULT_MODEL zurueck - auch das muss ein
+      // gueltiger Tag sein.
       expect(modelForProfile(profile)).toMatch(/^[a-z0-9.]+:[a-z0-9.]+$/)
     }
   })
