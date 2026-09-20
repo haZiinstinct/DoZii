@@ -151,6 +151,28 @@ export function getSettings(): AppSettings {
   return sanitizeSettings(getStore().get('settings'))
 }
 
+/**
+ * Hat dieser Rechner DoZii schon einmal benutzt?
+ *
+ * Der Willkommens-Assistent war bis 1.3.3 nicht erreichbar - niemand hat ihn
+ * je abgeschlossen, also steht bei ALLEN bisherigen Nutzern
+ * firstLaunchDone: false. Ohne diese Pruefung wuerde das Update sie alle
+ * durch ein Onboarding schicken, das sie nicht brauchen.
+ *
+ * Als Beleg fuer "schon benutzt" dient eine gespeicherte Einstellungsdatei,
+ * die bereits einen Modellnamen enthaelt: den setzt die App beim ersten
+ * echten Gebrauch.
+ */
+export function markExistingInstallAsOnboarded(): void {
+  const raw = getStore().get('settings') as Partial<AppSettings> | undefined
+  if (!raw || typeof raw !== 'object') return
+  if (raw.firstLaunchDone === true) return
+  const looksUsed = typeof raw.selectedModel === 'string' && raw.selectedModel.length > 0
+  if (!looksUsed) return
+  updateSettings({ firstLaunchDone: true })
+  logger.info('settings.service', 'Bestehende Installation erkannt - Assistent uebersprungen')
+}
+
 export function updateSettings(partial: Partial<AppSettings>): AppSettings {
   const current = getSettings()
   const next: AppSettings = { ...current, ...partial }

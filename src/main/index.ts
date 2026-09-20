@@ -5,6 +5,7 @@ import { registerWindowIpc } from './ipc/window.ipc'
 import { registerHardwareIpc } from './ipc/hardware.ipc'
 import { registerOllamaIpc } from './ipc/ollama.ipc'
 import { registerSettingsIpc } from './ipc/settings.ipc'
+import { markExistingInstallAsOnboarded } from './services/settings.service'
 import { registerDocumentsIpc } from './ipc/documents.ipc'
 import { registerAnalysisIpc } from './ipc/analysis.ipc'
 import { registerChatIpc } from './ipc/chat.ipc'
@@ -156,6 +157,8 @@ app.whenReady().then(() => {
   registerHardwareIpc()
   registerOllamaIpc()
   registerSettingsIpc()
+  // Bestandsnutzer nicht nachtraeglich durch den Assistenten schicken.
+  markExistingInstallAsOnboarded()
   registerDocumentsIpc()
   registerAnalysisIpc()
   registerChatIpc()

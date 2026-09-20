@@ -3,6 +3,27 @@
 Alle nennenswerten Änderungen an DoZii werden in dieser Datei dokumentiert.
 Das Format orientiert sich an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [1.3.4] – 2026-09-20
+
+### Behoben
+
+- **Der Willkommens-Assistent war nie erreichbar** – 216 Zeilen Onboarding mit
+  Hardware-Erkennung, Ollama-Status und Startknopf, zu denen die App niemals navigiert
+  hat. Wer DoZii zum ersten Mal öffnete, landete direkt auf der Hochlade-Seite: ohne
+  Ollama, ohne Modell, ohne Hinweis. Beim ersten Start geht es jetzt durch den Assistenten
+- **Bestandsnutzer werden nicht nachträglich onboardet** – weil den Assistenten nie jemand
+  abschließen konnte, steht bei allen bisherigen Installationen „noch nicht erledigt". Ohne
+  Gegenmaßnahme hätte das Update sie alle durch ein Onboarding geschickt, das sie nicht
+  brauchen
+
+### Hinzugefügt
+
+- **Modell direkt im Assistenten laden** – Ollama läuft ist nicht dasselbe wie einsatzbereit:
+  ohne Sprachmodell steht man trotzdem vor einer leeren App. Der Assistent zeigte das
+  empfohlene Modell bisher nur an. Jetzt lädt er es auf Knopfdruck, mit Fortschrittsbalken
+  und dem ehrlichen Hinweis, dass es ein einmaliger Download ist und danach alles offline
+  läuft. Wer ohne Modell weitergeht, erfährt vorher, was ihn erwartet
+
 ## [1.3.3] – 2026-09-20
 
 ### Hinzugefügt
