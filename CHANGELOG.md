@@ -56,6 +56,9 @@ Das Format orientiert sich an [Keep a Changelog](https://keepachangelog.com/de/1
 - Auslassungspunkte in allen neun Sprachdateien auf das typografische Zeichen `…`
   vereinheitlicht (270 Stellen) — drei einzelne Punkte werden von Screenreadern als
   „Punkt Punkt Punkt" vorgelesen
+- Im Willkommens-Assistenten standen „Threads" und „GB frei" fest auf Deutsch, obwohl es
+  dafür längst Übersetzungsschlüssel gibt — ausgerechnet auf dem ersten Bildschirm, den
+  ein fremdsprachiger Nutzer sieht
 - Im Diagnosebericht bekommen die Rückmeldungen „Kopiert" und „Gespeichert unter …" ein
   `aria-live`; vorher war der Wechsel nur zu sehen, nicht zu hören
 
