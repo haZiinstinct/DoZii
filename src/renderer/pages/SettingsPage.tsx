@@ -868,11 +868,17 @@ export function SettingsPage() {
             const neededRam = minRamGb(m)
             const neededVram = minVramGb(m)
             const hasEnoughRam = hardware ? hardware.ram.totalGb >= neededRam : true
-            // Fehlendes VRAM sperrt den Download nicht: ein GPU-Modell laeuft
-            // notfalls auch auf der CPU, nur langsam. Es wird nur darauf
-            // hingewiesen. Zu wenig Arbeitsspeicher ist dagegen ein echtes Aus.
+            /*
+             * Weder fehlendes VRAM noch knapper Arbeitsspeicher sperren den
+             * Download - beides wird nur angezeigt.
+             *
+             * Der RAM-Wert ist eine Komfortschaetzung (Modellgroesse mal zwei,
+             * mindestens 8 GB), kein hartes Limit: qwen3:4b belegt 2,5 GB und
+             * laeuft auch auf einem 6-GB-Rechner. Gesperrt wurde damit aber
+             * genau das Modell, das die Hardware-Erkennung demselben Rechner
+             * als Empfehlung anzeigt - die App widersprach sich selbst.
+             */
             const hasEnoughVram = hardware?.gpu ? hardware.gpu.vramMb / 1024 >= neededVram : false
-            const canRun = hasEnoughRam
             const insufficientReason = !hasEnoughRam
               ? t('settings.requiresRam', { n: neededRam })
               : !m.cpuFriendly && !hasEnoughVram
@@ -884,7 +890,7 @@ export function SettingsPage() {
                 key={m.name}
                 className={`flex items-center gap-3 rounded-xl border px-4 py-3 transition-opacity ${
                   isRecommended ? 'border-brand-cyan/20 bg-brand-cyan/5' : 'border-brand-border'
-                } ${!canRun && !isInstalled ? 'opacity-50' : ''}`}
+                }`}
               >
                 <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg bg-brand-card text-brand-text-dim">
                   {m.cpuFriendly ? (
@@ -922,7 +928,7 @@ export function SettingsPage() {
                       <> &middot; {t(`settings.strengths.${m.name}`, { defaultValue: '' })}</>
                     )}
                   </p>
-                  {!canRun && !isInstalled && (
+                  {insufficientReason && !isInstalled && (
                     <p className="mt-1 text-xs text-brand-amber">{insufficientReason}</p>
                   )}
                 </div>
@@ -940,8 +946,8 @@ export function SettingsPage() {
                 ) : (
                   <button
                     onClick={() => handlePull(m.name)}
-                    disabled={!!pulling || !connected || !canRun}
-                    title={!canRun ? (insufficientReason ?? '') : undefined}
+                    disabled={!!pulling || !connected}
+                    title={insufficientReason ?? undefined}
                     className="flex items-center gap-1 rounded-lg bg-brand-cyan/10 px-3 py-1.5 text-xs text-brand-cyan transition-all hover:bg-brand-cyan/20 disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     <Download size={12} aria-hidden="true" />

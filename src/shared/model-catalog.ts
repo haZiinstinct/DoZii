@@ -123,17 +123,6 @@ export const DEFAULT_MODEL = 'qwen3:4b'
 
 export const MODEL_CATALOG: readonly CatalogModel[] = [
   {
-    // Bleibt waehlbar - der kleinste Download im Katalog. Empfohlen wird es
-    // nicht mehr: bei den Fristen fand es zwei von sechs Bescheiden gar
-    // nicht, und die Note lag im Schnitt gut eine Stufe daneben.
-    name: 'granite4.1:3b',
-    displayName: 'Granite 4.1 (3B)',
-    sizeGb: 2.1,
-    contextK: 128,
-    heavyModeCapable: true,
-    cpuFriendly: true
-  },
-  {
     name: 'granite4.1:8b',
     displayName: 'Granite 4.1 (8B)',
     sizeGb: 5.3,
@@ -163,19 +152,19 @@ export const MODEL_CATALOG: readonly CatalogModel[] = [
     recommendedFor: 'light'
   },
   {
-    name: 'qwen2.5:7b',
-    displayName: 'Qwen 2.5 (7B)',
-    sizeGb: 4.7,
-    contextK: 32,
-    heavyModeCapable: true,
-    cpuFriendly: false
-  },
-  {
-    name: 'llama3.2:3b',
-    displayName: 'Llama 3.2 (3B)',
-    sizeGb: 2.0,
+    // Der kleinste Download, der noch alle Modi bedient - bleibt waehlbar,
+    // wird aber nicht empfohlen: Note im Schnitt gut eine Stufe daneben und
+    // knapp ein Drittel der Belegzitate erfunden.
+    //
+    // Darunter gibt es nichts Brauchbares. Gemessen: qwen3:1.7b erfindet
+    // 40 % seiner Zitate, llama3.2:3b sogar 50 % und dichtet dem Bescheid
+    // ohne Rechtsbehelfsbelehrung eine Frist an. Beide deshalb nicht im
+    // Katalog.
+    name: 'granite4.1:3b',
+    displayName: 'Granite 4.1 (3B)',
+    sizeGb: 2.1,
     contextK: 128,
-    heavyModeCapable: false,
+    heavyModeCapable: true,
     cpuFriendly: true
   }
 ]
