@@ -156,6 +156,33 @@ export const MODEL_CATALOG: readonly CatalogModel[] = [
     recommendedFor: 'light'
   },
   {
+    /*
+     * Waehlbar, aber bewusst NICHT empfohlen.
+     *
+     * Bei Noten und Klauseln ist es das zweitbeste Modell im Feld - bei den
+     * Fristen faellt es dagegen ab:
+     *
+     *              Zeugnis       Vertraege      Fristen (Recall)
+     *   qwen3:4b   0,33 - 6/6    57,1 % - 3/4   100 %
+     *   qwen3:8b   0,17 - 6/6    85,7 % - 4/4   71,4 %
+     *
+     * Zwei von sieben Fristen nicht zu finden waere als Voreinstellung nicht
+     * zu verantworten: eine verpasste Klagefrist laesst sich nicht
+     * nachholen, eine uebersehene Vertragsklausel dagegen meist noch
+     * verhandeln oder anfechten. Es benotet ausserdem ein
+     * Kuendigungsschreiben als Zeugnis, was qwen3:4b korrekt ablehnt.
+     *
+     * Wer weiss, dass er vor allem Vertraege prueft, kann es bewusst
+     * waehlen - deshalb steht es in der Liste.
+     */
+    name: 'qwen3:8b',
+    displayName: 'Qwen 3 (8B)',
+    sizeGb: 4.9,
+    contextK: 256,
+    heavyModeCapable: true,
+    cpuFriendly: false
+  },
+  {
     // Der kleinste Download, der noch alle Modi bedient - bleibt waehlbar,
     // wird aber nicht empfohlen: Note im Schnitt gut eine Stufe daneben und
     // knapp ein Drittel der Belegzitate erfunden.

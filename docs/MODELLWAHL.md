@@ -38,6 +38,28 @@ Praktische Folge: Wer eine 8-GB-Karte hat, bekommt jetzt `qwen3:4b` statt `grani
 empfohlen. Das ist kein Rückschritt, sondern die Korrektur einer Empfehlung, die auf
 Zahlen aus einer Fehlkonfiguration beruhte.
 
+### Und der Nachfolger? Gemessen, aber nicht empfohlen
+
+Die Lücke zwischen 4 und 9 GB VRAM betrifft die verbreitetsten Karten. Einziger Kandidat
+der passenden Größe ist `qwen3:8b` (4,9 GB, braucht 6,4 GB VRAM) — aus der Familie, die
+hier alles gewonnen hat. Das Kriterium war **vor** der Messung festgelegt: mindestens zwei
+von drei Suiten deutlich besser als `qwen3:4b`.
+
+| | Zeugnis | Verträge | Fristen (Recall) |
+| --- | --- | --- | --- |
+| qwen3:4b | 0,33 · 89,7 % | 57,1 % · 3/4 | **100 %** |
+| qwen3:8b | **0,17 · 96,0 %** | **85,7 % · 4/4** | 71,4 % |
+
+Nach dem Kriterium hätte es gewonnen. Das Kriterium war falsch — es gewichtet die drei
+Suiten gleich, und das sind sie nicht. Eine übersehene Frist ist irreversibel: Die
+Klagefrist läuft ab. Eine übersehene Vertragsklausel ist ärgerlich, aber meist noch
+verhandelbar oder anfechtbar. Zwei von sieben Fristen zu verfehlen ist als **Voreinstellung**
+nicht zu verantworten; dazu benotet es ein Kündigungsschreiben als Zeugnis, was `qwen3:4b`
+korrekt ablehnt.
+
+Deshalb steht es im Katalog als wählbar mit ehrlichem Hinweis, aber ohne Stufe. Wer weiß,
+dass er vor allem Verträge prüft, trifft die Wahl bewusst.
+
 ## Gibt es einen Boden unter qwen3:4b?
 
 Nein. Gemessen, weil Rechner mit 4 bis 6 GB RAM sonst ein Modell empfohlen bekommen, das

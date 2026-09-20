@@ -209,7 +209,8 @@
     "strengths": {
       "gemma4:12b": "Melhores resultados nos nossos testes: notas e prazos sem um único erro. Para placas gráficas a partir de 10 GB.",
       "granite4.1:3b": "O download mais pequeno. Menos preciso do que o Qwen 3 (4B) em notas e prazos – escolha-o só se o espaço for mesmo escasso.",
-      "qwen3:4b": "O mais fiável a detetar prazos nos nossos testes e acerta no risco contratual. Cabe num portátil."
+      "qwen3:4b": "O mais fiável a detetar prazos nos nossos testes e acerta no risco contratual. Cabe num portátil.",
+      "qwen3:8b": "Melhor em notas e cláusulas do que o Qwen 3 (4B) – mas falha dois de sete prazos. Escolha-o só se os contratos forem a sua prioridade."
     },
     "accessibility": "Apresentação e acessibilidade",
     "fontScale": "Tamanho do texto",

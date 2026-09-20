@@ -3,6 +3,20 @@
 Alle nennenswerten Änderungen an DoZii werden in dieser Datei dokumentiert.
 Das Format orientiert sich an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [1.3.6] – 2026-09-20
+
+### Hinzugefügt
+
+- **`qwen3:8b` in der Modellliste** – wählbar, aber bewusst nicht empfohlen. Bei
+  Zeugnisnoten (0,17 statt 0,33) und Vertragsklauseln (85,7 % statt 57,1 %) ist es das
+  zweitbeste Modell im Feld, findet aber **zwei von sieben Fristen nicht**, wo `qwen3:4b`
+  alle findet — und benotet ein Kündigungsschreiben als Arbeitszeugnis.
+
+  Eine verpasste Klagefrist lässt sich nicht nachholen, eine übersehene Vertragsklausel
+  dagegen meist noch verhandeln. Als Voreinstellung für jede 8-GB-Karte taugt es deshalb
+  nicht; wer vor allem Verträge prüft, kann es bewusst wählen. Die mittlere Stufe bleibt
+  leer
+
 ## [1.3.5] – 2026-09-20
 
 ### Geändert
