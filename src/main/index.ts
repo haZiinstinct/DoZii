@@ -12,6 +12,7 @@ import { registerLogsIpc } from './ipc/logs.ipc'
 import { registerExporterIpc } from './ipc/exporter.ipc'
 import { registerDeadlinesIpc } from './ipc/deadlines.ipc'
 import { registerSystemIpc } from './ipc/system.ipc'
+import { registerDiagnosticsIpc } from './ipc/diagnostics.ipc'
 import { registerUpdateIpc } from './ipc/update.ipc'
 import { initUpdater } from './services/updater.service'
 import { closeDb, getDb } from './db'
@@ -162,6 +163,7 @@ app.whenReady().then(() => {
   registerExporterIpc()
   registerDeadlinesIpc()
   registerSystemIpc()
+  registerDiagnosticsIpc()
   registerUpdateIpc()
   initUpdater()
 

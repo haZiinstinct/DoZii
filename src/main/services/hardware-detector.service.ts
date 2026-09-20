@@ -57,7 +57,12 @@ async function detectNvidiaGpu(): Promise<GpuInfo | null> {
       const [name, vramStr] = line.split(',').map((part) => part.trim())
       const vramMb = Number.parseInt(vramStr ?? '', 10)
       if (!Number.isFinite(vramMb) || vramMb <= 0) continue
-      candidates.push({ name: name || 'NVIDIA GPU', vramMb, vendor: 'nvidia' })
+      candidates.push({
+        name: name || 'NVIDIA GPU',
+        vramMb,
+        vendor: 'nvidia',
+        detectedVia: 'nvidia-smi'
+      })
     }
     if (candidates.length === 0) return null
 
@@ -92,7 +97,8 @@ async function detectAmdGpu(): Promise<GpuInfo | null> {
     const gpu: GpuInfo = {
       name: 'AMD GPU',
       vramMb: Math.round(rawBytes / (1024 * 1024)),
-      vendor: 'amd'
+      vendor: 'amd',
+      detectedVia: 'rocm-smi'
     }
     logger.info('hardware-detector', 'rocm-smi detected GPU', gpu)
     return gpu
@@ -190,7 +196,7 @@ if ($gpu) {
     const vramMb = Math.round(vramBytes / (1024 * 1024))
     const vendor = classifyGpuVendor(name)
 
-    const gpu: GpuInfo = { name, vramMb, vendor }
+    const gpu: GpuInfo = { name, vramMb, vendor, detectedVia: 'windows-registry' }
     logger.info('hardware-detector', 'Windows registry detected GPU', {
       ...gpu,
       vramBytes

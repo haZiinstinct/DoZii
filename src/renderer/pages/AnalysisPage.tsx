@@ -54,6 +54,7 @@ import { parseContractCheck } from '@/lib/parse-contract'
 import { parseLetter } from '@/lib/parse-letter'
 import type { HighlightQuery } from '@/lib/highlight'
 import { DEFAULT_MODEL, isHeavyModeCapable } from '@shared/model-catalog'
+import { DiagnosticReportCard } from '@/components/DiagnosticReportCard'
 import { useTranslation } from 'react-i18next'
 
 // ============================================================================
@@ -771,6 +772,13 @@ export function AnalysisPage() {
       {analysis.kind === 'error' && (
         <div className="rounded-xl border border-brand-red/30 bg-brand-red/5 p-4">
           <p className="text-sm text-brand-red">{analysis.message}</p>
+          {/*
+            Hier und nicht nur in den Einstellungen: im Moment des Aergers
+            klickt jemand auf "Bericht erstellen", drei Menues spaeter nicht
+            mehr. Ohne Berichte erfahren wir nie, ob es auf fremder Hardware
+            laeuft.
+          */}
+          <DiagnosticReportCard compact />
         </div>
       )}
       {exportError && (

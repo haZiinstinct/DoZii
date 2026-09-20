@@ -386,7 +386,8 @@
       "formelBetter": "Achtung: Oben steht Note {{grade}}, der Wortlaut gibt aber nur Note {{formel}} her. Besser als die Hauptformel wird ein Zeugnis nicht – hier irrt die Bewertung.",
       "formelAmbiguous": "Im Text stehen mehrere Zufriedenheitsformeln mit unterschiedlicher Note. Solange das so ist, lässt sich daraus keine Note ableiten.",
       "formelHint": "Ohne KI berechnet – feste Zeugnissprache",
-      "formelMissing": "Im Text steht keine der üblichen Zufriedenheitsformeln. Entweder ist es kein Arbeitszeugnis, oder es ist ein einfaches Zeugnis ohne Bewertung. Die Note oben beruht damit allein auf der Einschätzung des Modells – nimm sie mit Vorsicht."
+      "formelMissing": "Im Text steht keine der üblichen Zufriedenheitsformeln. Entweder ist es kein Arbeitszeugnis, oder es ist ein einfaches Zeugnis ohne Bewertung. Die Note oben beruht damit allein auf der Einschätzung des Modells – nimm sie mit Vorsicht.",
+      "disclaimer": "Die Note ist eine Einschätzung, keine Rechtsberatung. Sie beruht auf den üblichen Zeugnisformeln – ob dein Zeugnis vor Gericht Bestand hätte, klärt nur eine Beratung."
     },
     "plain": {
       "headline": "Das Wichtigste",
@@ -440,7 +441,8 @@
         "ueberstundenPauschal": "Alle Überstunden pauschal abgegolten",
         "verlaengerungZuLang": "Automatische Verlängerung um ein ganzes Jahr",
         "wettbewerbOhneKarenz": "Wettbewerbsverbot ohne Karenzentschädigung"
-      }
+      },
+      "disclaimer": "Diese Prüfung ist keine Rechtsberatung. Sie zeigt bekannte Stolperfallen – ob eine Klausel in deinem Fall wirksam ist, entscheidet am Ende ein Gericht."
     },
     "letter": {
       "notice": "Hinweis",
@@ -523,5 +525,17 @@
     "explain": "Was heißt das?",
     "close": "Schließen",
     "hint": "Unterstrichene Wörter erklärt DoZii dir - klick sie an."
+  },
+  "diagnostics": {
+    "copied": "Kopiert",
+    "copy": "Kopieren",
+    "create": "Diagnosebericht erstellen",
+    "creating": "wird erstellt …",
+    "desc": "Wenn etwas nicht funktioniert: Dieser Bericht zeigt, auf welcher Hardware DoZii läuft und welche Fehler zuletzt auftraten. Damit lässt sich das Problem nachstellen.",
+    "privacyNote": "DoZii sendet nichts von selbst. Du siehst den Bericht vollständig, bevor du entscheidest, ob du ihn weitergibst – Dokumentinhalte und Dateinamen stehen nicht darin.",
+    "report": "Auf GitHub melden",
+    "save": "Als Datei speichern",
+    "saved": "Gespeichert: {{path}}",
+    "title": "Diagnosebericht"
   }
 }

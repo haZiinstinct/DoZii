@@ -78,10 +78,19 @@ export interface AnalysisExtra {
 export type HardwareProfile = 'minimal' | 'light' | 'medium' | 'strong' | 'power'
 export type GpuVendor = 'nvidia' | 'amd' | 'intel' | 'unknown'
 
+/** Womit die Grafikkarte gefunden wurde - wichtigstes Feld im Diagnosebericht. */
+export type GpuProbe = 'nvidia-smi' | 'rocm-smi' | 'windows-registry'
+
 export interface GpuInfo {
   name: string
   vramMb: number
   vendor: GpuVendor
+  /**
+   * Welcher Weg die Karte gefunden hat. Steht im Diagnosebericht, weil genau
+   * das die offene Frage ist: greift der CUDA-Pfad bei echten Nutzern, oder
+   * raet am Ende doch nur die Registry den Hersteller aus dem Namen?
+   */
+  detectedVia?: GpuProbe
 }
 
 export interface HardwareInfo {

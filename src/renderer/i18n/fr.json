@@ -386,7 +386,8 @@
       "formelBetter": "Attention : la note ci-dessus est {{grade}}, mais la formulation ne justifie que la note {{formel}}. Un certificat n’est jamais meilleur que sa formule type – l’évaluation se trompe ici.",
       "formelAmbiguous": "Le texte contient plusieurs formules de satisfaction avec des notes différentes. Tant que c’est le cas, aucune note ne peut en être déduite.",
       "formelHint": "Calculé sans IA – formulation figée des certificats",
-      "formelMissing": "Le texte ne contient aucune des formules de satisfaction usuelles. Soit ce n’est pas un certificat de travail, soit c’est un certificat simple sans appréciation. La note ci-dessus repose donc uniquement sur le jugement du modèle – à prendre avec prudence."
+      "formelMissing": "Le texte ne contient aucune des formules de satisfaction usuelles. Soit ce n’est pas un certificat de travail, soit c’est un certificat simple sans appréciation. La note ci-dessus repose donc uniquement sur le jugement du modèle – à prendre avec prudence.",
+      "disclaimer": "Cette note est une estimation, pas un conseil juridique. Elle suit les formules usuelles – seul un conseil peut dire ce que vaudrait votre certificat."
     },
     "plain": {
       "headline": "L'essentiel",
@@ -440,7 +441,8 @@
         "ueberstundenPauschal": "Toutes les heures supplémentaires incluses dans le salaire",
         "verlaengerungZuLang": "Reconduction automatique pour une année entière",
         "wettbewerbOhneKarenz": "Clause de non-concurrence sans contrepartie"
-      }
+      },
+      "disclaimer": "Cette analyse n’est pas un conseil juridique. Elle signale des pièges connus – la validité d’une clause dans votre cas relève d’un tribunal."
     },
     "letter": {
       "notice": "Remarque",
@@ -523,5 +525,17 @@
     "explain": "Ça veut dire quoi ?",
     "close": "Fermer",
     "hint": "DoZii t'explique les mots soulignés - clique dessus."
+  },
+  "diagnostics": {
+    "copied": "Copié",
+    "copy": "Copier",
+    "create": "Créer un rapport de diagnostic",
+    "creating": "création …",
+    "desc": "Si quelque chose ne fonctionne pas : ce rapport indique sur quel matériel DoZii tourne et quelles erreurs sont survenues récemment. Il rend le problème reproductible.",
+    "privacyNote": "DoZii n’envoie rien de lui-même. Vous voyez le rapport en entier avant de décider de le transmettre – il ne contient ni contenu de document ni nom de fichier.",
+    "report": "Signaler sur GitHub",
+    "save": "Enregistrer dans un fichier",
+    "saved": "Enregistré : {{path}}",
+    "title": "Rapport de diagnostic"
   }
 }

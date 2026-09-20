@@ -36,6 +36,7 @@ import type {
 } from '@shared/types'
 import { SUPPORTED_LANGUAGES } from '@shared/languages'
 import { MODEL_CATALOG, minRamGb, minVramGb } from '@shared/model-catalog'
+import { DiagnosticReportCard } from '@/components/DiagnosticReportCard'
 import { useOllamaStatus } from '@/hooks/useOllamaStatus'
 import { useTheme } from '@/hooks/useTheme'
 import { useAppearance } from '@/hooks/useAppearance'
@@ -1073,6 +1074,8 @@ export function SettingsPage() {
           </div>
         </section>
       )}
+
+      <DiagnosticReportCard />
 
       {/* Logs */}
       <section className="rounded-2xl border border-brand-border bg-brand-card/60 p-6">

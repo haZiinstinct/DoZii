@@ -505,6 +505,15 @@ export function ContractCheck({ result, onShowInText, documentText }: Props): Re
 
       <KlauselRadar findings={radarFindings} onShowInText={onShowInText} />
 
+      {/*
+        Haftungshinweis. Die Fristen und die Briefe hatten ihn laengst, die
+        Note nicht - ausgerechnet die Aussage, mit der jemand zum Arbeitgeber
+        geht.
+      */}
+      <p className="text-xs leading-relaxed text-brand-text-dim">
+        {t('results.contract.disclaimer')}
+      </p>
+
       <KeyTermsBlock terms={result.keyTerms} />
 
       {verifiedClauses.length > 0 && (

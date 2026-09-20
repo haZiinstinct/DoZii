@@ -3,6 +3,31 @@
 Alle nennenswerten Änderungen an DoZii werden in dieser Datei dokumentiert.
 Das Format orientiert sich an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [1.3.3] – 2026-09-20
+
+### Hinzugefügt
+
+- **Diagnosebericht statt Telemetrie** – DoZii sendet weiterhin **nichts** von selbst. Wer
+  ein Problem melden will, erzeugt auf Knopfdruck einen Bericht, **sieht ihn vollständig**
+  und gibt ihn selbst weiter: kopieren, als Datei speichern oder als vorausgefülltes
+  GitHub-Issue öffnen. Drin stehen Betriebssystem, Prozessor, Arbeitsspeicher, Grafikkarte
+  samt **Erkennungsweg** (nvidia-smi / rocm-smi / Registry), eingestufte Stufe, Modelle und
+  die letzten Fehlerzeilen. Nicht drin: Dokumentinhalte, Dateinamen, Kennungen.
+
+  Der Erkennungsweg ist der Zweck der Sache: Steht dort „NVIDIA über windows-registry",
+  hat `nvidia-smi` nicht gegriffen und der Hersteller wurde nur aus dem Gerätenamen
+  geraten. Anders lässt sich von außen nicht feststellen, ob der CUDA-Pfad auf fremden
+  Rechnern funktioniert.
+
+  Der Knopf steht **auch direkt in der Fehlermeldung** einer fehlgeschlagenen Analyse, nicht
+  nur in den Einstellungen. Im Moment des Ärgers klickt jemand, drei Menüs später nicht mehr
+
+### Behoben
+
+- **Haftungshinweis fehlte ausgerechnet bei der Zeugnisnote** – Fristen und Briefe hatten
+  ihn längst („ohne Gewähr", „keine Rechtsberatung"), die Note und der Vertrags-Check
+  nicht. Das ist die Aussage, mit der jemand zum Arbeitgeber geht. Beide haben jetzt einen
+
 ## [1.3.2] – 2026-09-20
 
 ### Behoben

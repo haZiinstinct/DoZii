@@ -383,7 +383,8 @@
       "formelBetter": "注意：上方给出评级 {{grade}}，但措辞只支持评级 {{formel}}。证明书不会好过它的固定表述——此处评价有误。",
       "formelAmbiguous": "文中出现多条评级不同的满意度表述。只要如此，就无法据此得出评级。",
       "formelHint": "未使用 AI 计算——固定的证明书用语",
-      "formelMissing": "文中没有任何一条通行的满意度表述。要么这不是工作证明，要么是不含评价的简单证明。因此上方的评级仅凭模型判断——请谨慎对待。"
+      "formelMissing": "文中没有任何一条通行的满意度表述。要么这不是工作证明，要么是不含评价的简单证明。因此上方的评级仅凭模型判断——请谨慎对待。",
+      "disclaimer": "该评级是估计，而非法律建议。它依据的是通行的证明书表述。"
     },
     "plain": {
       "headline": "最要紧的事",
@@ -437,7 +438,8 @@
         "ueberstundenPauschal": "所有加班均已包含在工资中",
         "verlaengerungZuLang": "自动续约整整一年",
         "wettbewerbOhneKarenz": "竞业禁止但无补偿"
-      }
+      },
+      "disclaimer": "此检查不是法律建议，只是指出常见的陷阱。"
     },
     "letter": {
       "notice": "提示",
@@ -518,5 +520,17 @@
     "explain": "这是什么意思？",
     "close": "关闭",
     "hint": "带下划线的词 DoZii 会解释给你听 — 点一下试试。"
+  },
+  "diagnostics": {
+    "copied": "已复制",
+    "copy": "复制",
+    "create": "生成诊断报告",
+    "creating": "生成中 …",
+    "desc": "如果出了问题：该报告显示 DoZii 运行在什么硬件上，以及最近发生了哪些错误。",
+    "privacyNote": "DoZii 不会自行发送任何内容。在决定是否分享之前，你可以看到完整报告——其中不包含文档内容和文件名。",
+    "report": "在 GitHub 报告",
+    "save": "保存为文件",
+    "saved": "已保存：{{path}}",
+    "title": "诊断报告"
   }
 }
