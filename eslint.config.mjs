@@ -17,6 +17,16 @@ export default tseslint.config(
     }
   },
   {
+    // Werkzeuge, die in einem echten Electron laufen muessen und deshalb
+    // CommonJS sind - sie werden nicht mitgebaut, nur von Hand gestartet.
+    files: ['scripts/**/*.cjs'],
+    languageOptions: { globals: { require: 'readonly', process: 'readonly', module: 'writable' } },
+    rules: {
+      '@typescript-eslint/no-require-imports': 'off',
+      'no-console': 'off'
+    }
+  },
+  {
     rules: {
       '@typescript-eslint/no-unused-vars': [
         'error',
