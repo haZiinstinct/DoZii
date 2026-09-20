@@ -3,6 +3,19 @@
 Alle nennenswerten Änderungen an DoZii werden in dieser Datei dokumentiert.
 Das Format orientiert sich an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [1.3.2] – 2026-09-20
+
+### Behoben
+
+- **App hieß „Electron" und zeigte dessen Symbol** – die installierte `DoZii.exe` war die
+  unveränderte Electron-Binärdatei, nur umbenannt: Desktop-Verknüpfung mit Electron-Logo,
+  Produktname „Electron", Version 33.4.11 statt 1.3.x. Ursache war
+  `signAndEditExecutable: false` in der Windows-Konfiguration. Die Option schaltet nicht
+  nur das Signieren ab, sondern auch das Schreiben von Icon, Name und Version in die Exe.
+  Ohne Zertifikat wird ohnehin nicht signiert — die Option war überflüssig und hat dabei
+  die Metadaten mitgenommen. Die portable Variante war nie betroffen, weil NSIS ihre
+  Angaben selbst setzt
+
 ## [1.3.1] – 2026-09-20
 
 Nachtrag zur Modellauswahl. Gemessen statt geschätzt — die Zahlen stehen in
