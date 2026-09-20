@@ -157,19 +157,40 @@ export async function chatOnce(options: {
 
   incrementActiveStreams()
   try {
-    const response = await withTransientRetry('chatOnce', () =>
+    /*
+     * Gestreamt, obwohl der Aufrufer nur den fertigen Text will.
+     *
+     * Node bricht eine NICHT gestreamte Antwort ab, wenn nach fuenf Minuten
+     * noch keine Kopfzeilen da sind (UND_ERR_HEADERS_TIMEOUT). Auf einem
+     * Rechner ohne Grafikkarte dauert genau das: ein Abschnitt eines langen
+     * Vertrags braucht bei rund zehn Token pro Sekunde und einigen tausend
+     * Tokens Antwort 200 bis 500 Sekunden. Der Nutzer sah dann "fetch
+     * failed" statt eines Ergebnisses - ausgerechnet auf der schwachen
+     * Hardware, fuer die DoZii gedacht ist. Auf einer Grafikkarte faellt es
+     * nie auf, weil derselbe Abschnitt dort zwanzig Sekunden dauert.
+     *
+     * Beim Streamen kommen die Kopfzeilen sofort und danach laufend Tokens,
+     * damit greift kein Zeitlimit mehr. Zusammengesetzt wird hier; der
+     * Aufrufer merkt keinen Unterschied.
+     */
+    const stream = await withTransientRetry('chatOnce', () =>
       ollama.chat({
         model: options.model,
         messages: [
           { role: 'system', content: options.system },
           { role: 'user', content: options.prompt }
         ],
-        stream: false,
+        stream: true,
         think: false,
         options: modelOptions
       })
     )
-    return stripThinking(response.message?.content ?? '')
+    const parts: string[] = []
+    for await (const chunk of stream) {
+      const text = chunk.message?.content
+      if (text) parts.push(text)
+    }
+    return stripThinking(parts.join(''))
   } finally {
     decrementActiveStreams()
   }
