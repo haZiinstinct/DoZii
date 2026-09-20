@@ -379,16 +379,6 @@ export async function importDocument(
   return rowToDocument(doc as DocumentRow)
 }
 
-export function getAllDocuments(): DoziiDocument[] {
-  const db = getDb()
-  return db
-    .select()
-    .from(schema.documents)
-    .orderBy(desc(schema.documents.createdAt))
-    .all()
-    .map(rowToDocument)
-}
-
 export function getDocumentById(id: string): DoziiDocument | undefined {
   const db = getDb()
   const row = db.select().from(schema.documents).where(eq(schema.documents.id, id)).get()

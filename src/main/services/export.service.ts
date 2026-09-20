@@ -5,7 +5,6 @@ import { getDb, schema } from '../db'
 import { getDocumentById } from './document-store.service'
 import { getDeadlinesForDocument, getUpcomingDeadlines } from './deadline.service'
 import { exportAnalysisAsPdf } from './pdf-exporter.service'
-import { getSettings } from './settings.service'
 import { logger } from './logger.service'
 import { markdownToRtf } from '@shared/rtf'
 import { buildIcsCalendar, type IcsEvent } from '@shared/ics'
@@ -202,18 +201,4 @@ export async function exportDeadlinesAsIcs(
     logger.error(SOURCE, 'ICS-Export fehlgeschlagen', { error: message })
     return { ok: false, error: `Kalenderdatei konnte nicht geschrieben werden: ${message}` }
   }
-}
-
-/** Nur fuer die UI-Vorschau: wie viele Stellen wuerden geschwaerzt? */
-export function previewRedaction(analysisId: string): { count: number; kinds: string[] } {
-  const db = getDb()
-  const analysis = db.select().from(schema.analyses).where(eq(schema.analyses.id, analysisId)).get()
-  if (!analysis) return { count: 0, kinds: [] }
-  const result = redactText(analysis.result)
-  return { count: result.spans.length, kinds: Object.keys(result.countByKind) }
-}
-
-/** Standardwert fuer die Schwaerzen-Checkbox im Export-Dialog. */
-export function redactByDefault(): boolean {
-  return getSettings().redactOnExport
 }

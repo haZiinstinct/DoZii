@@ -38,30 +38,6 @@ export interface GlossaryEntry {
   category: GlossaryCategory
 }
 
-/** Reihenfolge wie im Glossar-Filter der UI. */
-export const GLOSSARY_CATEGORIES = [
-  'verwaltung',
-  'sozial',
-  'steuer',
-  'gericht',
-  'vertrag',
-  'arbeit',
-  'geld',
-  'wohnen'
-] as const satisfies readonly GlossaryCategory[]
-
-/** Anzeigenamen der Kategorien (deutsch, fuer Filter-Chips). */
-export const CATEGORY_LABELS: Record<GlossaryCategory, string> = {
-  verwaltung: 'Behörde & Bescheid',
-  sozial: 'Sozialleistungen',
-  steuer: 'Steuern',
-  gericht: 'Gericht & Mahnung',
-  vertrag: 'Verträge',
-  arbeit: 'Arbeit',
-  geld: 'Geld & Schulden',
-  wohnen: 'Wohnen & Miete'
-}
-
 export const GLOSSARY: readonly GlossaryEntry[] = [
   // --- Verwaltung / Bescheide ---
   {

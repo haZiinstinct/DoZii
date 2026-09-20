@@ -3,6 +3,65 @@
 Alle nennenswerten Änderungen an DoZii werden in dieser Datei dokumentiert.
 Das Format orientiert sich an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [1.3.8] – 2026-09-20
+
+### Behoben
+
+- **Zeugnisse liefen auf Rechnern ohne Grafikkarte in „fetch failed"** – und zwar aus einem
+  anderen Grund als in 1.3.7 angenommen. Dort war die Antwort auf Streamen umgestellt
+  worden, in der Annahme, damit kämen die Antwortkopfzeilen sofort. Das stimmt nicht:
+  Ollama schickt die Kopfzeilen erst, wenn das Modell geladen **und** der Prompt
+  verarbeitet ist. Nodes eingebautes `fetch` bricht aber genau davor ab, nach fünf Minuten
+  ohne Kopfzeilen.
+
+  Nachgemessen: bei einem Arbeitszeugnis mit knapp 4000 Prompt-Tokens kam die erste
+  Kopfzeile nach **250 Sekunden** — vier Sekunden unter dem Limit. Deshalb ging es mal
+  gut und mal nicht, ohne erkennbares Muster. DoZii benutzt jetzt den Netzwerk-Stack von
+  Electron (`net.fetch`), der dieses Zeitlimit nicht kennt
+
+### Geändert
+
+- **`granite4.1:3b` ist nicht mehr im Katalog** – es war als kleinster Download gedacht,
+  für Rechner ohne Grafikkarte. Der Vorteil ist aber winzig: auf der CPU ist es 12 %
+  schneller als `qwen3:4b` (11,9 gegen 10,6 Token/s) und 0,4 GB kleiner. Das spart rund
+  acht Sekunden pro Zeugnis.
+
+  Dafür liegt die Note im Schnitt eine ganze Stufe daneben, jedes dritte Belegzitat ist
+  erfunden, und es findet nur **42,9 % der Fristen** statt 100 %. Für wen wäre das der
+  richtige Tausch? Für niemanden — also steht es auch nicht mehr zur Wahl
+
+- **Die App sagt jetzt, wie lange der CPU-Betrieb wirklich dauert** – bisher stand in den
+  Einstellungen „läuft ohne dedizierte Grafikkarte, nur RAM wird gebraucht" und beim
+  großen Modell „läuft sonst auf CPU-Fallback langsamer". Beides ist nach der Nachmessung
+  nicht mehr haltbar.
+
+  Ein echtes Arbeitszeugnis durch `qwen3:4b` ohne Grafikkarte, `num_ctx` 12288: 5216
+  Prompt-Token in 72 s, 7220 Ausgabe-Token in 1338 s — **zusammen 24 Minuten**. Die
+  Ausgabe läuft mit 5,4 Token/s, also halb so schnell wie im kurzen Durchsatztest, weil
+  bei vollem Kontext jedes Token über mehrere tausend vorherige hinwegsehen muss.
+
+  Die Doku nannte an dieser Stelle bisher „gut eine Minute pro Zeugnis". Das war aus dem
+  kurzen Test hochgerechnet und um mehr als den Faktor zwanzig daneben. Korrigiert sind
+  `docs/MODELLWAHL.md`, die Begründung in `determineProfile` und die beiden Hinweistexte
+  in allen neun Sprachen.
+
+  An der Entscheidung ändert das nichts — ohne Karte bleibt es bei der leichten Stufe,
+  alles andere wäre noch langsamer. Aber wer 2,5 GB herunterlädt, soll vorher wissen,
+  worauf er wartet
+
+### Aufgeräumt
+
+- Sieben exportierte Funktionen und Konstanten entfernt, die nirgends mehr aufgerufen
+  wurden, samt einem verwaisten Import
+- Auslassungspunkte in allen neun Sprachdateien auf das typografische Zeichen `…`
+  vereinheitlicht (270 Stellen) — drei einzelne Punkte werden von Screenreadern als
+  „Punkt Punkt Punkt" vorgelesen
+- Im Willkommens-Assistenten standen „Threads" und „GB frei" fest auf Deutsch, obwohl es
+  dafür längst Übersetzungsschlüssel gibt — ausgerechnet auf dem ersten Bildschirm, den
+  ein fremdsprachiger Nutzer sieht
+- Im Diagnosebericht bekommen die Rückmeldungen „Kopiert" und „Gespeichert unter …" ein
+  `aria-live`; vorher war der Wechsel nur zu sehen, nicht zu hören
+
 ## [1.3.7] – 2026-09-20
 
 ### Behoben

@@ -65,10 +65,10 @@ describe('determineProfile mit GPU', () => {
 
 describe('determineProfile ohne GPU', () => {
   it('empfiehlt auch bei viel RAM hoechstens die leichte Stufe', () => {
-    // Gemessen auf derselben Maschine: das 8B schafft auf der CPU 5,1 Token
-    // pro Sekunde, das 3B 11,9. Ein Arbeitszeugnis dauert damit neunzehn
-    // Minuten statt einer. Viel RAM macht ein grosses Modell ladbar, nicht
-    // benutzbar - vorher bekam genau dieser Rechner das 8B empfohlen.
+    // Gemessen: ein echtes Arbeitszeugnis durch das leichte Modell braucht
+    // auf der CPU 24 Minuten (5,4 Token/s Ausgabe). Das 8B ist im Kurztest
+    // noch einmal halb so schnell. Viel RAM macht ein grosses Modell ladbar,
+    // nicht benutzbar - vorher bekam genau dieser Rechner das 8B empfohlen.
     expect(determineProfile({ ramGb: 64, vramGb: 0 }, SIZES)).toBe('light')
     expect(determineProfile({ ramGb: 128, vramGb: 0 }, SIZES)).toBe('light')
   })

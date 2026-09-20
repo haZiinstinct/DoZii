@@ -17,10 +17,6 @@ const VALID_LETTER_KINDS: ReadonlySet<LetterKind> = new Set<LetterKind>(LETTER_K
 // Dokument-/Analyse-/Chat-IDs sind UUIDs (crypto.randomUUID).
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
-export function isValidString(val: unknown): val is string {
-  return typeof val === 'string' && val.length > 0
-}
-
 export function isValidId(val: unknown): val is string {
   return typeof val === 'string' && UUID_RE.test(val)
 }

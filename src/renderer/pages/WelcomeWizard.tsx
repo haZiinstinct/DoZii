@@ -151,14 +151,14 @@ export function WelcomeWizard({ onDone }: { onDone?: () => void }) {
                     <Cpu size={16} className="text-brand-cyan" />
                     <span className="text-sm text-brand-text">{hardware.cpu.model}</span>
                     <span className="ms-auto text-xs text-brand-text-dim">
-                      {hardware.cpu.threads} Threads
+                      {t('settings.threads', { count: hardware.cpu.threads })}
                     </span>
                   </div>
                   <div className="flex items-center gap-3">
                     <HardDrive size={16} className="text-brand-cyan" />
                     <span className="text-sm text-brand-text">{hardware.ram.totalGb} GB RAM</span>
                     <span className="ms-auto text-xs text-brand-text-dim">
-                      {hardware.ram.freeGb} GB frei
+                      {t('settings.ramFree', { n: hardware.ram.freeGb })}
                     </span>
                   </div>
                   {hardware.gpu && (
