@@ -3,6 +3,25 @@
 Alle nennenswerten Änderungen an DoZii werden in dieser Datei dokumentiert.
 Das Format orientiert sich an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
+## [Unveröffentlicht]
+
+### Geändert
+
+- **Der Willkommens-Assistent sagt die 24 Minuten jetzt auch selbst** – die Zahl stand seit
+  1.3.8 in den Einstellungen, also dort, wo ein Erstnutzer noch gar nicht war. Im
+  Assistenten verschwand die Grafikkarten-Zeile stattdessen ersatzlos, wenn keine Karte
+  gefunden wurde: zu sehen waren CPU, RAM, das empfohlene Modell und direkt darunter der
+  Download-Knopf für 2,5 GB.
+
+  Die Zeile bleibt jetzt stehen und sagt „Läuft nur auf der CPU", darunter steht die
+  gemessene Laufzeit — rund 24 Minuten pro Zeugnis, plus rund vier Minuten Ladezeit beim
+  ersten Lauf nach dem Hochfahren. Gesperrt wird nichts; wer keine Karte hat, soll nur
+  vorher wissen, worauf er wartet.
+
+  Ob eine Karte zählt, entscheidet `usableVramGb` — dieselbe Funktion, die auch die
+  Einstufung benutzt. `hardware.profile` hätte dafür nicht gereicht: die leichte Stufe
+  kommt auch bei einer echten, aber zu kleinen Karte heraus
+
 ## [1.3.8] – 2026-09-20
 
 ### Behoben

@@ -276,6 +276,8 @@
   "welcome": {
     "continue": "开始使用",
     "continueWithout": "没有模型时可以添加文档，但还无法分析。你可以随时在设置中补上。",
+    "cpuOnly": "未检测到 DoZii 可以使用的显卡。",
+    "cpuOnlyHint": "实测一份工作证明约需 24 分钟，开机后首次运行还要额外约 4 分钟加载模型。分析可以进行，只是比较慢。",
     "modelDownload": "立即下载模型",
     "modelFailed": "下载失败。",
     "modelLoading": "下载中 … {{percent}} %",

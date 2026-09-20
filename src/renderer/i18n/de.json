@@ -277,6 +277,8 @@
   "welcome": {
     "continue": "Loslegen",
     "continueWithout": "Ohne Modell kannst du Dokumente ablegen, aber noch nichts auswerten. Nachholen kannst du das jederzeit in den Einstellungen.",
+    "cpuOnly": "Keine Grafikkarte erkannt, die DoZii nutzen kann.",
+    "cpuOnlyHint": "Gemessen dauert ein Arbeitszeugnis dann rund 24 Minuten, beim ersten Lauf nach dem Hochfahren kommen rund vier Minuten Ladezeit dazu. Auswerten geht, es dauert nur.",
     "modelDownload": "Modell jetzt laden",
     "modelFailed": "Download fehlgeschlagen.",
     "modelLoading": "Lädt … {{percent}} %",

@@ -277,6 +277,8 @@
   "welcome": {
     "continue": "Começar",
     "continueWithout": "Sem modelo pode adicionar documentos mas ainda não analisá-los. Pode fazê-lo depois nas definições.",
+    "cpuOnly": "Não foi detetada nenhuma placa de vídeo que o DoZii possa usar.",
+    "cpuOnlyHint": "Medido, um certificado de trabalho leva então cerca de 24 minutos, mais cerca de quatro minutos de carregamento na primeira execução depois de ligar o computador. A análise funciona, só demora.",
     "modelDownload": "Transferir o modelo",
     "modelFailed": "A transferência falhou.",
     "modelLoading": "A transferir … {{percent}} %",

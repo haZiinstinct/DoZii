@@ -277,6 +277,8 @@
   "welcome": {
     "continue": "Commencer",
     "continueWithout": "Sans modèle, vous pouvez déposer des documents mais pas encore les analyser. Vous pourrez le faire plus tard dans les réglages.",
+    "cpuOnly": "Aucune carte graphique utilisable par DoZii n'a été détectée.",
+    "cpuOnlyHint": "Mesuré, un certificat de travail prend alors environ 24 minutes, plus environ quatre minutes de chargement au premier lancement après le démarrage. L'analyse fonctionne, elle prend simplement du temps.",
     "modelDownload": "Télécharger le modèle",
     "modelFailed": "Échec du téléchargement.",
     "modelLoading": "Téléchargement … {{percent}} %",

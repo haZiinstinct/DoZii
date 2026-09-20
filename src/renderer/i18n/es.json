@@ -277,6 +277,8 @@
   "welcome": {
     "continue": "Empezar",
     "continueWithout": "Sin modelo puedes añadir documentos pero aún no analizarlos. Puedes hacerlo más tarde en los ajustes.",
+    "cpuOnly": "No se detectó ninguna tarjeta gráfica que DoZii pueda usar.",
+    "cpuOnlyHint": "Según las mediciones, un certificado laboral tarda entonces unos 24 minutos, más unos cuatro minutos de carga en la primera ejecución tras encender el equipo. El análisis funciona, solo que tarda.",
     "modelDownload": "Descargar el modelo",
     "modelFailed": "La descarga falló.",
     "modelLoading": "Descargando … {{percent}} %",
