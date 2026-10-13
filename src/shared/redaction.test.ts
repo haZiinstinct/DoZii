@@ -194,6 +194,23 @@ describe('redactText - nur mit Schluesselwort', () => {
     expectConsistentSpans(input, result)
   })
 
+  it.each([
+    'Az. 4 Ca 1234/24',
+    'Aktenzeichen: 12 Js 456/24',
+    'Az.: 3 Sa 78/25',
+    'Vorgangsnummer: ab12345'
+  ])('schwaerzt Aktenzeichen in gemischter Schreibweise: %s', (input) => {
+    const result = redactText(input)
+    expect(result.text).toMatch(/[:.] \[Aktenzeichen geschwaerzt\]$/)
+    expectConsistentSpans(input, result)
+  })
+
+  it('frisst bei gemischter Schreibweise nicht das Folgewort', () => {
+    const input = 'Az. 12 Js 456/24 vom 3.4.2026, Bitte 2 Kopien.'
+    const result = redactText(input)
+    expect(result.spans[0].original).toBe('12 Js 456/24')
+  })
+
   it('laesst ein Aktenzeichen ohne Schluesselwort unangetastet', () => {
     const input = 'Das Schreiben 1234/56 vom 12.03.2024 liegt vor'
     const result = redactText(input)

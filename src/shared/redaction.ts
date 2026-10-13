@@ -208,8 +208,14 @@ const EMAIL_RE = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z
 const PHONE_RE =
   /(?<![\d/])(?:(?:\+|00)49[ ./-]?(?:\(0\)[ ./-]?)?|\(?0\d{2,5}\)?[ ./-]?)\d(?:[ ./-]?\d){4,13}(?!\d)/g
 
-/** Baustein fuer Aktenzeichen-Werte: "S 12 AS 345/26", "1234/56", "2024-0815". */
-const REF_TOKEN = '(?:[A-Z]{1,4}|[A-Za-z]?\\d+[A-Za-z]?)'
+/**
+ * Baustein fuer Aktenzeichen-Werte: "S 12 AS 345/26", "4 Ca 1234/24",
+ * "1234/56", "2024-0815", "ab12345". Registerzeichen in gemischter Schreibweise
+ * ("Ca", "Js") nur, wenn danach eine Zahl folgt - sonst frisst der Wert das
+ * naechste Wort ("Az. 12/345 Bitte ...").
+ */
+const REF_TOKEN =
+  '(?:[A-Z]{1,4}(?![a-z])|[A-Z][a-z]{1,3}(?=[ ./-]\\d)|[A-Za-z]{0,4}\\d+[A-Za-z]?)'
 const REF_VALUE = `${REF_TOKEN}(?:[ ./-]${REF_TOKEN})*`
 
 /** Trennung zwischen Schluesselwort und Wert: "Az. ", "Nr.: ", " - ". */
