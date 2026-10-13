@@ -69,6 +69,7 @@ export const deadlines = sqliteTable('deadlines', {
   kind: text('kind').notNull(),
   label: text('label').notNull(),
   dueDate: text('due_date').notNull(), // ISO YYYY-MM-DD
+  latestDueDate: text('latest_due_date'), // ISO, Bekanntgabefiktion (+4 Tage)
   startDate: text('start_date'),
   periodText: text('period_text'),
   quote: text('quote').notNull(),

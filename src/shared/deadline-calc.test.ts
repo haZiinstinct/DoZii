@@ -1,5 +1,12 @@
 import { describe, it, expect } from 'vitest'
-import { addPeriod, computeDeadline, daysUntil, shiftToNextWorkingDay } from './deadline-calc'
+import {
+  addPeriod,
+  computeDeadline,
+  daysUntil,
+  deadlineUrgency,
+  effectiveDueIso,
+  shiftToNextWorkingDay
+} from './deadline-calc'
 import type { DeadlineAnchor } from './types'
 
 /** Anker wie ihn das Modell liefert - Felder pro Testfall gezielt ueberschrieben. */
@@ -326,5 +333,67 @@ describe('computeDeadline - Kuendigung (§ 193 BGB gilt nicht)', () => {
       todayIso: '2026-05-01'
     })
     expect(result?.note).toBeNull()
+  })
+})
+
+describe('computeDeadline - Bekanntgabefiktion (+4 Tage)', () => {
+  const bescheid = anchor({
+    kind: 'widerspruch',
+    startDateIso: '2026-03-02',
+    startDateQuote: 'Bescheid vom 02.03.2026',
+    periodValue: 1,
+    periodUnit: 'month'
+  })
+
+  it('meldet nicht "abgelaufen", solange das spaeteste Ende noch kommt', () => {
+    const result = computeDeadline({ anchor: bescheid, todayIso: '2026-04-03' })
+    expect(result?.dueDateIso).toBe('2026-04-02')
+    // 06.03. + 1 Monat = 06.04.2026, Ostermontag -> Dienstag 07.04.
+    expect(result?.latestDueDateIso).toBe('2026-04-07')
+    expect(result?.urgency).not.toBe('expired')
+    expect(result?.note).toContain('spätestens am 07.04.2026')
+  })
+
+  it('meldet "abgelaufen", wenn auch das spaeteste Ende vorbei ist', () => {
+    const result = computeDeadline({ anchor: bescheid, todayIso: '2026-04-08' })
+    expect(result?.urgency).toBe('expired')
+  })
+
+  it('rechnet nicht mit Fiktion, wenn das Zustelldatum im Dokument steht', () => {
+    const result = computeDeadline({
+      anchor: { ...bescheid, startDateQuote: 'Zugestellt am: 02.03.2026' },
+      todayIso: '2026-03-10'
+    })
+    expect(result?.latestDueDateIso).toBeNull()
+  })
+
+  it('gilt nur fuer Rechtsbehelfe, nicht fuer Zahlungen', () => {
+    const result = computeDeadline({
+      anchor: { ...bescheid, kind: 'zahlung' },
+      todayIso: '2026-03-10'
+    })
+    expect(result?.latestDueDateIso).toBeNull()
+  })
+
+  it('gilt nicht fuer ein Enddatum aus dem Dokument', () => {
+    const result = computeDeadline({
+      anchor: { ...bescheid, explicitDueDateIso: '2026-04-02' },
+      todayIso: '2026-03-10'
+    })
+    expect(result?.latestDueDateIso).toBeNull()
+  })
+})
+
+describe('deadlineUrgency / effectiveDueIso', () => {
+  it('nimmt das spaeteste Ende erst, wenn das frueheste vorbei ist', () => {
+    expect(effectiveDueIso('2026-04-02', '2026-04-07', '2026-04-01')).toBe('2026-04-02')
+    expect(effectiveDueIso('2026-04-02', '2026-04-07', '2026-04-03')).toBe('2026-04-07')
+    expect(effectiveDueIso('2026-04-02', null, '2026-04-03')).toBe('2026-04-02')
+  })
+
+  it('ist erst nach dem spaetesten Ende abgelaufen', () => {
+    expect(deadlineUrgency('2026-04-02', '2026-04-07', '2026-04-07')).toBe('critical')
+    expect(deadlineUrgency('2026-04-02', '2026-04-07', '2026-04-08')).toBe('expired')
+    expect(deadlineUrgency('2026-04-02', null, '2026-04-03')).toBe('expired')
   })
 })

@@ -6,7 +6,7 @@ import { chatOnce } from './ollama-client.service'
 import { buildDeadlineExtractPrompt } from '../prompts/deadline-extract.prompt'
 import { parseDeadlineAnchors } from '../lib/parse-deadline-anchors'
 import { addPeriod, computeDeadline } from '@shared/deadline-calc'
-import { findDeadlineAnchors } from '@shared/fristen-radar'
+import { findDeadlineAnchors, parseGermanDate } from '@shared/fristen-radar'
 import { logger } from './logger.service'
 import { DEFAULT_NUM_CTX } from '../config/constants'
 import type {
@@ -48,6 +48,7 @@ function rowToDeadline(row: typeof schema.deadlines.$inferSelect): Deadline {
     kind: row.kind as Deadline['kind'],
     label: row.label,
     dueDateIso: row.dueDate,
+    latestDueDateIso: row.latestDueDate ?? null,
     startDateIso: row.startDate,
     periodText: row.periodText,
     quote: row.quote,
@@ -98,6 +99,7 @@ function persist(documentId: string, deadlines: Deadline[]): void {
         kind: d.kind,
         label: d.label,
         dueDate: d.dueDateIso,
+        latestDueDate: d.latestDueDateIso,
         startDate: d.startDateIso,
         periodText: d.periodText,
         quote: d.quote,
@@ -144,6 +146,7 @@ export function anchorsToDeadlines(
       kind: anchor.kind,
       label: anchor.label || anchor.kind,
       dueDateIso: computed.dueDateIso,
+      latestDueDateIso: computed.latestDueDateIso,
       startDateIso: anchor.startDateIso,
       periodText: anchor.periodText,
       quote: anchor.quote,
@@ -176,19 +179,40 @@ export function anchorsToDeadlines(
 export function mergeAnchors(
   fromRules: DeadlineAnchor[],
   fromModel: DeadlineAnchor[],
-  today?: string
+  today?: string,
+  documentText?: string
 ): DeadlineAnchor[] {
   const staleBefore = today ? addPeriod(today, -24, 'month') : null
   const rules = fromRules.map((rule) => {
     if (!staleBefore || rule.explicitDueDateIso || !rule.startDateIso) return rule
     if (rule.startDateIso >= staleBefore) return rule
     const newer = fromModel.find(
-      (m) => m.kind === rule.kind && m.startDateIso !== null && m.startDateIso > rule.startDateIso!
+      (m) =>
+        m.kind === rule.kind &&
+        m.startDateIso !== null &&
+        m.startDateIso > rule.startDateIso! &&
+        m.startDateIso <= today! &&
+        startDateIsBacked(m, documentText)
     )
     return newer ?? rule
   })
   const covered = new Set(rules.map((a) => a.kind))
   return [...rules, ...fromModel.filter((a) => !covered.has(a.kind))]
+}
+
+/**
+ * Das Startdatum eines Modell-Ankers ist nur belegt, wenn sein Zitat woertlich
+ * im Dokument steht UND genau dieses Datum enthaelt. Die Belegpruefung in
+ * parseDeadlineAnchors deckt nur das Fristzitat ab - ohne diese Pruefung
+ * koennte ein Dokument dem Modell ein spaeteres Datum unterschieben und so
+ * den Regel-Anker verdraengen.
+ */
+function startDateIsBacked(anchor: DeadlineAnchor, documentText?: string): boolean {
+  const quote = anchor.startDateQuote
+  if (!documentText || !quote) return false
+  const squash = (v: string): string => v.replace(/\s+/g, ' ').toLowerCase()
+  if (!squash(documentText).includes(squash(quote))) return false
+  return parseGermanDate(quote) === anchor.startDateIso
 }
 
 /**
@@ -221,7 +245,12 @@ export async function scanDeadlines(
       logger.warn(SOURCE, 'Fristen ohne Beleg im Dokument verworfen', { documentId, unverified })
     })
     const today = todayIso()
-    const anchors = mergeAnchors(findDeadlineAnchors(doc.extractedText), modelAnchors, today)
+    const anchors = mergeAnchors(
+      findDeadlineAnchors(doc.extractedText),
+      modelAnchors,
+      today,
+      doc.extractedText
+    )
     const deadlines = anchorsToDeadlines(
       documentId,
       anchors,

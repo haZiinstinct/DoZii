@@ -463,6 +463,11 @@ export interface Deadline {
   label: string
   /** Enddatum als ISO-Datum (YYYY-MM-DD), bereits auf Werktag geschoben. */
   dueDateIso: string
+  /**
+   * Spaetestes Ende mit Bekanntgabefiktion (+4 Tage), wenn ab dem
+   * Bescheiddatum gerechnet wurde; sonst null. Siehe deadline-calc.
+   */
+  latestDueDateIso: string | null
   startDateIso: string | null
   periodText: string | null
   quote: string

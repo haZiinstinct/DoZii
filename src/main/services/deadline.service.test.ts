@@ -33,10 +33,31 @@ describe('mergeAnchors', () => {
     expect(mergeAnchors([rule], [model], '2026-03-20')).toEqual([rule])
   })
 
+  const DOC = 'Geburtsdatum: 05.06.1985\nHagen, 12.03.2026\nWiderspruch innerhalb eines Monats'
+
   it('nimmt das Modell, wenn der Regel-Anker ein uraltes Datum gegriffen hat', () => {
     const rule = anchor({ startDateIso: '1985-06-05' })
-    const model = anchor({ startDateIso: '2026-03-12' })
-    expect(mergeAnchors([rule], [model], '2026-03-20')).toEqual([model])
+    const model = anchor({ startDateIso: '2026-03-12', startDateQuote: 'Hagen, 12.03.2026' })
+    expect(mergeAnchors([rule], [model], '2026-03-20', DOC)).toEqual([model])
+  })
+
+  it('glaubt dem Modell-Datum nur, wenn es so im Dokument steht', () => {
+    const rule = anchor({ startDateIso: '1985-06-05' })
+    const erfunden = anchor({ startDateIso: '2026-03-15', startDateQuote: 'Hagen, 15.03.2026' })
+    const falschGelesen = anchor({
+      startDateIso: '2026-03-15',
+      startDateQuote: 'Hagen, 12.03.2026'
+    })
+    const ohneZitat = anchor({ startDateIso: '2026-03-12', startDateQuote: null })
+    for (const model of [erfunden, falschGelesen, ohneZitat]) {
+      expect(mergeAnchors([rule], [model], '2026-03-20', DOC)).toEqual([rule])
+    }
+  })
+
+  it('nimmt kein Modell-Datum aus der Zukunft', () => {
+    const rule = anchor({ startDateIso: '1985-06-05' })
+    const model = anchor({ startDateIso: '2026-03-12', startDateQuote: 'Hagen, 12.03.2026' })
+    expect(mergeAnchors([rule], [model], '2026-03-01', DOC)).toEqual([rule])
   })
 
   it('behaelt einen alten Regel-Anker ohne besseren Modell-Anker', () => {

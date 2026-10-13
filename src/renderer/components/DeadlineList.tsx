@@ -1,6 +1,7 @@
 import { CalendarClock, Loader2, Search } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import type { Deadline } from '@shared/types'
+import { effectiveDueIso } from '@shared/deadline-calc'
 import { DeadlineCard } from './DeadlineCard'
 
 interface Props {
@@ -16,8 +17,10 @@ interface Props {
  * oben), Abgelaufenes danach - dort zuerst das, was gerade eben abgelaufen ist.
  */
 function sortByUrgency(deadlines: Deadline[], todayIso: string): Deadline[] {
-  const open = deadlines.filter((d) => d.dueDateIso >= todayIso)
-  const expired = deadlines.filter((d) => d.dueDateIso < todayIso)
+  const isOpen = (d: Deadline): boolean =>
+    effectiveDueIso(d.dueDateIso, d.latestDueDateIso, todayIso) >= todayIso
+  const open = deadlines.filter(isOpen)
+  const expired = deadlines.filter((d) => !isOpen(d))
   open.sort((a, b) => a.dueDateIso.localeCompare(b.dueDateIso))
   expired.sort((a, b) => b.dueDateIso.localeCompare(a.dueDateIso))
   return [...open, ...expired]

@@ -9,18 +9,6 @@ Reihenfolge: was am ehesten jemandem schadet, steht oben.
 
 ## Fachlich
 
-### Bekanntgabefiktion bei Behördenbescheiden fehlt
-`src/shared/deadline-calc.ts`
-
-Gerechnet wird ab dem Bescheiddatum. Nach § 41 Abs. 2 VwVfG gilt ein Bescheid aber erst am
-dritten Tag nach Aufgabe zur Post als bekanntgegeben — die Frist beginnt also drei Tage
-später und endet drei Tage später.
-
-**Bewusst so gelassen:** die aktuelle Rechnung liegt damit auf der sicheren Seite. Wer sich
-an das angezeigte Datum hält, ist eher zu früh als zu spät. Die Gegenrichtung wäre
-gefährlich. Richtig wäre trotzdem: mit Fiktion rechnen und den Unterschied benennen
-("frühestens … , spätestens …").
-
 ### "Einfach erklärt" prüft keine Belege
 `src/main/prompts/plain-language.prompt.ts`, `src/renderer/lib/parse-plain-language.ts`
 

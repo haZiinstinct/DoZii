@@ -160,7 +160,8 @@ function documentDate(text: string): DatedReference | null {
   return fallback
 }
 
-const BIRTH_HINT = /(?:\bgeb\b\.?|geburt|geboren|\*)[^\n]*$/iu
+/** "geb.", "Geburtsdatum", "geboren am" kurz davor - oder ein "*" direkt vor dem Datum. */
+const BIRTH_HINT = /(?:\bgeb\b\.?|geburt|geboren)[^\n]*$|\*[\s\u00a0]*$/iu
 
 /** Zeilenanfang vor dem Datum: nichts, "Ort," oder "Ort, den". */
 const DATE_LINE_PREFIX = /^[\s\u00a0]*(?:[\p{L} .()/-]{1,40},[\s\u00a0]*)?(?:den[\s\u00a0]+)?$/iu
@@ -300,8 +301,8 @@ export function findDeadlineAnchors(text: string): DeadlineAnchor[] {
        * ausdruecklich beim gemeinten Ereignis stand ("Zugestellt am:
        * 05.02.2026"). Musste das Datum des Schreibens herhalten, bleibt es
        * bei mittel: zwischen Bescheiddatum und Zustellung liegen regelmaessig
-       * ein paar Tage, und die Drei-Tage-Fiktion des Paragrafen 41 VwVfG
-       * bildet DoZii bewusst nicht ab.
+       * ein paar Tage. Das spaeteste Ende mit Bekanntgabefiktion (+4 Tage)
+       * rechnet deadline-calc zusaetzlich aus.
        */
       confidence: explicitDueDateIso || reference?.exact ? 'high' : 'medium'
     })

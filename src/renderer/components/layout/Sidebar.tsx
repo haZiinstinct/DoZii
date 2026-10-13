@@ -15,7 +15,7 @@ import {
   Clock
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { daysUntil } from '@shared/deadline-calc'
+import { daysUntil, effectiveDueIso } from '@shared/deadline-calc'
 import { toIsoDate } from '@shared/german-holidays'
 import type { DeadlineWithDocument } from '@shared/types'
 import { useOllamaStatus } from '@/hooks/useOllamaStatus'
@@ -99,7 +99,10 @@ function NextDeadline({
   onOpen
 }: NextDeadlineProps): React.ReactElement {
   const { t } = useTranslation()
-  const daysLeft = daysUntil(deadline.dueDateIso, todayIso)
+  const daysLeft = daysUntil(
+    effectiveDueIso(deadline.dueDateIso, deadline.latestDueDateIso, todayIso),
+    todayIso
+  )
   const style = urgencyStyles[urgencyFor(daysLeft)]
 
   // Null und Eins bekommen eigene Saetze - "noch 0 Tage" versteht niemand.
@@ -188,7 +191,7 @@ export function Sidebar() {
   const openDeadlines = useMemo(
     () =>
       deadlines
-        .filter((d) => d.dueDateIso >= todayIso)
+        .filter((d) => effectiveDueIso(d.dueDateIso, d.latestDueDateIso, todayIso) >= todayIso)
         .sort((a, b) => a.dueDateIso.localeCompare(b.dueDateIso)),
     [deadlines, todayIso]
   )

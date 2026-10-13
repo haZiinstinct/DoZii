@@ -9,7 +9,7 @@ import {
   Info
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { daysUntil } from '@shared/deadline-calc'
+import { daysUntil, deadlineUrgency, effectiveDueIso } from '@shared/deadline-calc'
 import { parseIsoDate } from '@shared/german-holidays'
 import type { Deadline } from '@shared/types'
 
@@ -20,7 +20,7 @@ interface Props {
   onAddToCalendar?: (deadline: Deadline) => void
 }
 
-type Urgency = 'expired' | 'critical' | 'soon' | 'ok'
+type Urgency = ReturnType<typeof deadlineUrgency>
 
 const urgencyConfig: Record<
   Urgency,
@@ -56,13 +56,6 @@ const urgencyConfig: Record<
   }
 }
 
-function urgencyFor(daysLeft: number): Urgency {
-  if (daysLeft < 0) return 'expired'
-  if (daysLeft <= 3) return 'critical'
-  if (daysLeft <= 10) return 'soon'
-  return 'ok'
-}
-
 /**
  * Lokalisiertes Datum. `new Date('2026-03-15')` liest ISO als UTC-Mitternacht -
  * westlich von Greenwich waere das Ergebnis der Vortag. Darum die Datumsteile
@@ -78,13 +71,19 @@ function formatDate(iso: string, locale: string): string {
 
 export function DeadlineCard({ deadline, todayIso, onAddToCalendar }: Props): React.ReactElement {
   const { t, i18n } = useTranslation()
-  const daysLeft = daysUntil(deadline.dueDateIso, todayIso)
-  const urgency = urgencyFor(daysLeft)
+  const latest = deadline.latestDueDateIso
+  const effective = effectiveDueIso(deadline.dueDateIso, latest, todayIso)
+  // Fruehestes Ende vorbei, spaetestes (Bekanntgabe +4 Tage) noch nicht.
+  const onlyLatestLeft = effective !== deadline.dueDateIso
+  const daysLeft = daysUntil(effective, todayIso)
+  const urgency = deadlineUrgency(deadline.dueDateIso, latest, todayIso)
   const config = urgencyConfig[urgency]
 
   // Null und Eins bekommen eigene Saetze - "noch 0 Tage" versteht niemand.
   let countdown: string
-  if (daysLeft === 0) countdown = t('deadlines.today')
+  if (onlyLatestLeft && daysLeft === 0) countdown = t('deadlines.latestToday')
+  else if (onlyLatestLeft) countdown = t('deadlines.latestDaysLeft', { count: daysLeft })
+  else if (daysLeft === 0) countdown = t('deadlines.today')
   else if (daysLeft === 1) countdown = t('deadlines.tomorrow')
   else if (daysLeft < 0) countdown = t('deadlines.expiredDays', { count: Math.abs(daysLeft) })
   else countdown = t('deadlines.daysLeft', { count: daysLeft })
@@ -116,7 +115,12 @@ export function DeadlineCard({ deadline, todayIso, onAddToCalendar }: Props): Re
 
       <p className="mt-3 flex items-center gap-2 text-sm font-semibold text-brand-text-bright">
         <CalendarDays size={14} className="flex-shrink-0 text-brand-text-dim" aria-hidden="true" />
-        {formatDate(deadline.dueDateIso, i18n.language)}
+        {latest
+          ? t('deadlines.latestRange', {
+              earliest: formatDate(deadline.dueDateIso, i18n.language),
+              latest: formatDate(latest, i18n.language)
+            })
+          : formatDate(deadline.dueDateIso, i18n.language)}
       </p>
 
       {deadline.quote && (

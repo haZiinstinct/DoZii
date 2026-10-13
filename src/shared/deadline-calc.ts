@@ -22,7 +22,7 @@ import {
   weekdayOf
 } from './german-holidays'
 import { defaultRuleFor } from './deadline-rules'
-import type { DeadlineAnchor, DeadlineConfidence, DeadlinePeriodUnit } from './types'
+import type { DeadlineAnchor, DeadlineConfidence, DeadlineKind, DeadlinePeriodUnit } from './types'
 
 const WEEKDAY_NAMES_DE = [
   'Sonntag',
@@ -45,6 +45,24 @@ const MAX_PERIOD_VALUE: Record<DeadlinePeriodUnit, number> = {
   month: 24,
   year: 5
 }
+
+/**
+ * Bekanntgabefiktion: ein per Post verschickter Verwaltungsakt gilt erst am
+ * vierten Tag nach Aufgabe zur Post als bekannt gegeben (§ 41 Abs. 2 VwVfG,
+ * § 122 Abs. 2 AO, § 37 Abs. 2 SGB X; seit 1.1.2025 vier statt drei Tage).
+ */
+const BEKANNTGABE_DAYS = 4
+
+/** Rechtsbehelfe gegen Verwaltungsakte - nur fuer sie gilt die Fiktion. */
+const POSTAL_FICTION_KINDS: ReadonlySet<DeadlineKind> = new Set([
+  'widerspruch',
+  'einspruch',
+  'klage'
+])
+
+/** Stand das Bezugsdatum ausdruecklich beim Zugang ("Zugestellt am ...")? */
+const DELIVERY_QUOTE =
+  /zugestellt|zustellung|bekannt|zugang|zugegangen|erhalten|eingang|eingegangen/iu
 
 /** Nach wie vielen Werktagsspruengen abgebrochen wird (Endlosschutz). */
 const MAX_WORKING_DAY_SHIFT = 14
@@ -115,6 +133,12 @@ export interface ComputeInput {
 
 export interface ComputedDeadline {
   dueDateIso: string
+  /**
+   * Spaetestes Fristende, wenn ab dem Bescheiddatum gerechnet wurde und der
+   * Bescheid per Post kam (Bekanntgabe +4 Tage). Sonst null. Die Frist gilt
+   * erst als abgelaufen, wenn auch dieses Datum vorbei ist.
+   */
+  latestDueDateIso: string | null
   source: 'explicit' | 'computed'
   note: string | null
   confidence: DeadlineConfidence
@@ -139,6 +163,7 @@ export function computeDeadline(input: ComputeInput): ComputedDeadline | null {
   let source: 'explicit' | 'computed'
 
   const explicit = anchor.explicitDueDateIso
+  let latestBase: string | null = null
   if (explicit && isValidIsoDate(explicit)) {
     base = explicit
     source = 'explicit'
@@ -155,6 +180,20 @@ export function computeDeadline(input: ComputeInput): ComputedDeadline | null {
 
     base = addPeriod(start, period.value, period.unit)
     source = 'computed'
+
+    /*
+     * Gerechnet ab dem Datum des Bescheids statt ab dem Zugang: das Ergebnis
+     * ist das FRUEHESTE Fristende. Fuer den Countdown ist das die sichere
+     * Seite - fuer "abgelaufen" nicht. Wer der Anzeige glaubt, gaebe einen
+     * Rechtsbehelf auf, der noch laeuft. Deshalb zusaetzlich das spaeteste
+     * Ende mit Bekanntgabefiktion.
+     */
+    if (
+      POSTAL_FICTION_KINDS.has(anchor.kind) &&
+      !(anchor.startDateQuote && DELIVERY_QUOTE.test(anchor.startDateQuote))
+    ) {
+      latestBase = addPeriod(addDays(start, BEKANNTGABE_DAYS), period.value, period.unit)
+    }
   }
 
   /*
@@ -173,15 +212,51 @@ export function computeDeadline(input: ComputeInput): ComputedDeadline | null {
     notes.push(describeShift(base, shift.iso))
   }
 
+  let latestDueDateIso: string | null = null
+  if (latestBase) {
+    const latest = shiftToNextWorkingDay(latestBase).iso
+    if (latest > shift.iso) {
+      latestDueDateIso = latest
+      notes.push(
+        `Gerechnet ab dem Datum des Bescheids. Kam er per Post, gilt er erst am vierten Tag danach als bekannt gegeben (§ 41 Abs. 2 VwVfG, § 122 Abs. 2 AO, § 37 Abs. 2 SGB X) - die Frist endet dann spätestens am ${formatGermanDate(latest)}.`
+      )
+    }
+  }
+
   const daysLeft = daysUntil(shift.iso, todayIso)
   return {
     dueDateIso: shift.iso,
+    latestDueDateIso,
     source,
     note: notes.length > 0 ? notes.join(' ') : null,
     confidence,
     daysLeft,
-    urgency: urgencyFor(daysLeft)
+    urgency: deadlineUrgency(shift.iso, latestDueDateIso, todayIso)
   }
+}
+
+export type DeadlineUrgency = ComputedDeadline['urgency']
+
+/**
+ * Dringlichkeit einer Frist. Ist das frueheste Ende vorbei, das spaeteste
+ * (Bekanntgabefiktion) aber nicht, zaehlt das spaeteste - "abgelaufen" erst,
+ * wenn beide vorbei sind.
+ */
+export function deadlineUrgency(
+  dueIso: string,
+  latestIso: string | null | undefined,
+  todayIso: string
+): DeadlineUrgency {
+  return urgencyFor(daysUntil(effectiveDueIso(dueIso, latestIso, todayIso), todayIso))
+}
+
+/** Das Fristende, an dem sich Countdown und "noch offen" ausrichten. */
+export function effectiveDueIso(
+  dueIso: string,
+  latestIso: string | null | undefined,
+  todayIso: string
+): string {
+  return dueIso < todayIso && latestIso ? latestIso : dueIso
 }
 
 interface ResolvedPeriod {
@@ -251,7 +326,7 @@ function downgrade(confidence: DeadlineConfidence): DeadlineConfidence {
   return confidence === 'high' ? 'medium' : confidence
 }
 
-function urgencyFor(daysLeft: number): ComputedDeadline['urgency'] {
+function urgencyFor(daysLeft: number): DeadlineUrgency {
   if (daysLeft < 0) return 'expired'
   if (daysLeft <= 3) return 'critical'
   if (daysLeft <= 10) return 'soon'

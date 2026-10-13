@@ -247,6 +247,13 @@ describe('Datum des Schreibens', () => {
     expect(findDeadlineAnchors(text)[0].startDateIso).toBe('2026-03-12')
   })
 
+  it('ueberspringt ein Datum nicht wegen eines entfernten Sternchens', () => {
+    const text = 'Stadt Hagen *\nBescheiddatum: 13.03.2026\n\n' + BELEHRUNG
+    expect(findDeadlineAnchors(text)[0].startDateIso).toBe('2026-03-13')
+    const fussnote = 'Bescheid* vom 13.03.2026\n\n' + BELEHRUNG
+    expect(findDeadlineAnchors(fussnote)[0].startDateIso).toBe('2026-03-13')
+  })
+
   it('erkennt ein beschriftetes Bescheiddatum', () => {
     const text =
       'Stadt Hagen\nIhr Schreiben vom 02.01.2026\nBescheiddatum: 13.03.2026\n\n' + BELEHRUNG

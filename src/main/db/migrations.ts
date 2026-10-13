@@ -116,6 +116,13 @@ const ANALYSIS_NOTICE_SQL = `
   ALTER TABLE analyses ADD COLUMN notice TEXT;
 `
 
+// v6: Spaetestes Fristende mit Bekanntgabefiktion. Ohne das zeigte DoZii eine
+// ab Bescheiddatum gerechnete Frist als "abgelaufen", waehrend sie wegen der
+// vier Tage Postlaufzeit noch lief.
+const LATEST_DUE_DATE_SQL = `
+  ALTER TABLE deadlines ADD COLUMN latest_due_date TEXT;
+`
+
 export const MIGRATIONS: Migration[] = [
   {
     version: 1,
@@ -145,6 +152,12 @@ export const MIGRATIONS: Migration[] = [
     version: 5,
     up: (db) => {
       db.exec(ANALYSIS_NOTICE_SQL)
+    }
+  },
+  {
+    version: 6,
+    up: (db) => {
+      db.exec(LATEST_DUE_DATE_SQL)
     }
   }
 ]

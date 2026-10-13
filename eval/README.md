@@ -179,9 +179,10 @@ Feldbedeutungen:
 ### Zwei Fallen beim Schreiben von Bescheid-Fixtures
 
 1. **Das Bezugsdatum muss wörtlich im Text stehen.** Die Fixtures nennen deshalb immer ein
-   ausdrückliches Zustell- oder Bekanntgabedatum. DoZii bildet die Bekanntgabefiktion
-   (vier Tage seit 2025: § 41 Abs. 2 VwVfG, § 122 Abs. 2 AO, § 37 Abs. 2 SGB X) bewusst **nicht** ab — die
-   erwarteten Daten dürfen sie also auch nicht einrechnen.
+   ausdrückliches Zustell- oder Bekanntgabedatum. Das gemessene Fristende ist
+   das **früheste** — ab Bescheiddatum, ohne Bekanntgabefiktion (vier Tage seit 2025: § 41
+   Abs. 2 VwVfG, § 122 Abs. 2 AO, § 37 Abs. 2 SGB X). Die Fiktion steckt nur im zusätzlichen
+   `latestDueDateIso`; die erwarteten Daten dürfen sie also nicht einrechnen.
 2. **§ 193 BGB prüfen.** Fällt das Fristende auf Samstag, Sonntag oder einen bundesweiten
    Feiertag, verschiebt `computeDeadline` es auf den nächsten Werktag. Das erwartete Datum
    muss das bereits enthalten.
