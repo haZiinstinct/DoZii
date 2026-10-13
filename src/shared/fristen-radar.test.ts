@@ -19,6 +19,18 @@ describe('parseGermanDate', () => {
     expect(parseGermanDate('kein Datum')).toBeNull()
     expect(parseGermanDate('45. Februar 2026')).toBeNull()
   })
+
+  it('prueft den Kalender', () => {
+    expect(parseGermanDate('31.02.2026')).toBeNull()
+    expect(parseGermanDate('29.02.2026')).toBeNull()
+    expect(parseGermanDate('29.02.2028')).toBe('2028-02-29')
+    expect(parseGermanDate('12.13.2026')).toBeNull()
+  })
+
+  it('liest kein Datum aus einer laengeren Ziffernfolge', () => {
+    expect(parseGermanDate('Az 126.02.2026')).toBeNull()
+    expect(parseGermanDate('1.2.20261')).toBeNull()
+  })
 })
 
 describe('Rechtsbehelfsfristen', () => {

@@ -21,7 +21,7 @@
  */
 
 import type { DeadlineAnchor, DeadlineKind, DeadlinePeriodUnit } from './types'
-import { toIsoDate } from './german-holidays'
+import { daysInMonth, toIsoDate } from './german-holidays'
 import { sentenceAround } from './sentence'
 
 const WS = '[\\s\\u00a0]+'
@@ -91,9 +91,13 @@ const PERIOD_RE = new RegExp(
   'giu'
 )
 
-/** "26. Februar 2026" oder "26.02.2026" - das Datum des Schreibens. */
+/**
+ * "26. Februar 2026" oder "26.02.2026" - das Datum des Schreibens. Verankert
+ * an Ziffern und Punkten davor/danach, sonst wird aus "Az 126.02.2026" ein
+ * 26. Februar.
+ */
 const DATE_RE = new RegExp(
-  `(\\d{1,2})\\.${WSO}(?:(${Object.keys(MONTHS).join('|')})|(\\d{1,2})\\.)${WSO}(\\d{4})`,
+  `(?<![\\d.])(\\d{1,2})\\.${WSO}(?:(${Object.keys(MONTHS).join('|')})|(\\d{1,2})\\.)${WSO}(\\d{4})(?!\\d)`,
   'giu'
 )
 
@@ -124,7 +128,8 @@ export function parseGermanDate(raw: string): string | null {
   const day = Number.parseInt(m[1], 10)
   const month = m[2] ? MONTHS[m[2].toLowerCase()] : Number.parseInt(m[3], 10)
   const year = Number.parseInt(m[4], 10)
-  if (!month || day < 1 || day > 31 || year < 1900 || year > 2200) return null
+  if (!month || month > 12 || year < 1900 || year > 2200) return null
+  if (day < 1 || day > daysInMonth(year, month)) return null
   return toIsoDate(year, month, day)
 }
 
