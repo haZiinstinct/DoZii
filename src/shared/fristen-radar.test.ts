@@ -134,15 +134,40 @@ describe('gegen die Eval-Fixtures', () => {
 
   it('erfindet beim Bescheid ohne Frist keine', () => {
     const f = fixtures.find((x) => x.id.includes('ohne-frist'))
-    if (!f) return
+    expect(f).toBeDefined()
     // Lieber nichts melden als etwas erfinden.
-    expect(findDeadlineAnchors(f.text).length).toBeLessThanOrEqual(1)
+    expect(findDeadlineAnchors(f!.text)).toHaveLength(0)
   })
 
-  it('findet in der Mehrheit der Bescheide eine Frist', () => {
-    const withAny = fixtures.filter((f) => findDeadlineAnchors(f.text).length > 0)
-    expect(withAny.length / fixtures.length).toBeGreaterThanOrEqual(0.6)
+  it('findet in jedem Bescheid mit Frist mindestens einen Anker', () => {
+    const withDeadline = fixtures.filter((f) => !f.id.includes('ohne-frist'))
+    const missed = withDeadline.filter((f) => findDeadlineAnchors(f.text).length === 0)
+    expect(missed.map((f) => f.id)).toEqual([])
   })
+
+  /**
+   * Bekannte Luecke: "bis zum 30.04.2026 ... zu ueberweisen" ist ein festes
+   * Datum ohne Fristdauer - das erkennt der Radar nicht. it.fails meldet sich,
+   * sobald es behoben ist.
+   */
+  const KNOWN_KIND_GAPS = new Set(['bescheid-gebuehr-zahlung'])
+
+  for (const id of [
+    'bussgeld-2wochen',
+    'klage-widerspruchsbescheid',
+    'steuer-1monat',
+    'widerspruch-monat',
+    'gebuehr-zahlung'
+  ]) {
+    const fullId = `bescheid-${id}`
+    const run = KNOWN_KIND_GAPS.has(fullId) ? it.fails : it
+    run(`erkennt die erwartete Fristart in ${fullId}`, () => {
+      const f = fixtures.find((x) => x.id === fullId)
+      expect(f).toBeDefined()
+      const expected = (f!.expect as { kind?: string }).kind
+      expect(findDeadlineAnchors(f!.text).map((a) => a.kind)).toContain(expected)
+    })
+  }
 })
 
 describe('Bezugspunkt in der Zukunft', () => {
