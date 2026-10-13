@@ -14,7 +14,7 @@ deinem Rechner. Keine Cloud, keine Telemetrie, kein CDN.</p>
 
 <p>
   <a href="https://github.com/haZiinstinct/DoZii/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/haZiinstinct/DoZii/actions/workflows/ci.yml/badge.svg" /></a>
-  <img alt="Version" src="https://img.shields.io/badge/version-1.3.0-00d4ff?labelColor=0a0a0f" />
+  <img alt="Version" src="https://img.shields.io/badge/version-1.3.8-00d4ff?labelColor=0a0a0f" />
   <img alt="License MIT" src="https://img.shields.io/badge/license-MIT-00d4ff?labelColor=0a0a0f" />
   <img alt="Electron 33" src="https://img.shields.io/badge/Electron-33-00d4ff?labelColor=0a0a0f&logo=electron&logoColor=white" />
   <img alt="React 19" src="https://img.shields.io/badge/React-19-00d4ff?labelColor=0a0a0f&logo=react&logoColor=white" />
@@ -22,7 +22,7 @@ deinem Rechner. Keine Cloud, keine Telemetrie, kein CDN.</p>
   <img alt="Windows 10/11" src="https://img.shields.io/badge/Windows-10%2F11-94a3b8?labelColor=0a0a0f&logo=windows&logoColor=white" />
 </p>
 
-<sub><a href="#-highlights">Highlights</a> · <a href="#-die-5-analyse-modi">Analyse-Modi</a> · <a href="#-loslegen">Loslegen</a> · <a href="#-datenschutz--datenablage">Datenschutz</a> · <a href="#-entwicklung">Entwicklung</a></sub>
+<sub><a href="#-highlights">Highlights</a> · <a href="#-die-analyse-modi">Analyse-Modi</a> · <a href="#-loslegen">Loslegen</a> · <a href="#-datenschutz--datenablage">Datenschutz</a> · <a href="#-entwicklung">Entwicklung</a></sub>
 
 </div>
 

@@ -38,21 +38,10 @@ $env:DOZII_EVAL_MODEL = 'llama3.1:8b'
 npx vitest run --config vitest.eval.config.ts
 ```
 
-### Was der Integrator noch tun muss
+Kurzform: `npm run eval`.
 
-In `package.json` fehlt das Skript — diese Datei durfte beim Anlegen des Harness nicht
-angefasst werden. Bitte ergänzen:
-
-```json
-"eval": "vitest run --config vitest.eval.config.ts"
-```
-
-Zweiter, optionaler Punkt: `eval/` liegt in keinem der beiden Projekt-tsconfigs
-(`tsconfig.node.json` deckt `src/main`, `src/preload`, `src/shared` ab, `tsconfig.web.json`
-den Renderer), `npm run typecheck` prüft diesen Ordner also nicht mit. Der Code hier ist
-gegen dieselben Compiler-Optionen geprüft (strict, `noUnusedLocals`, `noUnusedParameters`,
-kein `any`) — wer das dauerhaft absichern will, nimmt `eval/**/*` in ein tsconfig auf.
-`npm run lint` und `npm run format:check` erfassen den Ordner dagegen schon.
+`eval/` liegt in keinem der beiden Projekt-tsconfigs, `npm run typecheck` prüft den Ordner
+also nicht mit. `npm run lint` und `npm run format:check` erfassen ihn dagegen.
 
 ## Voraussetzungen
 
@@ -190,8 +179,8 @@ Feldbedeutungen:
 ### Zwei Fallen beim Schreiben von Bescheid-Fixtures
 
 1. **Das Bezugsdatum muss wörtlich im Text stehen.** Die Fixtures nennen deshalb immer ein
-   ausdrückliches Zustell- oder Bekanntgabedatum. DoZii bildet die Drei-Tages-Fiktion
-   (§ 41 Abs. 2 VwVfG, § 122 Abs. 2 AO, § 37 Abs. 2 SGB X) bewusst **nicht** ab — die
+   ausdrückliches Zustell- oder Bekanntgabedatum. DoZii bildet die Bekanntgabefiktion
+   (vier Tage seit 2025: § 41 Abs. 2 VwVfG, § 122 Abs. 2 AO, § 37 Abs. 2 SGB X) bewusst **nicht** ab — die
    erwarteten Daten dürfen sie also auch nicht einrechnen.
 2. **§ 193 BGB prüfen.** Fällt das Fristende auf Samstag, Sonntag oder einen bundesweiten
    Feiertag, verschiebt `computeDeadline` es auf den nächsten Werktag. Das erwartete Datum

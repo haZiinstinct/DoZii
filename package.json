@@ -16,6 +16,9 @@
     "url": "https://github.com/haZiinstinct/DoZii/issues"
   },
   "main": "./out/main/index.js",
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
     "dev": "electron-vite dev",
     "build": "electron-vite build",
