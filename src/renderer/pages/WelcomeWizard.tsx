@@ -25,6 +25,7 @@ export function WelcomeWizard({ onDone }: { onDone?: () => void }) {
   const [hardware, setHardware] = useState<HardwareInfo | null>(null)
   const [ollamaState, setOllamaState] = useState<OllamaState>('checking')
   const [scanning, setScanning] = useState(true)
+  const [scanFailed, setScanFailed] = useState(false)
   const [starting, setStarting] = useState(false)
   const [startError, setStartError] = useState<string | null>(null)
   /** null = noch nicht geprueft (Ollama war nicht erreichbar). */
@@ -55,12 +56,25 @@ export function WelcomeWizard({ onDone }: { onDone?: () => void }) {
   }
 
   useEffect(() => {
+    // Ein Fehler im Scan darf den Assistenten nicht im Ladezustand festhalten -
+    // ohne Hardware-Angaben geht es trotzdem weiter.
     async function scan() {
-      const [hw, ollama] = await Promise.all([window.api.hardware.detect(), refreshOllama()])
-      setHardware(hw)
-      setOllamaState(ollama)
-      if (ollama === 'connected') await refreshModel(hw.recommendedModel)
-      setScanning(false)
+      try {
+        const [hw, ollama] = await Promise.allSettled([
+          window.api.hardware.detect(),
+          refreshOllama()
+        ])
+        const state = ollama.status === 'fulfilled' ? ollama.value : 'not-installed'
+        setOllamaState(state)
+        if (hw.status === 'fulfilled') {
+          setHardware(hw.value)
+          if (state === 'connected') await refreshModel(hw.value.recommendedModel)
+        } else {
+          setScanFailed(true)
+        }
+      } finally {
+        setScanning(false)
+      }
     }
     scan()
   }, [])
@@ -152,6 +166,8 @@ export function WelcomeWizard({ onDone }: { onDone?: () => void }) {
                 <div className="h-5 w-5 animate-spin rounded-full border-2 border-brand-cyan border-t-transparent" />
                 <span className="text-sm text-brand-text-dim">{t('welcome.scanning')}</span>
               </div>
+            ) : scanFailed ? (
+              <p className="py-4 text-sm text-brand-text-dim">{t('welcome.scanFailed')}</p>
             ) : (
               hardware && (
                 <div className="space-y-3">

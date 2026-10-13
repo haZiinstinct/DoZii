@@ -292,6 +292,7 @@
     "privacy": "Nenhuns dados saem do seu computador",
     "recommended": "Modelo recomendado",
     "scanning": "A detetar hardware…",
+    "scanFailed": "Não foi possível detetar o hardware. Pode continuar na mesma e escolher um modelo mais tarde nas definições.",
     "startFailed": "Não foi possível iniciar o Ollama",
     "startFailedConnect": "O Ollama foi iniciado mas ainda não responde. Aguarde um momento e tente novamente.",
     "startOllama": "Iniciar o Ollama agora",

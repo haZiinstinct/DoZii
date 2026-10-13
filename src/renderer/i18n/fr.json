@@ -292,6 +292,7 @@
     "privacy": "Aucune donnée ne quitte votre ordinateur",
     "recommended": "Modèle recommandé",
     "scanning": "Détection du matériel…",
+    "scanFailed": "Le matériel n'a pas pu être détecté. Vous pouvez tout de même continuer et choisir un modèle plus tard dans les paramètres.",
     "startFailed": "Impossible de démarrer Ollama",
     "startFailedConnect": "Ollama a démarré mais ne répond pas encore. Patientez un instant et réessayez.",
     "startOllama": "Démarrer Ollama maintenant",

@@ -292,6 +292,7 @@
     "privacy": "Keine Daten verlassen deinen Rechner",
     "recommended": "Empfohlenes Modell",
     "scanning": "Hardware wird erkannt…",
+    "scanFailed": "Die Hardware ließ sich nicht erkennen. Du kannst trotzdem fortfahren und das Modell später in den Einstellungen wählen.",
     "startFailed": "Ollama konnte nicht gestartet werden",
     "startFailedConnect": "Ollama wurde gestartet, antwortet aber noch nicht. Einen Moment warten und erneut versuchen.",
     "startOllama": "Ollama jetzt starten",

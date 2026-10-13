@@ -291,6 +291,7 @@
     "privacy": "データがあなたのコンピュータから外に出ることはありません",
     "recommended": "推奨モデル",
     "scanning": "ハードウェアを検出中…",
+    "scanFailed": "ハードウェアを検出できませんでした。このまま続行し、後で設定からモデルを選べます。",
     "startFailed": "Ollama を起動できませんでした",
     "startFailedConnect": "Ollama は起動しましたがまだ応答していません。少し待ってから再試行してください。",
     "startOllama": "Ollama を今すぐ起動",

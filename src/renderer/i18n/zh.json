@@ -291,6 +291,7 @@
     "privacy": "没有数据会离开你的电脑",
     "recommended": "推荐模型",
     "scanning": "正在检测硬件…",
+    "scanFailed": "无法检测硬件。你仍可继续，稍后在设置中选择模型。",
     "startFailed": "无法启动 Ollama",
     "startFailedConnect": "Ollama 已启动但尚未响应。请稍候片刻后重试。",
     "startOllama": "立即启动 Ollama",
