@@ -62,9 +62,21 @@ export function isValidOllamaUrl(value: unknown): value is string {
  * ungueltige Werte in die UI zu reichen.
  */
 export function sanitizeSettings(raw: unknown): AppSettings {
-  if (!raw || typeof raw !== 'object') return { ...DEFAULT_SETTINGS }
+  const { settings, invalidKeys } = checkSettings(raw)
+  if (invalidKeys.length > 0) {
+    logger.warn('settings.service', 'Korrupte Settings-Felder auf Default zurueckgesetzt')
+  }
+  return settings
+}
+
+/** Wie sanitizeSettings, meldet die ungueltigen Felder aber zurueck statt zu loggen. */
+function checkSettings(raw: unknown): {
+  settings: AppSettings
+  invalidKeys: (keyof AppSettings)[]
+} {
+  if (!raw || typeof raw !== 'object') return { settings: { ...DEFAULT_SETTINGS }, invalidKeys: [] }
   const r = raw as Record<string, unknown>
-  let repaired = false
+  const invalidKeys: (keyof AppSettings)[] = []
 
   /**
    * Ein FEHLENDES Feld ist kein Schaden, sondern der Normalfall nach einem
@@ -77,7 +89,7 @@ export function sanitizeSettings(raw: unknown): AppSettings {
    */
   const pick = <K extends keyof AppSettings>(key: K, valid: boolean, value: AppSettings[K]) => {
     if (valid) return value
-    if (r[key] !== undefined) repaired = true
+    if (r[key] !== undefined) invalidKeys.push(key)
     return DEFAULT_SETTINGS[key]
   }
 
@@ -141,10 +153,7 @@ export function sanitizeSettings(raw: unknown): AppSettings {
     )
   }
 
-  if (repaired) {
-    logger.warn('settings.service', 'Korrupte Settings-Felder auf Default zurueckgesetzt')
-  }
-  return result
+  return { settings: result, invalidKeys }
 }
 
 export function getSettings(): AppSettings {
@@ -173,9 +182,21 @@ export function markExistingInstallAsOnboarded(): void {
   logger.info('settings.service', 'Bestehende Installation erkannt - Assistent uebersprungen')
 }
 
+/**
+ * Uebernimmt nur gueltige Werte. Ein ungueltiger Wert (z.B. eine fremde
+ * ollamaUrl ueber die DevTools) wird verworfen, der bisherige bleibt - so
+ * landet nichts in der Datei, was getSettings danach bei jedem Lesen
+ * reparieren und anmahnen muesste.
+ */
 export function updateSettings(partial: Partial<AppSettings>): AppSettings {
   const current = getSettings()
-  const next: AppSettings = { ...current, ...partial }
+  const { settings: next, invalidKeys } = checkSettings({ ...current, ...partial })
+  for (const key of invalidKeys) {
+    ;(next as Record<keyof AppSettings, unknown>)[key] = current[key]
+  }
+  if (invalidKeys.length > 0) {
+    logger.warn('settings.service', 'Ungueltige Einstellungen verworfen', { keys: invalidKeys })
+  }
   getStore().set('settings', next)
   logger.info('settings.service', 'Settings updated', { keys: Object.keys(partial) })
   return next

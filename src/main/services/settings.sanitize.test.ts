@@ -5,9 +5,23 @@ import { vi } from 'vitest'
 vi.mock('./logger.service', () => ({
   logger: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }
 }))
-vi.mock('electron-store', () => ({ default: class {} }))
+vi.mock('electron-store', () => ({
+  default: class {
+    path = 'memory'
+    private data: Record<string, unknown>
+    constructor(opts: { defaults: Record<string, unknown> }) {
+      this.data = structuredClone(opts.defaults)
+    }
+    get(key: string): unknown {
+      return this.data[key]
+    }
+    set(key: string, value: unknown): void {
+      this.data[key] = value
+    }
+  }
+}))
 
-import { isValidOllamaUrl, sanitizeSettings } from './settings.service'
+import { isValidOllamaUrl, sanitizeSettings, updateSettings, getSettings } from './settings.service'
 import { logger } from './logger.service'
 import { DEFAULT_SETTINGS } from '@shared/types'
 
@@ -108,5 +122,26 @@ describe('Update von einer aelteren Version', () => {
 
     expect(result.theme).toBe(DEFAULT_SETTINGS.theme)
     expect(logger.warn).toHaveBeenCalled()
+  })
+})
+
+describe('updateSettings', () => {
+  it('verwirft eine fremde ollamaUrl und behaelt die bisherige', () => {
+    const before = getSettings().ollamaUrl
+    const next = updateSettings({ ollamaUrl: 'http://evil.example', theme: 'light' })
+    expect(next.ollamaUrl).toBe(before)
+    expect(next.theme).toBe('light')
+    expect(getSettings().ollamaUrl).toBe(before)
+  })
+
+  it('behaelt bei ungueltigem Wert den bisherigen statt des Defaults', () => {
+    updateSettings({ language: 'en' })
+    const next = updateSettings({ language: 'klingon' as never })
+    expect(next.language).toBe('en')
+  })
+
+  it('schreibt keine unbekannten Felder in die Datei', () => {
+    const next = updateSettings({ fremd: 1 } as never)
+    expect(next).not.toHaveProperty('fremd')
   })
 })
