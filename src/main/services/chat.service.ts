@@ -8,17 +8,20 @@ import { streamConversation, warmupModel } from './ollama-client.service'
 import { fitTextToTokenBudget } from '../prompts/token-budget'
 import { DEFAULT_NUM_CTX, MAX_HISTORY_CHARS, DOC_TOKEN_BUDGET } from '../config/constants'
 import { logger } from './logger.service'
+import { getSettings } from './settings.service'
+import { englishNameFor } from '@shared/languages'
 import type { ChatMessage, ChatRole } from '@shared/types'
 
-function buildSystemPrompt(documentText: string, language: string): string {
-  const isGerman = language === 'de'
-  return isGerman
+/** Antwortsprache = UI-Sprache; de hat einen eigenen Prompt, alle anderen den englischen. */
+export function buildSystemPrompt(documentText: string, language: string): string {
+  const answerIn = englishNameFor(language)
+  return language === 'de'
     ? `Du bist ein hilfreicher Dokumentenassistent für DoZii. Der Nutzer hat dir ein Dokument gegeben und stellt dir Fragen dazu. Antworte präzise und hilfreich auf Deutsch. Beziehe dich, wenn möglich, auf konkrete Stellen im Dokument.
 
 --- DOKUMENT ---
 ${documentText}
 --- ENDE DOKUMENT ---`
-    : `You are a helpful document assistant for DoZii. The user has given you a document and is asking questions about it. Answer precisely and helpfully in English. Reference specific parts of the document when possible.
+    : `You are a helpful document assistant for DoZii. The user has given you a document and is asking questions about it. Answer precisely and helpfully in ${answerIn}, even if the document is written in another language. Reference specific parts of the document when possible.
 
 --- DOCUMENT ---
 ${documentText}
@@ -86,7 +89,9 @@ export async function sendChatMessage(
     throw new Error('Dokument hat keinen extrahierten Text')
   }
 
-  const language = doc.detectedLanguage || 'de'
+  // UI-Sprache, nicht Dokumentsprache: wer DoZii auf Russisch nutzt, will die
+  // Antwort zum deutschen Bescheid auf Russisch.
+  const language = getSettings().language || 'de'
 
   // Build message array: system prompt + full persisted history + NEW user message.
   // The new message is NOT persisted yet - we only save it after the stream
