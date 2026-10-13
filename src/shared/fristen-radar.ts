@@ -23,6 +23,7 @@
 import type { DeadlineAnchor, DeadlineKind, DeadlinePeriodUnit } from './types'
 import { daysInMonth, toIsoDate } from './german-holidays'
 import { sentenceAround } from './sentence'
+import { NUMBER_WORD_PATTERN, numberWordValue } from './number-words'
 
 const WS = '[\\s\\u00a0]+'
 /** Optionaler Zwischenraum. `${WSO}` waere ein laessiges "ein oder mehr". */
@@ -34,18 +35,6 @@ const UNIT_WORDS: ReadonlyArray<[RegExp, DeadlinePeriodUnit]> = [
   [/^Tag/i, 'day'],
   [/^Jahr/i, 'year']
 ]
-
-const COUNT_WORDS: Readonly<Record<string, number>> = {
-  einem: 1,
-  eines: 1,
-  einer: 1,
-  zwei: 2,
-  drei: 3,
-  vier: 4,
-  sechs: 6,
-  zwoelf: 12,
-  zwölf: 12
-}
 
 const MONTHS: Readonly<Record<string, number>> = {
   januar: 1,
@@ -72,6 +61,8 @@ const KIND_HINTS: ReadonlyArray<[DeadlineKind, RegExp]> = [
   ['klage', /\bKlage\b/i],
   ['einspruch', /\bEinspruch\b/i],
   ['widerspruch', /\bWiderspruch\b/i],
+  ['widerruf', /\bWiderruf/i],
+  ['kuendigung', /\bK(?:ü|ue)ndig/iu],
   ['zahlung', new RegExp(`(?:zu${WS}zahlen|Zahlung|zahlbar|(?:ü|ue)berweisen)`, 'iu')]
 ]
 
@@ -79,14 +70,16 @@ const KIND_LABELS: Readonly<Record<string, string>> = {
   klage: 'Klage',
   einspruch: 'Einspruch',
   widerspruch: 'Widerspruch',
+  widerruf: 'Widerruf',
+  kuendigung: 'Kündigung',
   zahlung: 'Zahlung',
   sonstige: 'Frist'
 }
 
-/** "innerhalb eines Monats", "binnen zwei Wochen", "innerhalb von 14 Tagen". */
+/** "innerhalb eines Monats", "binnen vierzehn Tagen", "innerhalb von 14 Tagen". */
 const PERIOD_RE = new RegExp(
   `(?:innerhalb|binnen)${WS}(?:von${WS})?` +
-    `(${Object.keys(COUNT_WORDS).join('|')}|\\d{1,3})${WS}` +
+    `(${NUMBER_WORD_PATTERN}|\\d{1,3})${WS}` +
     `(Monat(?:e|en|s)?|Woche(?:n)?|Tag(?:e|en)?|Jahr(?:e|en|es)?)`,
   'giu'
 )
@@ -114,7 +107,7 @@ function parseUnit(raw: string): DeadlinePeriodUnit | null {
 }
 
 function parseCount(raw: string): number | null {
-  const word = COUNT_WORDS[raw.toLowerCase()]
+  const word = numberWordValue(raw)
   if (word !== undefined) return word
   const n = Number.parseInt(raw, 10)
   return Number.isFinite(n) && n > 0 ? n : null

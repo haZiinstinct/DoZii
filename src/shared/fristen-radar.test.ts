@@ -34,6 +34,25 @@ describe('parseGermanDate', () => {
 })
 
 describe('Rechtsbehelfsfristen', () => {
+  it('liest ausgeschriebene Zahlwoerter wie "vierzehn"', () => {
+    const a = findDeadlineAnchors(
+      KOPF + 'Sie koennen innerhalb von vierzehn Tagen nach Zustellung Einspruch einlegen.'
+    )
+    expect(a).toHaveLength(1)
+    expect(a[0]).toMatchObject({ kind: 'einspruch', periodValue: 14, periodUnit: 'day' })
+  })
+
+  it('erkennt Widerruf und Kuendigung als Fristart', () => {
+    const widerruf = findDeadlineAnchors(
+      KOPF + 'Sie koennen Ihre Vertragserklaerung binnen vierzehn Tagen widerrufen.'
+    )
+    expect(widerruf[0]).toMatchObject({ kind: 'widerruf', periodValue: 14 })
+    const kuendigung = findDeadlineAnchors(
+      KOPF + 'Die Kündigung muss innerhalb von drei Monaten erfolgen.'
+    )
+    expect(kuendigung[0]).toMatchObject({ kind: 'kuendigung', periodValue: 3 })
+  })
+
   it('liest die Widerspruchsfrist samt Bezugsdatum', () => {
     const a = findDeadlineAnchors(
       KOPF +

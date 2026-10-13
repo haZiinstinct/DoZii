@@ -19,6 +19,7 @@
  */
 
 import { sentenceAround } from './sentence'
+import { NUMBER_WORD_PATTERN, numberWordValue } from './number-words'
 
 export type KlauselSeverity = 'red' | 'yellow'
 
@@ -36,34 +37,14 @@ export interface KlauselFinding {
 
 const WS = '[\\s\\u00a0]+'
 
-/** Wortzahlen, wie sie in Vertraegen stehen. */
-const NUMBER_WORDS: Readonly<Record<string, number>> = {
-  ein: 1,
-  eine: 1,
-  einer: 1,
-  zwei: 2,
-  drei: 3,
-  vier: 4,
-  fuenf: 5,
-  fünf: 5,
-  sechs: 6,
-  sieben: 7,
-  acht: 8,
-  neun: 9,
-  zehn: 10,
-  zwoelf: 12,
-  zwölf: 12,
-  vierundzwanzig: 24
-}
-
 function parseAmount(raw: string): number | undefined {
-  const word = NUMBER_WORDS[raw.toLowerCase()]
+  const word = numberWordValue(raw)
   if (word !== undefined) return word
   const num = Number.parseFloat(raw.replace(',', '.'))
   return Number.isFinite(num) ? num : undefined
 }
 
-const AMOUNT = `(${Object.keys(NUMBER_WORDS).join('|')}|\\d+(?:[.,]\\d+)?)`
+const AMOUNT = `(${NUMBER_WORD_PATTERN}|\\d+(?:[.,]\\d+)?)`
 
 /** Steht die Fundstelle im Umfeld eines der Stichwoerter? */
 function nearAny(text: string, index: number, words: string[], radius = 250): boolean {
