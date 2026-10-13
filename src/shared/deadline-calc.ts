@@ -196,7 +196,8 @@ function resolvePeriod(anchor: DeadlineAnchor, hint?: string): ResolvedPeriod | 
   return { value: rule.periodValue, unit: rule.periodUnit, fromRule: true, note: notes.join(' ') }
 }
 
-function isPlausiblePeriod(value: number, unit: DeadlinePeriodUnit): boolean {
+/** Gemeinsame Plausibilitaetsgrenze - auch der Anker-Parser prueft damit. */
+export function isPlausiblePeriod(value: number, unit: DeadlinePeriodUnit): boolean {
   if (!Number.isInteger(value)) return false
   return value > 0 && value <= MAX_PERIOD_VALUE[unit]
 }

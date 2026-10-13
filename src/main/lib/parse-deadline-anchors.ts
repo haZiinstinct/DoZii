@@ -16,6 +16,7 @@ import type {
   DeadlineKind,
   DeadlinePeriodUnit
 } from '@shared/types'
+import { isPlausiblePeriod } from '@shared/deadline-calc'
 import { extractJsonObject } from './extract-json'
 
 const DEADLINE_KINDS: readonly DeadlineKind[] = [
@@ -44,9 +45,6 @@ const FALLBACK_LABELS: Record<DeadlineKind, string> = {
   mitwirkung: 'Mitwirkungsfrist',
   sonstige: 'Frist'
 }
-
-/** 60 Monate/Wochen/Tage sind noch plausibel, 600 ist Modell-Rauschen. */
-const MAX_PERIOD_VALUE = 60
 
 /** Plausibler Jahresbereich fuer Datumsangaben in Behoerdenpost und Vertraegen. */
 const MIN_YEAR = 1990
@@ -88,11 +86,19 @@ const MONTH_NAMES: Record<string, number> = {
  * faellt raus - im Zweifel lieber eine leere Liste.
  */
 /**
- * Normalisiert fuer den Belegabgleich: Kleinschreibung, Whitespace vereinheitlicht.
- * Dieselbe Idee wie die Evidence-Pruefung im Zeugnis-Decoder.
+ * Normalisiert fuer den Belegabgleich: Kleinschreibung, Umlaute gefaltet,
+ * typografische Anfuehrungszeichen und Striche vereinheitlicht, Whitespace
+ * zusammengefasst. Die Faltung ist noetig, weil das Beispiel im Prompt
+ * "koennen" schreibt - kleine Modelle uebernehmen das, und ohne Faltung fiel
+ * das korrekte Zitat durch die Belegpruefung.
  */
 function normalizeForMatch(value: string): string {
-  return value.toLowerCase().replace(/\s+/g, ' ').trim()
+  return foldUmlauts(value.toLowerCase())
+    .replace(/[„“”«»]/g, '"')
+    .replace(/[‚‘’]/g, "'")
+    .replace(/[‐-―−]/g, '-')
+    .replace(/\s+/g, ' ')
+    .trim()
 }
 
 /**
@@ -230,15 +236,17 @@ function asPeriod(
   const value = asPeriodValue(rawValue)
   const unit = asPeriodUnit(rawUnit)
   if (value === null || unit === null) return { value: null, unit: null }
+  // Dieselbe Grenze wie die Fristberechnung: "90 Tage" ist plausibel, 600 Monate nicht.
+  if (!isPlausiblePeriod(value, unit)) return { value: null, unit: null }
   return { value, unit }
 }
 
 function asPeriodValue(value: unknown): number | null {
   const num =
     typeof value === 'number' ? value : typeof value === 'string' ? Number(value.trim()) : NaN
-  // Halbe Fristen gibt es nicht, 0/negative und absurd grosse Werte auch nicht.
+  // Halbe Fristen gibt es nicht, 0/negative auch nicht.
   if (!Number.isInteger(num)) return null
-  if (num < 1 || num > MAX_PERIOD_VALUE) return null
+  if (num < 1) return null
   return num
 }
 

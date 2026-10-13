@@ -178,7 +178,29 @@ describe('parseDeadlineAnchors', () => {
     expect(result[0].explicitDueDateIso).toBeNull()
   })
 
-  it('verwirft periodValue ausserhalb 1-60', () => {
+  it('nimmt dieselbe Plausibilitaetsgrenze wie die Fristberechnung', () => {
+    const days = parseDeadlineAnchors(
+      modelAnswer([{ ...VALID_ANCHOR, periodValue: 90, periodUnit: 'day' }])
+    )
+    expect(days[0].periodValue).toBe(90)
+    const months = parseDeadlineAnchors(
+      modelAnswer([{ ...VALID_ANCHOR, periodValue: 36, periodUnit: 'month' }])
+    )
+    expect(months[0].periodValue).toBeNull()
+  })
+
+  it('findet das Zitat auch mit ae/oe/ue gegen Umlaute im Dokument', () => {
+    const doc = 'Gegen diesen Bescheid können Sie innerhalb eines Monats Widerspruch erheben.'
+    expect(parseDeadlineAnchors(modelAnswer([VALID_ANCHOR]), doc)).toHaveLength(1)
+  })
+
+  it('findet das Zitat trotz typografischer Anfuehrungszeichen und Striche', () => {
+    const doc = 'Die Frist – „ein Monat“ – laeuft ab Zustellung.'
+    const quote = 'Die Frist - "ein Monat" - laeuft ab Zustellung.'
+    expect(parseDeadlineAnchors(modelAnswer([{ ...VALID_ANCHOR, quote }]), doc)).toHaveLength(1)
+  })
+
+  it('verwirft periodValue ausserhalb der Grenzen', () => {
     for (const value of [0, -3, 61, 600, 1.5, 'abc', null]) {
       const result = parseDeadlineAnchors(modelAnswer([{ ...VALID_ANCHOR, periodValue: value }]))
       expect(result[0].periodValue).toBeNull()
