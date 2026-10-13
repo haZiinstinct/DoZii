@@ -18,24 +18,28 @@ Kleine, risikoarme Änderungen mit großem Nutzen. Zusammen etwa ein Arbeitstag.
 
 | | ID | Titel | Aufwand | Erledigt in |
 |---|---|---|---|---|
-| [ ] | H6 | Aktenzeichen mit gemischter Schreibweise schwärzen | S | |
-| [ ] | H3 | `sharp` auf 0.35.5 heben | S | |
-| [ ] | M1 | Ersteindruck über `chatOnce` statt eigenem Ollama-Client | S | |
-| [ ] | H8 | Willkommens-Assistent: Fehlerpfad im Hardware-Scan | S | |
-| [ ] | M3 | Settings vor dem Speichern bereinigen | S | |
-| [ ] | M23 | Fristen-Test „erfindet keine Frist" auf 0 schärfen | S | |
-| [ ] | M22 | `autoInstallOnAppQuit` auf `false` oder Kommentar anpassen | S | |
-| [ ] | M4 | Chat-Sprache aus `settings.language` | S | |
-| [ ] | L20a | Patch-Updates: react-router-dom 7.18.4, vitest 4.1.11, unpdf 1.8, better-sqlite3 12.11 | S | |
-| [ ] | L18 | README-Badge 1.3.8, Überschrift „Analyse-Modi", `engines` in package.json, eval/README (Vier-Tage-Fiktion, `eval`-Skript) | S | |
+| [x] | H6 | Aktenzeichen mit gemischter Schreibweise schwärzen | S | 24897e2 |
+| [x] | H3 | `sharp` auf 0.35.5 heben | S | 631c124 |
+| [x] | M1 | Ersteindruck über `chatOnce` statt eigenem Ollama-Client | S | 5dd042b |
+| [x] | H8 | Willkommens-Assistent: Fehlerpfad im Hardware-Scan | S | 20d58d3 |
+| [x] | M3 | Settings vor dem Speichern bereinigen | S | 7c82945 |
+| [x] | M23 | Fristen-Test „erfindet keine Frist" auf 0 schärfen | S | 182b38f |
+| [x] | M22 | `autoInstallOnAppQuit` auf `false` oder Kommentar anpassen | S | be57c90 |
+| [x] | M4 | Chat-Sprache aus `settings.language` | S | 43472ec |
+| [x] | L20a | Patch-Updates: react-router-dom 7.18.4, vitest 4.1.11, unpdf 1.8, better-sqlite3 12.11 | S | 631c124 |
+| [x] | L18 | README-Badge 1.3.8, Überschrift „Analyse-Modi", `engines` in package.json, eval/README (Vier-Tage-Fiktion, `eval`-Skript) | S | 7dab9b3 |
 
 ### H6 · Aktenzeichen-Schwärzung
 - Datei: `src/shared/redaction.ts:212`
 - Fix: `REF_TOKEN` von `[A-Z]{1,4}` auf `[A-Za-z]{1,4}` ändern.
+- Umgesetzt enger als vorgeschlagen: gemischte Schreibweise (`Ca`, `Js`) nur mit folgender
+  Zahl, sonst frisst der Wert das Folgewort („Az. 12/345 Bitte …").
 - Prüfung: Test in `redaction.test.ts` mit `4 Ca 1234/24`, `12 Js 456/24`, `3 Sa 78/25`,
   `Vorgangsnummer: ab12345`; Erwartung jeweils vollständig `[Aktenzeichen geschwaerzt]`.
 
 ### H3 · sharp
+- Lokal nur Node-Probe (sharp 0.35.5 verarbeitet ein PNG); `build:win` geht lokal wegen Smart
+  App Control nicht – JPG/PNG-OCR im CI-Installer prüfen.
 - Datei: `package.json`
 - Fix: `"sharp": "^0.35.5"`, `npm install`, `npm run build:win` lokal einmal durchlaufen lassen
   (natives Modul, `postinstall` baut neu).
@@ -64,12 +68,17 @@ Kleine, risikoarme Änderungen mit großem Nutzen. Zusammen etwa ein Arbeitstag.
   Datei `dozii-settings.json` enthält danach weiterhin `localhost`, kein Warn-Log im Sekundentakt.
 
 ### M23 · Test schärfen
+- Ergebnis: „ohne Frist" liefert 0 Anker, alle Bescheide mit Frist mindestens einen. Neu
+  aufgedeckt: im Gebührenbescheid wird der feste Zahlungstermin („bis zum 30.04.2026 … zu
+  überweisen") nicht als `zahlung` erkannt – als `it.fails` markiert, gehört zu Paket 2.
 - Datei: `src/shared/fristen-radar.test.ts:135-142`
 - Fix: `toBeLessThanOrEqual(1)` → `toHaveLength(0)`; Trefferquote von 60 % anheben oder den
   Test in konkrete Einzelfälle zerlegen. Schlägt der Test dann fehl, ist das ein echter
   Befund für Paket 2 (H4, M11).
 
 ### M22 · Auto-Update
+- Entscheidung: Kommentar angepasst. Download nur auf Klick, und `update.readyDesc` sagt
+  bereits „Wird beim nächsten Beenden installiert".
 - Datei: `src/main/services/updater.service.ts:43`
 - Fix: entweder `autoInstallOnAppQuit = false` (Nutzer klickt „Installieren") oder den
   Kommentar und den Einstellungstext an das tatsächliche Verhalten anpassen.
@@ -271,6 +280,6 @@ Diese Punkte sind bewusst offen und gehören in `OFFENE-PUNKTE.md`, falls sie do
 
 | Paket | Punkte | Erledigt |
 |---|---|---|
-| 1 · Sofort | 10 | 0 |
+| 1 · Sofort | 10 | 10 |
 | 2 · Minor | 34 | 0 |
 | 3 · Größer | 11 | 0 |
