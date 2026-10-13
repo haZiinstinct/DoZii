@@ -211,7 +211,7 @@ export async function ocrPdf(
     // pdf.js haelt dekodierte Seiten im Speicher, bis das Dokument zerstoert
     // wird. Bei 40 Seiten Scan ist das der Unterschied zwischen ein paar
     // hundert Megabyte und dem Ende des Arbeitsspeichers.
-    await pdf.destroy().catch((err: unknown) => {
+    await pdf.loadingTask.destroy().catch((err: unknown) => {
       logger.debug(SOURCE, 'PDF-Proxy konnte nicht zerstoert werden', {
         error: err instanceof Error ? err.message : String(err)
       })
