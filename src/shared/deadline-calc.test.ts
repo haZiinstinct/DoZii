@@ -190,14 +190,16 @@ describe('computeDeadline - Regelkatalog', () => {
     expect(result?.confidence).toBe('medium')
   })
 
-  it('Widerspruch ohne Rechtsbehelfsbelehrung: Jahresfrist', () => {
+  it('Widerspruch ohne Rechtsbehelfsbelehrung: bewusst keine Jahresfrist', () => {
+    // Ob die Belehrung wirklich fehlt, laesst sich am Text nicht sicher sagen -
+    // ein zu Unrecht versprochenes Jahr waere der teurere Fehler.
     const result = computeDeadline({
-      anchor: anchor({ startDateIso: '2025-03-15' }),
+      anchor: anchor({ startDateIso: '2025-03-14' }),
       todayIso: '2025-03-20',
       hint: 'Dieser Bescheid ergeht ohne Rechtsbehelfsbelehrung.'
     })
-    expect(result?.dueDateIso).toBe('2026-03-16') // 15.03.2026 ist ein Sonntag
-    expect(result?.note).toContain('§ 58 Abs. 2 VwGO')
+    expect(result?.dueDateIso).toBe('2025-04-14')
+    expect(result?.note).not.toContain('§ 58 Abs. 2 VwGO')
   })
 
   it('Einspruch gegen Bussgeldbescheid: 2 Wochen (§ 67 OWiG)', () => {

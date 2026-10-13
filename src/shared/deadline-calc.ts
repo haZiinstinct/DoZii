@@ -21,7 +21,7 @@ import {
   toIsoDate,
   weekdayOf
 } from './german-holidays'
-import { defaultRuleFor } from './deadline-rules'
+import { defaultRuleFor, isEmploymentContext } from './deadline-rules'
 import type { DeadlineAnchor, DeadlineConfidence, DeadlineKind, DeadlinePeriodUnit } from './types'
 
 const WEEKDAY_NAMES_DE = [
@@ -188,9 +188,12 @@ export function computeDeadline(input: ComputeInput): ComputedDeadline | null {
      * Rechtsbehelf auf, der noch laeuft. Deshalb zusaetzlich das spaeteste
      * Ende mit Bekanntgabefiktion.
      */
+    // Nicht im Arbeitsrecht: dort zaehlt der tatsaechliche Zugang der
+    // Kuendigung, eine Bekanntgabefiktion gibt es nicht.
     if (
       POSTAL_FICTION_KINDS.has(anchor.kind) &&
-      !(anchor.startDateQuote && DELIVERY_QUOTE.test(anchor.startDateQuote))
+      !(anchor.startDateQuote && DELIVERY_QUOTE.test(anchor.startDateQuote)) &&
+      !isEmploymentContext(hint)
     ) {
       latestBase = addPeriod(addDays(start, BEKANNTGABE_DAYS), period.value, period.unit)
     }

@@ -56,18 +56,23 @@ const BUSSGELD_HINTS = [
 ]
 
 /**
- * Fehlende oder falsche Rechtsbehelfsbelehrung: dann laeuft statt der
- * Monatsfrist eine Jahresfrist (§ 58 Abs. 2 VwGO, § 66 Abs. 2 SGG).
+ * Arbeitsrecht: eine Klage gegen eine Kuendigung des Arbeitgebers geht ans
+ * Arbeitsgericht, und dort laufen drei Wochen (§ 4 KSchG) - nicht der Monat
+ * der VwGO. Versaeumt ist sie praktisch nicht heilbar.
  */
-const KEINE_BELEHRUNG_HINTS = [
-  'ohne rechtsbehelfsbelehrung',
-  'keine rechtsbehelfsbelehrung',
-  'rechtsbehelfsbelehrung fehlt',
-  'fehlende rechtsbehelfsbelehrung',
-  'fehlerhafte rechtsbehelfsbelehrung',
-  'unrichtige rechtsbehelfsbelehrung',
-  'falsche rechtsbehelfsbelehrung'
+const ARBEITSRECHT_HINTS = [
+  'arbeitsverhaeltnis',
+  'arbeitsvertrag',
+  'arbeitgeber',
+  'arbeitsgericht',
+  'kuendigungsschutz',
+  'kschg'
 ]
+
+/** Steht das Dokument im arbeitsrechtlichen Zusammenhang? */
+export function isEmploymentContext(hint: string | undefined): boolean {
+  return hint ? matches(normalizeHint(hint), ARBEITSRECHT_HINTS) : false
+}
 
 /**
  * Vergleichsform: Kleinschreibung, Umlaute/ss transliteriert, Paragraphen und
@@ -99,17 +104,14 @@ export function defaultRuleFor(kind: DeadlineKind, hint?: string): DeadlineRule 
 
   switch (kind) {
     case 'widerspruch':
-      // § 70 Abs. 1 VwGO / § 84 Abs. 1 SGG: ein Monat ab Bekanntgabe.
-      if (matches(normalized, KEINE_BELEHRUNG_HINTS)) {
-        return {
-          kind,
-          periodValue: 1,
-          periodUnit: 'year',
-          label: 'Widerspruch (ohne Rechtsbehelfsbelehrung)',
-          legalBasis: '§ 58 Abs. 2 VwGO / § 66 Abs. 2 SGG',
-          note: 'Ohne oder mit fehlerhafter Rechtsbehelfsbelehrung betraegt die Frist ein Jahr.'
-        }
-      }
+      /*
+       * § 70 Abs. 1 VwGO / § 84 Abs. 1 SGG: ein Monat ab Bekanntgabe.
+       *
+       * Die Jahresfrist bei fehlender Belehrung (§ 58 Abs. 2 VwGO) bildet
+       * DoZii bewusst nicht ab: ob eine Belehrung fehlt, laesst sich am Text
+       * nicht sicher erkennen (OCR-Luecke, abgeschnittene Seite) - und ein
+       * zu Unrecht versprochenes Jahr kostet den Widerspruch.
+       */
       return {
         kind,
         periodValue: 1,
@@ -143,6 +145,16 @@ export function defaultRuleFor(kind: DeadlineKind, hint?: string): DeadlineRule 
       }
 
     case 'klage':
+      if (isEmploymentContext(hint)) {
+        return {
+          kind,
+          periodValue: 3,
+          periodUnit: 'week',
+          label: 'Kündigungsschutzklage',
+          legalBasis: '§ 4 KSchG',
+          note: 'Kündigungsschreiben erkannt: Gegen eine Kündigung des Arbeitgebers muss innerhalb von drei Wochen nach Zugang Klage beim Arbeitsgericht erhoben werden. Gerechnet ab dem Datum des Schreibens - maßgeblich ist der Tag, an dem es dir zuging.'
+        }
+      }
       return {
         kind,
         periodValue: 1,

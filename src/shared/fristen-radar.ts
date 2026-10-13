@@ -308,5 +308,44 @@ export function findDeadlineAnchors(text: string): DeadlineAnchor[] {
     })
   }
 
+  const kschg = findDismissalAnchor(text, docDate)
+  if (kschg && !anchors.some((a) => a.kind === 'klage')) anchors.push(kschg)
+
   return anchors
+}
+
+/**
+ * Kuendigung durch den Arbeitgeber: "hiermit kuendigen wir das mit Ihnen
+ * bestehende Arbeitsverhaeltnis ...". Die Frist steht in so einem Schreiben
+ * nie - die drei Wochen fuer die Kuendigungsschutzklage (§ 4 KSchG) kommen aus
+ * dem Regelkatalog. Gemeldet wird nur, wenn Verb und Arbeitsverhaeltnis im
+ * selben Satz stehen.
+ */
+const DISMISSAL_RE =
+  /k(?:ü|ue)ndigen\s+(?:wir|hiermit|Ihnen)\b|wird\s+(?:hiermit\s+)?(?:fristgerecht\s+|fristlos\s+|ordentlich\s+|au(?:ß|ss)erordentlich\s+)*gek(?:ü|ue)ndigt|sprechen\s+(?:wir\s+)?(?:hiermit\s+)?die\s+(?:\S+\s+){0,2}K(?:ü|ue)ndigung/iu
+const EMPLOYMENT_RE =
+  /Arbeitsverh(?:ä|ae)ltnis|Arbeitsvertrag|Besch(?:ä|ae)ftigungsverh(?:ä|ae)ltnis/iu
+
+function findDismissalAnchor(text: string, docDate: DatedReference | null): DeadlineAnchor | null {
+  if (!docDate) return null
+  DISMISSAL_RE.lastIndex = 0
+  const m = DISMISSAL_RE.exec(text)
+  if (!m) return null
+  const sentence = sentenceAround(text, m.index, m[0].length)
+  if (!EMPLOYMENT_RE.test(sentence)) return null
+  const reference = referenceDate(text, 'nach Zugang', docDate)
+  return {
+    kind: 'klage',
+    label: 'Kündigungsschutzklage',
+    startDateIso: reference?.iso ?? null,
+    startDateQuote: reference?.quote ?? null,
+    periodText: null,
+    // Bewusst leer: die Dauer steht nicht im Schreiben, der Regelkatalog
+    // liefert sie samt Fundstelle und Hinweis.
+    periodValue: null,
+    periodUnit: null,
+    explicitDueDateIso: null,
+    quote: sentence,
+    confidence: 'medium'
+  }
 }

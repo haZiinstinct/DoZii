@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { readdirSync, readFileSync } from 'fs'
 import { join } from 'path'
 import { findDeadlineAnchors, parseGermanDate } from './fristen-radar'
+import { computeDeadline } from './deadline-calc'
 
 const KOPF = 'Stadt Hagen\nAktenzeichen 12/345\n\nHagen, 26. Februar 2026\n\n'
 
@@ -258,5 +259,36 @@ describe('Datum des Schreibens', () => {
     const text =
       'Stadt Hagen\nIhr Schreiben vom 02.01.2026\nBescheiddatum: 13.03.2026\n\n' + BELEHRUNG
     expect(findDeadlineAnchors(text)[0].startDateIso).toBe('2026-03-13')
+  })
+})
+
+describe('Kuendigungsschutzklage', () => {
+  const KUENDIGUNG =
+    'Muster GmbH\nHerrn Max Muster\n\nBerlin, 12.03.2026\n\nKündigung\n\nSehr geehrter Herr Muster,\n' +
+    'hiermit kündigen wir das mit Ihnen bestehende Arbeitsverhältnis fristgerecht zum 30.04.2026.\n'
+
+  it('legt bei einer Arbeitgeberkuendigung einen Klage-Anker ohne Dauer an', () => {
+    const a = findDeadlineAnchors(KUENDIGUNG)
+    expect(a).toHaveLength(1)
+    expect(a[0]).toMatchObject({
+      kind: 'klage',
+      label: 'Kündigungsschutzklage',
+      startDateIso: '2026-03-12',
+      periodValue: null
+    })
+    expect(a[0].quote).toContain('Arbeitsverhältnis')
+  })
+
+  it('rechnet drei Wochen ohne Bekanntgabefiktion', () => {
+    const [anchor] = findDeadlineAnchors(KUENDIGUNG)
+    const result = computeDeadline({ anchor, todayIso: '2026-03-13', hint: KUENDIGUNG })
+    expect(result?.dueDateIso).toBe('2026-04-02')
+    expect(result?.latestDueDateIso).toBeNull()
+    expect(result?.note).toContain('§ 4 KSchG')
+  })
+
+  it('meldet bei einer Mietkuendigung nichts', () => {
+    const text = 'Berlin, 12.03.2026\n\nhiermit kündigen wir den Mietvertrag über die Wohnung.'
+    expect(findDeadlineAnchors(text)).toHaveLength(0)
   })
 })
