@@ -1,25 +1,13 @@
-import { Ollama } from 'ollama'
 import { eq } from 'drizzle-orm'
 import { getDb, schema } from '../db'
 import { buildFirstImpressionPrompt } from '../prompts/first-impression.prompt'
 import { extractJsonObject } from '../lib/extract-json'
 import { getSettings } from './settings.service'
-import { getOllamaUrl } from './ollama-client.service'
+import { chatOnce } from './ollama-client.service'
 import { logger } from './logger.service'
 import { ANALYSIS_MODES, type FirstImpression, type AnalysisMode } from '@shared/types'
 
 const ALLOWED_MODES = new Set<AnalysisMode>(ANALYSIS_MODES)
-
-let client: Ollama | null = null
-let clientHost = ''
-function getClient(): Ollama {
-  const host = getOllamaUrl()
-  if (!client || clientHost !== host) {
-    client = new Ollama({ host })
-    clientHost = host
-  }
-  return client
-}
 
 /**
  * Load an existing first impression for the given document, or null.
@@ -76,24 +64,19 @@ export async function generateFirstImpression(
   })
 
   try {
-    const ollama = getClient()
-    const response = await ollama.chat({
+    // Ueber chatOnce: net.fetch ohne Zeitlimit, think: false (sonst liefern
+    // Denk-Modelle wie qwen3 nur Gedanken und kein JSON) und Stream-Zaehlung.
+    const content = await chatOnce({
       model,
-      messages: [
-        { role: 'system', content: prompt.system },
-        { role: 'user', content: prompt.user }
-      ],
-      stream: false,
-      options: {
-        temperature: 0.1,
-        // Small context window: the entire prompt + sample fits in ~1500 tokens
-        num_ctx: 2048,
-        // Hard-cap output: we only need ~100 tokens of JSON
-        num_predict: 200
-      }
+      system: prompt.system,
+      prompt: prompt.user,
+      temperature: 0.1,
+      // Small context window: the entire prompt + sample fits in ~1500 tokens
+      numCtx: 2048,
+      // Hard-cap output: we only need ~100 tokens of JSON
+      numPredict: 200
     })
 
-    const content = response.message?.content ?? ''
     const parsed = extractJsonObject(content)
     if (!parsed) {
       // Privacy: Modell-Antwort enthält Dokumentinhalt - nur Länge loggen

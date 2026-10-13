@@ -49,8 +49,8 @@ export function getOllamaUrl(): string {
  * Electron ohne Fenster und macht beide Aufrufarten, die hier vorkommen.
  * Nachgewiesen fuer 1.3.8 - list() liefert, chat({stream:true}) liefert 40
  * Stuecke in 5 s. Wer an dieser Zeile etwas aendert, sollte es erneut
- * laufen lassen, denn dieser Aufruf haengt an allen elf Aufrufstellen: faellt
- * er aus, ist nicht der CPU-Pfad kaputt, sondern die ganze App.
+ * laufen lassen, denn jeder Ollama-Aufruf der App laeuft ueber diesen Client:
+ * faellt er aus, ist nicht der CPU-Pfad kaputt, sondern die ganze App.
  */
 function getClient(): Ollama {
   const host = getOllamaUrl()
@@ -177,11 +177,13 @@ export async function chatOnce(options: {
   prompt: string
   temperature?: number
   numCtx?: number
+  numPredict?: number
 }): Promise<string> {
   const ollama = getClient()
   const modelOptions: Record<string, number> = {}
   if (options.temperature !== undefined) modelOptions.temperature = options.temperature
   if (options.numCtx !== undefined) modelOptions.num_ctx = options.numCtx
+  if (options.numPredict !== undefined) modelOptions.num_predict = options.numPredict
 
   incrementActiveStreams()
   try {
