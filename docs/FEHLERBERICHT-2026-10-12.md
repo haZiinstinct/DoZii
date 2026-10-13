@@ -99,15 +99,15 @@ Fachliche Korrektheit des Fristen-Radars, Streaming-Stabilität, Packaging, Prom
 
 | | ID | Titel | Aufwand | Erledigt in |
 |---|---|---|---|---|
-| [ ] | H4 | Geburtsdatum im Briefkopf wird nicht mehr Fristbeginn | M | |
-| [ ] | H5 | Bekanntgabefiktion: kein „abgelaufen" vor dem echten Fristende | M | |
-| [ ] | M9 | Belegprüfung faltet Umlaute (ae/oe/ue/ss) | S | |
-| [ ] | M10 | Einheitliche Plausibilitätsgrenze für Fristdauern | S | |
-| [ ] | M11 | Zahlwörter vollständig, `widerruf`/`kuendigung` in `KIND_HINTS` | S | |
-| [ ] | M13 | Kündigungsschutzklage (3 Wochen, § 4 KSchG) im Regelkatalog | M | |
-| [ ] | M14 | Keine § 193-Verschiebung bei expliziten Endterminen (`kuendigung`) | S | |
-| [ ] | L8 | `parseGermanDate` validiert Kalender und verankert am Wortanfang | S | |
-| [ ] | L19 | Eval misst den Produktionspfad (`findDeadlineAnchors` + `mergeAnchors`) | M | |
+| [x] | H4 | Geburtsdatum im Briefkopf wird nicht mehr Fristbeginn | M | 434d177, 910c705 |
+| [x] | H5 | Bekanntgabefiktion: kein „abgelaufen" vor dem echten Fristende | M | 910c705 |
+| [x] | M9 | Belegprüfung faltet Umlaute (ae/oe/ue/ss) | S | 6641203 |
+| [x] | M10 | Einheitliche Plausibilitätsgrenze für Fristdauern | S | 6641203 |
+| [x] | M11 | Zahlwörter vollständig, `widerruf`/`kuendigung` in `KIND_HINTS` | S | ea94fd8 |
+| [x] | M13 | Kündigungsschutzklage (3 Wochen, § 4 KSchG) im Regelkatalog | M | b8fb14f |
+| [x] | M14 | Keine § 193-Verschiebung bei expliziten Endterminen (`kuendigung`) | S | 16ace31 |
+| [x] | L8 | `parseGermanDate` validiert Kalender und verankert am Wortanfang | S | c71776d |
+| [x] | L19 | Eval misst den Produktionspfad (`findDeadlineAnchors` + `mergeAnchors`) | M | 9be9ef0 |
 
 **H4** · `src/shared/fristen-radar.ts:136-144`, `src/main/services/deadline.service.ts:170-176`
 - Fix: Datumstreffer verwerfen, denen innerhalb von 25 Zeichen `geb`, `geburt`, `geboren`
@@ -141,14 +141,22 @@ Fachliche Korrektheit des Fristen-Radars, Streaming-Stabilität, Packaging, Prom
 - Prüfung: „innerhalb von vierzehn Tagen nach Zustellung Einspruch" → 1 Anker `einspruch`.
 
 **M13** · `src/shared/deadline-rules.ts:225-233,266,308-331`
+- Umgesetzt: KSchG-Regel für `klage` im Arbeitsrechts-Kontext, Radar erkennt die
+  Arbeitgeberkündigung. Den Ein-Jahres-Zweig habe ich entfernt statt gekoppelt: ob eine
+  Belehrung fehlt, ist am Text (OCR) nicht sicher erkennbar.
 - Fix: Regel `kuendigungsschutzklage` (3 Wochen ab Zugang, § 4 KSchG) mit Hinweis
   „Kündigungsschreiben erkannt"; den toten Ein-Jahres-Zweig entweder an das Fehlen einer
   Rechtsbehelfsbelehrung im Text koppeln oder entfernen.
 
 **M14** · `deadline-calc.ts:160-161`
+- Umgesetzt für alle `kuendigung`-Fristen (§ 193 BGB gilt für Kündigungsfristen generell nicht).
 - Fix: § 193 nur auf Fristen anwenden, bei denen eine Handlung bis zum Termin fällig ist;
   für `kuendigung` mit explizitem Datum den Termin unverändert lassen und eine Notiz
   „Zugang vor dem Termin erforderlich" setzen.
+
+**Zusätzlich (aus M23):** feste Termine ohne Fristdauer („bis zum … zu überweisen") erkennt
+der Radar jetzt – `438f1f0`. Nach dem Security-Review zu H4 übernimmt `mergeAnchors` ein
+Modell-Startdatum nur noch mit wörtlichem Beleg (`910c705`).
 
 ### Streaming und Hauptprozess
 
