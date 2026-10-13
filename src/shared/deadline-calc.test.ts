@@ -300,3 +300,31 @@ describe('computeDeadline - Restlaufzeit und Dringlichkeit', () => {
     expect(result?.daysLeft).toBe(7)
   })
 })
+
+describe('computeDeadline - Kuendigung (§ 193 BGB gilt nicht)', () => {
+  it('verschiebt einen expliziten Kuendigungstermin am Sonntag nicht', () => {
+    // 31.05.2026 ist ein Sonntag.
+    const result = computeDeadline({
+      anchor: anchor({ kind: 'kuendigung', explicitDueDateIso: '2026-05-31' }),
+      todayIso: '2026-05-01'
+    })
+    expect(result?.dueDateIso).toBe('2026-05-31')
+    expect(result?.note).toContain('§ 193 BGB gilt für Kündigungsfristen nicht')
+  })
+
+  it('verschiebt andere Fristen am Sonntag weiterhin', () => {
+    const result = computeDeadline({
+      anchor: anchor({ kind: 'zahlung', explicitDueDateIso: '2026-05-31' }),
+      todayIso: '2026-05-01'
+    })
+    expect(result?.dueDateIso).toBe('2026-06-01')
+  })
+
+  it('schreibt bei einem Werktag keine Notiz', () => {
+    const result = computeDeadline({
+      anchor: anchor({ kind: 'kuendigung', explicitDueDateIso: '2026-05-29' }),
+      todayIso: '2026-05-01'
+    })
+    expect(result?.note).toBeNull()
+  })
+})

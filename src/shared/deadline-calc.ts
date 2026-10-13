@@ -157,8 +157,21 @@ export function computeDeadline(input: ComputeInput): ComputedDeadline | null {
     source = 'computed'
   }
 
-  const shift = shiftToNextWorkingDay(base)
-  if (shift.shifted) notes.push(describeShift(base, shift.iso))
+  /*
+   * § 193 BGB schuetzt den, der bis zum Fristende handeln muss. Fuer
+   * Kuendigungsfristen gilt er nicht (BGH): faellt der Kuendigungstermin auf
+   * einen Sonntag, bleibt es bei diesem Tag - verschoben haette DoZii einen
+   * Tag zu viel Luft angezeigt.
+   */
+  let shift = shiftToNextWorkingDay(base)
+  if (shift.shifted && anchor.kind === 'kuendigung') {
+    notes.push(
+      'Der Termin fällt auf einen arbeitsfreien Tag, verschiebt sich aber nicht - § 193 BGB gilt für Kündigungsfristen nicht. Die Kündigung muss rechtzeitig vorher zugehen.'
+    )
+    shift = { iso: base, shifted: false }
+  } else if (shift.shifted) {
+    notes.push(describeShift(base, shift.iso))
+  }
 
   const daysLeft = daysUntil(shift.iso, todayIso)
   return {
