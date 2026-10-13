@@ -214,8 +214,7 @@ const PHONE_RE =
  * ("Ca", "Js") nur, wenn danach eine Zahl folgt - sonst frisst der Wert das
  * naechste Wort ("Az. 12/345 Bitte ...").
  */
-const REF_TOKEN =
-  '(?:[A-Z]{1,4}(?![a-z])|[A-Z][a-z]{1,3}(?=[ ./-]\\d)|[A-Za-z]{0,4}\\d+[A-Za-z]?)'
+const REF_TOKEN = '(?:[A-Z]{1,4}(?![a-z])|[A-Z][a-z]{1,3}(?=[ ./-]\\d)|[A-Za-z]{0,4}\\d+[A-Za-z]?)'
 const REF_VALUE = `${REF_TOKEN}(?:[ ./-]${REF_TOKEN})*`
 
 /** Trennung zwischen Schluesselwort und Wert: "Az. ", "Nr.: ", " - ". */
