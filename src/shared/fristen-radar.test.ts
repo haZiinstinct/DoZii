@@ -219,3 +219,37 @@ describe('Bezugspunkt in der Zukunft', () => {
     expect(findDeadlineAnchors(t)[0].explicitDueDateIso).toBe('2026-03-30')
   })
 })
+
+describe('Datum des Schreibens', () => {
+  const BELEHRUNG =
+    'Gegen diesen Bescheid kann innerhalb eines Monats nach Bekanntgabe Widerspruch erhoben werden.'
+
+  it('nimmt kein Geburtsdatum aus dem Briefkopf als Fristbeginn', () => {
+    const text =
+      'Jobcenter Hagen\nHerrn Max Muster\nGeburtsdatum: 05.06.1985\nKd.-Nr. 123\n\n' +
+      'Hagen, 12.03.2026\n\nBescheid\n\n' +
+      BELEHRUNG
+    const a = findDeadlineAnchors(text)
+    expect(a).toHaveLength(1)
+    expect(a[0].startDateIso).toBe('2026-03-12')
+  })
+
+  it('ueberspringt auch "geb." und "*"', () => {
+    for (const birth of ['geb. 05.06.1985', '* 05.06.1985', 'geboren am 5. Juni 1985']) {
+      const a = findDeadlineAnchors(`Max Muster, ${birth}\n\nHagen, 12.03.2026\n\n${BELEHRUNG}`)
+      expect(a[0]?.startDateIso).toBe('2026-03-12')
+    }
+  })
+
+  it('bevorzugt die Datumszeile vor einem frueheren Bezugsdatum', () => {
+    const text =
+      'Stadt Hagen\nIhr Schreiben vom 02.01.2026\n\nHagen, den 12.03.2026\n\n' + BELEHRUNG
+    expect(findDeadlineAnchors(text)[0].startDateIso).toBe('2026-03-12')
+  })
+
+  it('erkennt ein beschriftetes Bescheiddatum', () => {
+    const text =
+      'Stadt Hagen\nIhr Schreiben vom 02.01.2026\nBescheiddatum: 13.03.2026\n\n' + BELEHRUNG
+    expect(findDeadlineAnchors(text)[0].startDateIso).toBe('2026-03-13')
+  })
+})

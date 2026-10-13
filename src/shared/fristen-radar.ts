@@ -133,13 +133,39 @@ export function parseGermanDate(raw: string): string | null {
  */
 function documentDate(text: string): DatedReference | null {
   const head = text.slice(0, 1200)
+  let fallback: DatedReference | null = null
   DATE_RE.lastIndex = 0
   for (const m of head.matchAll(DATE_RE)) {
     const iso = parseGermanDate(m[0])
-    if (iso) return { iso, quote: m[0].trim().replace(/\s+/g, ' '), exact: false }
+    if (!iso) continue
+    const index = m.index ?? 0
+    const lineStart = head.lastIndexOf('\n', index - 1) + 1
+    const lineEnd = head.indexOf('\n', index)
+    const before = head.slice(lineStart, index)
+    const after = head.slice(index + m[0].length, lineEnd === -1 ? undefined : lineEnd)
+
+    // Geburtsdaten im Briefkopf ("Geburtsdatum: 05.06.1985", "geb. am",
+    // "* 05.06.1985") sind kein Fristbeginn - mit ihnen stand eine Frist
+    // von 1985 als "abgelaufen" in der Liste.
+    if (BIRTH_HINT.test(before.slice(-25))) continue
+
+    const ref = { iso, quote: m[0].trim().replace(/\s+/g, ' '), exact: false }
+    // Eindeutig das Datum des Schreibens: eigene Zeile ("Hagen, 26. Februar
+    // 2026") oder beschriftet ("Bescheiddatum:", "Datum:"). Nicht "vom" -
+    // "Ihr Schreiben vom ..." ist gerade NICHT das Datum dieses Schreibens.
+    if (DATE_LINE_PREFIX.test(before) && after.trim() === '') return ref
+    if (DATE_LABEL.test(before.slice(-30))) return ref
+    fallback ??= ref
   }
-  return null
+  return fallback
 }
+
+const BIRTH_HINT = /(?:\bgeb\b\.?|geburt|geboren|\*)[^\n]*$/iu
+
+/** Zeilenanfang vor dem Datum: nichts, "Ort," oder "Ort, den". */
+const DATE_LINE_PREFIX = /^[\s\u00a0]*(?:[\p{L} .()/-]{1,40},[\s\u00a0]*)?(?:den[\s\u00a0]+)?$/iu
+
+const DATE_LABEL = /datum[\s\u00a0]*:?[\s\u00a0]*$/iu
 
 interface DatedReference {
   iso: string

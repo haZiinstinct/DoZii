@@ -94,9 +94,9 @@ const MONTH_NAMES: Record<string, number> = {
  */
 function normalizeForMatch(value: string): string {
   return foldUmlauts(value.toLowerCase())
-    .replace(/[„“”«»]/g, '"')
-    .replace(/[‚‘’]/g, "'")
-    .replace(/[‐-―−]/g, '-')
+    .replace(/[\u201e\u201c\u201d\u00ab\u00bb]/g, '"')
+    .replace(/[\u201a\u2018\u2019]/g, "'")
+    .replace(/[\u2010-\u2015\u2212]/g, '-')
     .replace(/\s+/g, ' ')
     .trim()
 }

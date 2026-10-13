@@ -5,7 +5,7 @@ import { getDocumentById } from './document-store.service'
 import { chatOnce } from './ollama-client.service'
 import { buildDeadlineExtractPrompt } from '../prompts/deadline-extract.prompt'
 import { parseDeadlineAnchors } from '../lib/parse-deadline-anchors'
-import { computeDeadline } from '@shared/deadline-calc'
+import { addPeriod, computeDeadline } from '@shared/deadline-calc'
 import { findDeadlineAnchors } from '@shared/fristen-radar'
 import { logger } from './logger.service'
 import { DEFAULT_NUM_CTX } from '../config/constants'
@@ -166,13 +166,29 @@ export function anchorsToDeadlines(
  *
  * Das Modell bleibt trotzdem noetig: es findet Fristarten, die das Regelwerk
  * nicht abdeckt - etwa eine Zahlungsfrist neben der Widerspruchsfrist.
+ *
+ * Ausnahme: liegt das Bezugsdatum des Regel-Ankers mehr als zwei Jahre
+ * zurueck und hat das Modell fuer dieselbe Fristart ein spaeteres, gewinnt
+ * das Modell. So ein Regel-Anker hat fast immer ein falsches Datum gegriffen
+ * (Geburtsdatum, Datum eines Vorbescheids) - und haette eine Frist als
+ * "abgelaufen" gemeldet, die noch laeuft.
  */
 export function mergeAnchors(
   fromRules: DeadlineAnchor[],
-  fromModel: DeadlineAnchor[]
+  fromModel: DeadlineAnchor[],
+  today?: string
 ): DeadlineAnchor[] {
-  const covered = new Set(fromRules.map((a) => a.kind))
-  return [...fromRules, ...fromModel.filter((a) => !covered.has(a.kind))]
+  const staleBefore = today ? addPeriod(today, -24, 'month') : null
+  const rules = fromRules.map((rule) => {
+    if (!staleBefore || rule.explicitDueDateIso || !rule.startDateIso) return rule
+    if (rule.startDateIso >= staleBefore) return rule
+    const newer = fromModel.find(
+      (m) => m.kind === rule.kind && m.startDateIso !== null && m.startDateIso > rule.startDateIso!
+    )
+    return newer ?? rule
+  })
+  const covered = new Set(rules.map((a) => a.kind))
+  return [...rules, ...fromModel.filter((a) => !covered.has(a.kind))]
 }
 
 /**
@@ -204,11 +220,12 @@ export async function scanDeadlines(
     const modelAnchors = parseDeadlineAnchors(raw, doc.extractedText, (unverified) => {
       logger.warn(SOURCE, 'Fristen ohne Beleg im Dokument verworfen', { documentId, unverified })
     })
-    const anchors = mergeAnchors(findDeadlineAnchors(doc.extractedText), modelAnchors)
+    const today = todayIso()
+    const anchors = mergeAnchors(findDeadlineAnchors(doc.extractedText), modelAnchors, today)
     const deadlines = anchorsToDeadlines(
       documentId,
       anchors,
-      todayIso(),
+      today,
       doc.extractedText,
       new Date().toISOString()
     )
