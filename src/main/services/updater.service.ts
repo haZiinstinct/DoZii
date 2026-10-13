@@ -8,7 +8,10 @@ import type { UpdateStatus } from '@shared/types'
  * Auto-Update über GitHub Releases (Feed laut publish-Block in electron-builder.yml).
  *
  * Bewusst konservativ: kein Auto-Download. Der Check meldet nur die
- * Versionsnummer; Download und Installation stoesst der Nutzer an.
+ * Versionsnummer; den Download stoesst der Nutzer an. Ein so geladenes
+ * Update wird beim naechsten Beenden installiert (autoInstallOnAppQuit) -
+ * oder sofort ueber "Neustarten & installieren". Die Oberflaeche sagt das
+ * nach dem Download ausdruecklich (update.readyDesc).
  * Der Check ist der einzige Netzwerk-Call der App ausser Ollama und
  * laesst sich in den Einstellungen abschalten (autoUpdateCheck).
  */
