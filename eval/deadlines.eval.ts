@@ -4,9 +4,13 @@
  *
  * Misst die zweite Zahl, die DoZii verspricht: das FRISTENDE. Der Weg ist
  * derselbe wie in der App - Extraktions-Prompt (buildDeadlineExtractPrompt),
- * Validierung (parseDeadlineAnchors) und erst danach die deterministische
- * Berechnung (computeDeadline). Das Modell rechnet nie selbst; gemessen wird
- * also, ob es die richtigen ANKER findet.
+ * Validierung mit Belegpruefung (parseDeadlineAnchors), Fristen-Radar
+ * (findDeadlineAnchors), Zusammenfuehrung (mergeAnchors) und erst danach die
+ * deterministische Berechnung (computeDeadline). Die Scorecard bildet damit
+ * ab, was der Nutzer sieht - nicht nur, was das Modell allein schafft.
+ *
+ * Die Belegquote misst weiter die rohen Modellzitate: sie zeigt, wie oft das
+ * Modell erfindet, auch wenn die App solche Anker spaeter verwirft.
  *
  * Start: npx vitest run --config vitest.eval.config.ts eval/deadlines.eval.ts
  */
@@ -19,6 +23,8 @@ import { DEFAULT_NUM_CTX } from '../src/main/config/constants'
 import { buildDeadlineExtractPrompt } from '../src/main/prompts/deadline-extract.prompt'
 import { parseDeadlineAnchors } from '../src/main/lib/parse-deadline-anchors'
 import { computeDeadline } from '../src/shared/deadline-calc'
+import { mergeAnchors } from '../src/shared/deadline-merge'
+import { findDeadlineAnchors } from '../src/shared/fristen-radar'
 import type { DeadlineKind } from '../src/shared/types'
 import { chat, checkEvalPreconditions, EVAL_MODEL, reportSkip } from './lib/ollama'
 import { formatScorecard, rate, scoreDates, scoreEvidence } from './lib/score'
@@ -84,25 +90,37 @@ suite(`Fristen-Eval (${EVAL_MODEL})`, () => {
       numCtx: DEFAULT_NUM_CTX
     })
 
-    const anchors = parseDeadlineAnchors(answer.content)
-    // Der Dokumenttext ist der hint fuer den Regelkatalog (Bussgeld vs. Steuer).
-    const computed = anchors
-      .map((anchor) => computeDeadline({ anchor, todayIso: TODAY_ISO, hint: fixture.text }))
-      .filter((result): result is NonNullable<typeof result> => result !== null)
+    // Roh, ohne Belegpruefung - nur fuer die Belegquote.
+    const rawModelAnchors = parseDeadlineAnchors(answer.content)
+    // Wie in deadline.service.scanDeadlines:
+    const modelAnchors = parseDeadlineAnchors(answer.content, fixture.text)
+    const ruleAnchors = findDeadlineAnchors(fixture.text)
+    const anchors = mergeAnchors(ruleAnchors, modelAnchors, TODAY_ISO, fixture.text)
 
-    const dates = scoreDates(
-      fixture.expect.deadlines,
-      computed.map((result) => result.dueDateIso)
-    )
+    // Der Dokumenttext ist der hint fuer den Regelkatalog (Bussgeld vs. Steuer).
+    // Dubletten (Art + Datum) fasst die App zusammen, hier ebenso.
+    const seen = new Set<string>()
+    const dueDates: string[] = []
+    for (const anchor of anchors) {
+      const result = computeDeadline({ anchor, todayIso: TODAY_ISO, hint: fixture.text })
+      if (!result) continue
+      const key = `${anchor.kind}|${result.dueDateIso}`
+      if (seen.has(key)) continue
+      seen.add(key)
+      dueDates.push(result.dueDateIso)
+    }
+
+    const dates = scoreDates(fixture.expect.deadlines, dueDates)
     const evidence = scoreEvidence(
-      anchors.map((anchor) => anchor.quote),
+      rawModelAnchors.map((anchor) => anchor.quote),
       fixture.text
     )
     const kinds = anchors.map((anchor) => anchor.kind)
 
     rows.push({
       fixture: fixture.id,
-      anker: anchors.length,
+      anker_regel: ruleAnchors.length,
+      anker_modell: modelAnchors.length,
       fristen_soll: dates.expected.length,
       fristen_ist: dates.actual.length,
       treffer: dates.matched.length,

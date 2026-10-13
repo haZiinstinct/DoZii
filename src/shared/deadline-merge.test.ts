@@ -1,14 +1,7 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect } from 'vitest'
 
-vi.mock('../db', () => ({ getDb: vi.fn(), schema: {} }))
-vi.mock('./document-store.service', () => ({ getDocumentById: vi.fn() }))
-vi.mock('./ollama-client.service', () => ({ chatOnce: vi.fn() }))
-vi.mock('./logger.service', () => ({
-  logger: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }
-}))
-
-import { mergeAnchors } from './deadline.service'
-import type { DeadlineAnchor } from '@shared/types'
+import { mergeAnchors } from './deadline-merge'
+import type { DeadlineAnchor } from './types'
 
 function anchor(overrides: Partial<DeadlineAnchor>): DeadlineAnchor {
   return {
