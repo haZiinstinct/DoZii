@@ -308,10 +308,57 @@ export function findDeadlineAnchors(text: string): DeadlineAnchor[] {
     })
   }
 
+  for (const anchor of findFixedDateAnchors(text)) {
+    if (!anchors.some((a) => a.kind === anchor.kind)) anchors.push(anchor)
+  }
+
   const kschg = findDismissalAnchor(text, docDate)
   if (kschg && !anchors.some((a) => a.kind === 'klage')) anchors.push(kschg)
 
   return anchors
+}
+
+/**
+ * Feste Termine ohne Fristdauer: "Der Betrag ist bis zum 30.04.2026 zu
+ * ueberweisen." Nur mit "bis zum" / "spaetestens" - ein nacktes "bis" steht
+ * auch in "bewilligt vom 01.01. bis 30.06.", und das ist keine Frist fuer
+ * den Nutzer. Zahlungen zaehlen nur, wenn der Satz eine Zahlungspflicht
+ * ausdrueckt; "Die Zahlung erfolgt bis ..." kuendigt Geld AN den Nutzer an.
+ */
+const FIXED_DATE_RE = new RegExp(
+  `(?:bis${WS}(?:zum|sp(?:ä|ae)testens)|sp(?:ä|ae)testens(?:${WS}(?:am|bis${WS}zum))?)${WS}` +
+    `(\\d{1,2}\\.${WSO}(?:${Object.keys(MONTHS).join('|')}|\\d{1,2}\\.)${WSO}\\d{4})`,
+  'giu'
+)
+
+const PAYMENT_DUTY =
+  /zu[\s\u00a0]+(?:zahlen|(?:ü|ue)berweisen|entrichten|begleichen)|zahlbar|(?:ü|ue)berweisen[\s\u00a0]+Sie|begleichen[\s\u00a0]+Sie/iu
+
+function findFixedDateAnchors(text: string): DeadlineAnchor[] {
+  const found: DeadlineAnchor[] = []
+  FIXED_DATE_RE.lastIndex = 0
+  for (const m of text.matchAll(FIXED_DATE_RE)) {
+    const due = parseGermanDate(m[1])
+    if (!due) continue
+    const sentence = sentenceAround(text, m.index ?? 0, m[0].length)
+    const kind = kindOf(sentence)
+    if (kind === 'sonstige') continue
+    if (kind === 'zahlung' && !PAYMENT_DUTY.test(sentence)) continue
+    if (found.some((a) => a.kind === kind)) continue
+    found.push({
+      kind,
+      label: KIND_LABELS[kind] ?? KIND_LABELS.sonstige,
+      startDateIso: null,
+      startDateQuote: null,
+      periodText: null,
+      periodValue: null,
+      periodUnit: null,
+      explicitDueDateIso: due,
+      quote: sentence,
+      confidence: 'high'
+    })
+  }
+  return found
 }
 
 /**

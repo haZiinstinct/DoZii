@@ -177,13 +177,6 @@ describe('gegen die Eval-Fixtures', () => {
     expect(missed.map((f) => f.id)).toEqual([])
   })
 
-  /**
-   * Bekannte Luecke: "bis zum 30.04.2026 ... zu ueberweisen" ist ein festes
-   * Datum ohne Fristdauer - das erkennt der Radar nicht. it.fails meldet sich,
-   * sobald es behoben ist.
-   */
-  const KNOWN_KIND_GAPS = new Set(['bescheid-gebuehr-zahlung'])
-
   for (const id of [
     'bussgeld-2wochen',
     'klage-widerspruchsbescheid',
@@ -192,8 +185,7 @@ describe('gegen die Eval-Fixtures', () => {
     'gebuehr-zahlung'
   ]) {
     const fullId = `bescheid-${id}`
-    const run = KNOWN_KIND_GAPS.has(fullId) ? it.fails : it
-    run(`erkennt die erwartete Fristart in ${fullId}`, () => {
+    it(`erkennt die erwartete Fristart in ${fullId}`, () => {
       const f = fixtures.find((x) => x.id === fullId)
       expect(f).toBeDefined()
       const expected = (f!.expect as { kind?: string }).kind
@@ -290,5 +282,28 @@ describe('Kuendigungsschutzklage', () => {
   it('meldet bei einer Mietkuendigung nichts', () => {
     const text = 'Berlin, 12.03.2026\n\nhiermit kündigen wir den Mietvertrag über die Wohnung.'
     expect(findDeadlineAnchors(text)).toHaveLength(0)
+  })
+})
+
+describe('feste Termine ohne Fristdauer', () => {
+  it('liest "bis zum ... zu ueberweisen" als Zahlungsfrist', () => {
+    const a = findDeadlineAnchors(
+      KOPF +
+        'Der Betrag von 412,35 EUR ist bis zum 30.04.2026 auf das Konto der Stadtkasse zu überweisen.'
+    )
+    expect(a).toHaveLength(1)
+    expect(a[0]).toMatchObject({ kind: 'zahlung', explicitDueDateIso: '2026-04-30' })
+  })
+
+  it('macht aus einem Bewilligungszeitraum keine Zahlungsfrist', () => {
+    const text =
+      KOPF +
+      'Leistungen werden vom 01.01.2026 bis 30.06.2026 bewilligt. Die Zahlung erfolgt bis zum 30.06.2026 monatlich.'
+    expect(findDeadlineAnchors(text)).toHaveLength(0)
+  })
+
+  it('liest auch "spätestens am" mit Rechtsbehelf', () => {
+    const a = findDeadlineAnchors(KOPF + 'Der Widerspruch muss spätestens am 15.04.2026 eingehen.')
+    expect(a[0]).toMatchObject({ kind: 'widerspruch', explicitDueDateIso: '2026-04-15' })
   })
 })
