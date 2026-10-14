@@ -1,5 +1,6 @@
 {
   "common": {
+    "loading": "加载中…",
     "words": "字数"
   },
   "titlebar": {
@@ -170,6 +171,8 @@
     "connected": "已连接",
     "starting": "启动中…",
     "stopping": "正在停止…",
+    "creditAria": "代码：haZii.org",
+    "stopFailed": "无法停止 Ollama",
     "inactive": "未运行",
     "notInstalled": "未安装",
     "stopServer": "停止 Ollama 服务器",

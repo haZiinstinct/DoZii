@@ -1,5 +1,6 @@
 {
   "common": {
+    "loading": "読み込み中…",
     "words": "単語"
   },
   "titlebar": {
@@ -170,6 +171,8 @@
     "connected": "接続済み",
     "starting": "起動中…",
     "stopping": "停止中…",
+    "creditAria": "コード: haZii.org",
+    "stopFailed": "Ollama を停止できませんでした",
     "inactive": "実行されていません",
     "notInstalled": "インストールされていません",
     "stopServer": "Ollama サーバーを停止",

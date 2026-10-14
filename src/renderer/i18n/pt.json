@@ -1,5 +1,6 @@
 {
   "common": {
+    "loading": "A carregar…",
     "words": "palavras"
   },
   "titlebar": {
@@ -171,6 +172,8 @@
     "connected": "Ligado",
     "starting": "A iniciar…",
     "stopping": "A parar…",
+    "creditAria": "Código de haZii.org",
+    "stopFailed": "Não foi possível parar o Ollama",
     "inactive": "Não está em execução",
     "notInstalled": "Não instalado",
     "stopServer": "Parar o servidor Ollama",

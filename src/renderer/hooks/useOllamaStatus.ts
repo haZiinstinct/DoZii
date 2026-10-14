@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 
 export interface OllamaStatus {
   connected: boolean
@@ -12,6 +13,7 @@ export interface OllamaStatus {
 }
 
 export function useOllamaStatus() {
+  const { t } = useTranslation()
   const [status, setStatus] = useState<OllamaStatus>({
     connected: false,
     model: null,
@@ -65,10 +67,10 @@ export function useOllamaStatus() {
       setStatus((prev) => ({
         ...prev,
         starting: false,
-        startError: result.error ?? 'Ollama konnte nicht gestartet werden'
+        startError: result.error ?? t('welcome.startFailed')
       }))
     }
-  }, [check])
+  }, [check, t])
 
   const stopOllama = useCallback(async () => {
     setStatus((prev) => ({ ...prev, stopping: true, stopError: null }))
@@ -80,10 +82,10 @@ export function useOllamaStatus() {
       setStatus((prev) => ({
         ...prev,
         stopping: false,
-        stopError: result.error ?? 'Ollama konnte nicht gestoppt werden'
+        stopError: result.error ?? t('settings.stopFailed')
       }))
     }
-  }, [check])
+  }, [check, t])
 
   useEffect(() => {
     check()

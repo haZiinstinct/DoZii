@@ -1,5 +1,6 @@
 {
   "common": {
+    "loading": "Loading…",
     "words": "words"
   },
   "titlebar": {
@@ -171,6 +172,8 @@
     "connected": "Connected",
     "starting": "Starting…",
     "stopping": "Stopping…",
+    "creditAria": "Code by haZii.org",
+    "stopFailed": "Ollama could not be stopped",
     "inactive": "Not running",
     "notInstalled": "Not installed",
     "stopServer": "Stop Ollama server",

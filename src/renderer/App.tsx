@@ -29,7 +29,11 @@ const WelcomeWizard = lazy(() =>
 function RouteFallback() {
   return (
     <div className="flex h-full w-full items-center justify-center">
-      <Loader2 size={24} className="animate-spin text-brand-cyan" aria-label="Lädt" />
+      <Loader2
+        size={24}
+        className="animate-spin text-brand-cyan"
+        aria-label={i18n.t('common.loading')}
+      />
     </div>
   )
 }

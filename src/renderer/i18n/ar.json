@@ -1,5 +1,6 @@
 {
   "common": {
+    "loading": "جارٍ التحميل…",
     "words": "كلمات"
   },
   "titlebar": {
@@ -175,6 +176,8 @@
     "connected": "متصل",
     "starting": "جارٍ البدء…",
     "stopping": "جارٍ الإيقاف…",
+    "creditAria": "برمجة haZii.org",
+    "stopFailed": "تعذّر إيقاف Ollama",
     "inactive": "غير نشط",
     "notInstalled": "غير مثبّت",
     "stopServer": "إيقاف خادم Ollama",

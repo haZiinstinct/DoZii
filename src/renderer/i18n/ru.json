@@ -1,5 +1,6 @@
 {
   "common": {
+    "loading": "Загрузка…",
     "words": "слов"
   },
   "titlebar": {
@@ -173,6 +174,8 @@
     "connected": "Подключено",
     "starting": "Запуск…",
     "stopping": "Остановка…",
+    "creditAria": "Код: haZii.org",
+    "stopFailed": "Не удалось остановить Ollama",
     "inactive": "Не запущена",
     "notInstalled": "Не установлена",
     "stopServer": "Остановить сервер Ollama",

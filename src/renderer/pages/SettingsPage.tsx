@@ -314,7 +314,7 @@ export function SettingsPage() {
 
   const handlePull = async (name: string) => {
     setPulling(name)
-    setPullProgress('Starting...')
+    setPullProgress(t('settings.starting'))
     const removeProgress = window.api.ollama.onPullProgress((progress) => {
       if (progress.total && progress.completed) {
         const pct = Math.round((progress.completed / progress.total) * 100)
@@ -362,7 +362,7 @@ export function SettingsPage() {
               window.open('https://hazii.org', '_blank')
             }}
             dir="ltr"
-            aria-label="Code von haZii.org"
+            aria-label={t('settings.creditAria')}
             className="whitespace-nowrap font-mono text-sm transition-opacity hover:opacity-80"
           >
             <span className="text-brand-text-dim">{'// code: '}</span>
@@ -1104,11 +1104,6 @@ export function SettingsPage() {
             {t('settings.copyPath')}
           </button>
         </div>
-        {settings && (
-          <p className="mt-4 text-[10px] font-mono text-brand-text-dim">
-            Settings-Sprache: {settings.language} · OCR: {settings.ocrLanguages.join(', ')}
-          </p>
-        )}
       </section>
     </div>
   )
