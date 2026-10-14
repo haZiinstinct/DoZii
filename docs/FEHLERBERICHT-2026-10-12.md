@@ -255,16 +255,16 @@ morgen. M8 – fremdes Ollama wird nicht mehr beendet, die Einstellungen nennen 
 
 | | ID | Titel | Aufwand | Erledigt in |
 |---|---|---|---|---|
-| [ ] | H1 | Electron 33 → 39+ (mit electron-builder 26) | L | |
-| [ ] | H2 | `xlsx` ersetzen (SheetJS-CDN-Tarball 0.20.x oder `exceljs`) | M | |
-| [ ] | M15 | Schwärzung: Fehlalarme (0-Nummern, Kreditkarte), Lücken (IBAN klein, Steuernummer, Geb.-Datum), Regex-Laufzeit | M | |
-| [ ] | L5 | Duplikate zusammenführen: `MODE_LABELS`, Monatsnamen, Zahlwörter, `CHARS_PER_TOKEN` | S | |
-| [ ] | L17 | Typen schärfen: `Analysis.mode`, `DocumentTypeCategory`, `as const satisfies` für Anker-Enums | S | |
-| [ ] | L9 | `stripThinking`: Orphan-Regel nur bei Zeilenanfang | S | |
-| [ ] | L10 | `htmlToText`: nacktes `<` tolerieren | S | |
-| [ ] | L11 | RTF: Links, `####`, Flanking-Regel für `*` | S | |
-| [ ] | L12 | `chunk-text`: Dokumentation der Budget-Obergrenze korrigieren | S | |
-| [ ] | — | Settings-Provider im Renderer statt fünf `settings.get()` | M | |
+| [ ] | H1 | Electron 33 → 39+ (mit electron-builder 26) | L | Branch chore/electron-upgrade (Electron 44, nicht gemergt) |
+| [x] | H2 | `xlsx` ersetzen (SheetJS-CDN-Tarball 0.20.x oder `exceljs`) | M | 1b1d2ae |
+| [x] | M15 | Schwärzung: Fehlalarme (0-Nummern, Kreditkarte), Lücken (IBAN klein, Steuernummer, Geb.-Datum), Regex-Laufzeit | M | 412d15d |
+| [x] | L5 | Duplikate zusammenführen: `MODE_LABELS`, Monatsnamen, Zahlwörter, `CHARS_PER_TOKEN` | S | 8050369 |
+| [x] | L17 | Typen schärfen: `Analysis.mode`, `DocumentTypeCategory`, `as const satisfies` für Anker-Enums | S | 06bd180 |
+| [x] | L9 | `stripThinking`: Orphan-Regel nur bei Zeilenanfang | S | 14f7e24 |
+| [x] | L10 | `htmlToText`: nacktes `<` tolerieren | S | 29744cc |
+| [x] | L11 | RTF: Links, `####`, Flanking-Regel für `*` | S | f5443cf |
+| [x] | L12 | `chunk-text`: Dokumentation der Budget-Obergrenze korrigieren | S | 6797e72 |
+| [x] | — | Settings-Provider im Renderer statt fünf `settings.get()` | M | f3ab87f |
 | [ ] | — | `AnalysisPage` in Chat- und Export-Komponenten aufteilen | M | |
 
 **H1** · `package.json`
