@@ -47,9 +47,15 @@ export interface TextChunk {
 }
 
 export interface ChunkOptions {
-  /** Token-Budget pro Chunk - die Ueberlappung zaehlt mit hinein. */
+  /**
+   * Ziel-Budget pro Chunk - die Ueberlappung zaehlt mit hinein. KEINE harte
+   * Obergrenze: reicht `maxChunks` dafuer nicht, werden die Chunks groesser
+   * statt Text wegzuwerfen. Wer eine Obergrenze braucht, muss die Laenge der
+   * Chunks selbst pruefen (siehe analysis.service).
+   */
   budgetTokens: number
   overlapTokens?: number
+  /** Hoechstzahl der Chunks. Hat Vorrang vor `budgetTokens`. */
   maxChunks?: number
   charsPerToken?: number
 }
