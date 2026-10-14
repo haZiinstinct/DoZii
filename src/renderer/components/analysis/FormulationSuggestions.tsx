@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { FileText, ArrowRight, Copy, Check } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import type { FormulationResult } from '@/lib/parse-analysis'
+import { logRejection } from '@/lib/log-rejection'
 
 interface Props {
   result: FormulationResult
@@ -13,10 +14,13 @@ export function FormulationSuggestions({ result }: Props) {
 
   const handleCopy = () => {
     if (!result.revisedFullText) return
-    navigator.clipboard.writeText(result.revisedFullText).then(() => {
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    })
+    navigator.clipboard
+      .writeText(result.revisedFullText)
+      .then(() => {
+        setCopied(true)
+        setTimeout(() => setCopied(false), 2000)
+      })
+      .catch(logRejection('FormulationSuggestions', 'clipboard.writeText'))
   }
 
   return (

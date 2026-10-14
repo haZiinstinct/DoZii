@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Download, X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import type { UpdateStatus } from '@shared/types'
+import { logRejection } from '@/lib/log-rejection'
 
 /**
  * Dezenter Toast unten rechts, sobald ein Update heruntergeladen wurde.
@@ -18,7 +19,10 @@ export function UpdateToast() {
       setStatus(s)
       if (s.state === 'downloaded') setDismissed(false)
     })
-    window.api.update.getState().then(({ status: s }) => setStatus(s))
+    window.api.update
+      .getState()
+      .then(({ status: s }) => setStatus(s))
+      .catch(logRejection('UpdateToast', 'update.getState'))
     return unsubscribe
   }, [])
 

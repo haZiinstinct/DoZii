@@ -56,6 +56,7 @@ import type { HighlightQuery } from '@/lib/highlight'
 import { DEFAULT_MODEL, isHeavyModeCapable } from '@shared/model-catalog'
 import { DiagnosticReportCard } from '@/components/DiagnosticReportCard'
 import { useTranslation } from 'react-i18next'
+import { logRejection } from '@/lib/log-rejection'
 
 // ============================================================================
 // State machine: discriminated union prevents invalid boolean combinations
@@ -173,9 +174,12 @@ export function AnalysisPage() {
         // silent - chat history load error is non-critical
       })
     // Also load the document so parsers can validate evidence quotes against it
-    window.api.documents.getById(docId).then((d) => {
-      if (d) setDoc(d)
-    })
+    window.api.documents
+      .getById(docId)
+      .then((d) => {
+        if (d) setDoc(d)
+      })
+      .catch(logRejection('AnalysisPage', 'documents.getById'))
     window.api.documents
       .getFirstImpression(docId)
       .then((fi) => setDocumentType(fi?.documentType ?? null))
@@ -333,10 +337,12 @@ export function AnalysisPage() {
       onChunk: (chunk) => {
         setChat((s) => (s.kind === 'streaming' ? { ...s, buffer: s.buffer + chunk } : s))
       },
-      onComplete: async () => {
+      onComplete: () => {
         setChat({ kind: 'idle' })
-        const history = await window.api.chat.getHistory(docId)
-        setChatMessages(history)
+        window.api.chat
+          .getHistory(docId)
+          .then(setChatMessages)
+          .catch(logRejection('AnalysisPage', 'chat.getHistory'))
       },
       onError: (err) => {
         setChat({ kind: 'error', message: err })
@@ -348,8 +354,12 @@ export function AnalysisPage() {
 
   const handleClearChat = useCallback(async () => {
     if (!docId) return
-    await window.api.chat.clearHistory(docId)
-    setChatMessages([])
+    try {
+      await window.api.chat.clearHistory(docId)
+      setChatMessages([])
+    } catch (err) {
+      logRejection('AnalysisPage', 'chat.clearHistory')(err)
+    }
   }, [docId])
 
   const handleExport = useCallback(

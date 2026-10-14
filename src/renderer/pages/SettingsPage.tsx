@@ -41,6 +41,7 @@ import { useOllamaStatus } from '@/hooks/useOllamaStatus'
 import { useTheme } from '@/hooks/useTheme'
 import { useAppearance } from '@/hooks/useAppearance'
 import { applyLanguageDirection } from '@/hooks/useLanguageDirection'
+import { logRejection } from '@/lib/log-rejection'
 
 /**
  * Die Auswahlliste kommt aus dem zentralen Modellkatalog. Frueher standen die
@@ -186,29 +187,41 @@ export function SettingsPage() {
   const { fontScale, highContrast, setFontScale, setHighContrast } = useAppearance()
 
   const loadModels = async () => {
-    const m = await window.api.ollama.listModels()
-    setModels(m)
+    try {
+      setModels(await window.api.ollama.listModels())
+    } catch (err) {
+      logRejection('SettingsPage', 'ollama.listModels')(err)
+    }
   }
 
   useEffect(() => {
-    window.api.hardware.detect().then((hw) => {
-      setHardware(hw)
-      // Auto-select GPU tab if the user has a capable GPU
-      if (hw.gpu && hw.gpu.vramMb >= 6 * 1024) {
-        setModelTab('gpu')
-      }
-    })
-    window.api.settings.get().then((s) => {
-      setSettings(s)
-      setSelectedModel(s.selectedModel)
-      setOllamaUrlDraft(s.ollamaUrl)
-      persistedOllamaUrl.current = s.ollamaUrl
-    })
-    loadModels()
-    window.api.update.getState().then(({ appVersion: v, status }) => {
-      setAppVersion(v)
-      setUpdateStatus(status)
-    })
+    window.api.hardware
+      .detect()
+      .then((hw) => {
+        setHardware(hw)
+        // Auto-select GPU tab if the user has a capable GPU
+        if (hw.gpu && hw.gpu.vramMb >= 6 * 1024) {
+          setModelTab('gpu')
+        }
+      })
+      .catch(logRejection('SettingsPage', 'hardware.detect'))
+    window.api.settings
+      .get()
+      .then((s) => {
+        setSettings(s)
+        setSelectedModel(s.selectedModel)
+        setOllamaUrlDraft(s.ollamaUrl)
+        persistedOllamaUrl.current = s.ollamaUrl
+      })
+      .catch(logRejection('SettingsPage', 'settings.get'))
+    void loadModels()
+    window.api.update
+      .getState()
+      .then(({ appVersion: v, status }) => {
+        setAppVersion(v)
+        setUpdateStatus(status)
+      })
+      .catch(logRejection('SettingsPage', 'update.getState'))
     const unsubscribe = window.api.update.onStatus(setUpdateStatus)
     return unsubscribe
   }, [])

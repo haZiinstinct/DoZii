@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import type { ThemeMode } from '@shared/types'
+import { logRejection } from '@/lib/log-rejection'
 
 /**
  * Theme management. The CSS tokens are defined for dark-first in globals.css;
@@ -30,13 +31,16 @@ export function useTheme() {
   // Load persisted setting on mount
   useEffect(() => {
     let cancelled = false
-    window.api.settings.get().then((settings) => {
-      if (cancelled) return
-      setModeState(settings.theme)
-      const eff = resolveEffective(settings.theme)
-      setEffective(eff)
-      applyTheme(eff)
-    })
+    window.api.settings
+      .get()
+      .then((settings) => {
+        if (cancelled) return
+        setModeState(settings.theme)
+        const eff = resolveEffective(settings.theme)
+        setEffective(eff)
+        applyTheme(eff)
+      })
+      .catch(logRejection('useTheme', 'settings.get'))
     return () => {
       cancelled = true
     }
