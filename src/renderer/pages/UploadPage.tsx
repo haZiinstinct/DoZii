@@ -311,7 +311,9 @@ export function UploadPage() {
         }}
         onDragLeave={(e) => {
           e.preventDefault()
-          setDragging(false)
+          // Nur beim Verlassen der Flaeche selbst - nicht beim Wechsel auf ein
+          // Kind-Element, sonst flackert der Rahmen.
+          if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setDragging(false)
         }}
         onDrop={handleDrop}
         aria-label={t('upload.title')}
@@ -357,16 +359,24 @@ export function UploadPage() {
                 </span>
               ))}
             </div>
-            <button
-              onClick={handleBulkFolderImport}
-              className="titlebar-no-drag inline-flex items-center gap-2 rounded-xl border border-brand-border bg-brand-card/50 px-4 py-2 text-xs text-brand-text-dim transition-all hover:border-brand-cyan/30 hover:text-brand-cyan"
-            >
-              <FolderOpen size={12} aria-hidden="true" />
-              {t('upload.folderImport')}
-            </button>
           </>
         )}
       </div>
+
+      {/*
+       * Bewusst AUSSERHALB der Ablage-Flaeche: dort war der Knopf ein
+       * interaktives Element in role="button" - Enter/Leertaste oeffneten den
+       * Datei-Dialog statt des Ordner-Dialogs, per Tastatur war er unerreichbar.
+       */}
+      {!busy && (
+        <button
+          onClick={handleBulkFolderImport}
+          className="titlebar-no-drag -mt-2 inline-flex items-center gap-2 rounded-xl border border-brand-border bg-brand-card/50 px-4 py-2 text-xs text-brand-text-dim transition-all hover:border-brand-cyan/30 hover:text-brand-cyan"
+        >
+          <FolderOpen size={12} aria-hidden="true" />
+          {t('upload.folderImport')}
+        </button>
+      )}
 
       {/* Trenner zwischen Datei-Import und Text einfuegen */}
       <div className="flex w-full max-w-2xl items-center gap-4">
