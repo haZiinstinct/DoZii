@@ -327,3 +327,17 @@ describe('decodeTextBytes: Windows-1252 mit wenigen Umlauten', () => {
     expect(decodeTextBytes(Buffer.from(text, 'utf8'), null)).toBe(text)
   })
 })
+
+describe('parseEml - nacktes < im HTML', () => {
+  it('verschluckt keinen Text nach einem einzelnen <', () => {
+    const parsed = parseEml(
+      eml(
+        'Subject: Vergleich',
+        'Content-Type: text/html; charset=utf-8',
+        '',
+        '<p>Wenn a < b und c > d gilt, zahlen Sie Preis <5 EUR.</p>'
+      )
+    )
+    expect(parsed.body).toContain('Wenn a < b und c > d gilt, zahlen Sie Preis <5 EUR.')
+  })
+})

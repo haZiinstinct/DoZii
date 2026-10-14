@@ -309,7 +309,10 @@ function htmlToText(html: string): string {
     .replace(/<br\s*\/?>/gi, '\n')
     .replace(/<\/td\s*>/gi, '\t')
     .replace(/<\/?(p|div|tr|li|h[1-6]|blockquote|table|ul|ol)\b[^>]*>/gi, '\n')
-    .replace(/<[^>]*>/g, '')
+    // Nur echte Tags: '<' direkt gefolgt von Buchstabe, '/' oder '!'. Ein
+    // nacktes '<' ("a < b", "Preis <5 EUR") verschluckte sonst den Text bis zum
+    // naechsten '>'.
+    .replace(/<\/?[A-Za-z!][^<>]*>/g, '')
   return collapseBlankLines(decodeEntities(withBreaks))
 }
 
