@@ -122,6 +122,7 @@
   },
   "document": {
     "back": "返回",
+    "deleteFailed": "删除失败：{{error}}",
     "notFound": "未找到文档",
     "reimport": "重新读取文本（用于提取损坏时）",
     "reimportFailed": "重新导入失败",

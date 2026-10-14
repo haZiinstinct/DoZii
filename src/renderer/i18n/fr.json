@@ -122,6 +122,7 @@
   },
   "document": {
     "back": "Retour",
+    "deleteFailed": "La suppression a échoué : {{error}}",
     "notFound": "Document introuvable",
     "reimport": "Relire le texte (en cas d'extraction défectueuse)",
     "reimportFailed": "Échec de la réimportation",

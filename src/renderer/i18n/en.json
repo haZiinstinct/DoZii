@@ -122,6 +122,7 @@
   },
   "document": {
     "back": "Back",
+    "deleteFailed": "Deleting failed: {{error}}",
     "notFound": "Document not found",
     "reimport": "Re-read text (for broken extraction)",
     "reimportFailed": "Re-import failed",

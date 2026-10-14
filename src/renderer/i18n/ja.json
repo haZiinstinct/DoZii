@@ -122,6 +122,7 @@
   },
   "document": {
     "back": "戻る",
+    "deleteFailed": "削除できませんでした: {{error}}",
     "notFound": "ドキュメントが見つかりません",
     "reimport": "テキストを再読み込み（抽出が壊れている場合）",
     "reimportFailed": "再インポートに失敗しました",

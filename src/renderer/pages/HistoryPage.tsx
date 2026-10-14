@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import type { DocumentSummary } from '@shared/types'
+import { useConfirmClick } from '@/hooks/useConfirmClick'
 
 /** Wartezeit, bevor aus einer Eingabe eine SQLite-Suche wird. */
 const SEARCH_DEBOUNCE_MS = 250
@@ -27,6 +28,8 @@ export function HistoryPage() {
   const navigate = useNavigate()
   const { t, i18n } = useTranslation()
   const [docs, setDocs] = useState<DocumentSummary[]>([])
+  const [deleteError, setDeleteError] = useState<string | null>(null)
+  const deleteConfirm = useConfirmClick()
   const [search, setSearch] = useState('')
   /** Die Suche, zu der die aktuell angezeigte Liste gehoert - fuer Zaehler und Leerzustand. */
   const [appliedSearch, setAppliedSearch] = useState('')
@@ -82,9 +85,18 @@ export function HistoryPage() {
     }
   }, [search])
 
+  // Zweistufig wie bei den Modellen: erster Klick fragt nach, zweiter loescht.
   const handleDelete = async (id: string) => {
-    await window.api.documents.delete(id)
-    setDocs((prev) => prev.filter((d) => d.id !== id))
+    if (!deleteConfirm.confirmOrArm(id)) return
+    setDeleteError(null)
+    try {
+      await window.api.documents.delete(id)
+      setDocs((prev) => prev.filter((d) => d.id !== id))
+    } catch (err) {
+      setDeleteError(
+        t('document.deleteFailed', { error: err instanceof Error ? err.message : String(err) })
+      )
+    }
   }
 
   return (
@@ -135,6 +147,12 @@ export function HistoryPage() {
       </div>
 
       {/* Document list */}
+      {deleteError && (
+        <p role="alert" className="text-sm text-brand-red">
+          {deleteError}
+        </p>
+      )}
+
       {busy && !ready ? (
         <div className="flex justify-center py-12">
           <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-cyan border-t-transparent" />
@@ -203,11 +221,24 @@ export function HistoryPage() {
                 </button>
                 <button
                   onClick={() => handleDelete(doc.id)}
-                  className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg text-brand-text-dim opacity-0 transition-all hover:bg-brand-red/10 hover:text-brand-red focus-visible:opacity-100 group-hover:opacity-100"
-                  title={t('history.deleteDoc')}
-                  aria-label={t('history.deleteDoc')}
+                  className={`flex h-8 flex-shrink-0 items-center justify-center gap-1.5 rounded-lg px-2 text-xs font-semibold transition-all ${
+                    deleteConfirm.armed === doc.id
+                      ? 'border border-brand-red/40 bg-brand-red/20 text-brand-red'
+                      : 'w-8 text-brand-text-dim opacity-0 hover:bg-brand-red/10 hover:text-brand-red focus-visible:opacity-100 group-hover:opacity-100'
+                  }`}
+                  title={
+                    deleteConfirm.armed === doc.id
+                      ? t('settings.confirmDeleteHint')
+                      : t('history.deleteDoc')
+                  }
+                  aria-label={
+                    deleteConfirm.armed === doc.id
+                      ? t('settings.confirmDelete')
+                      : t('history.deleteDoc')
+                  }
                 >
-                  <Trash2 size={14} aria-hidden="true" />
+                  <Trash2 size={deleteConfirm.armed === doc.id ? 12 : 14} aria-hidden="true" />
+                  {deleteConfirm.armed === doc.id && t('settings.confirmDelete')}
                 </button>
               </li>
             )

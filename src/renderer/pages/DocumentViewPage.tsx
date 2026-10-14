@@ -26,6 +26,7 @@ import { ANALYSIS_MODES } from '@shared/types'
 import type { AnalysisMode, Deadline, DoziiDocument, FirstImpression } from '@shared/types'
 import { isLikelyGarbled } from '@shared/text-validators'
 import { DeadlineList } from '@/components/DeadlineList'
+import { useConfirmClick } from '@/hooks/useConfirmClick'
 
 /** Modi, die hier zur Auswahl stehen - 'letter' gehoert bewusst nicht dazu. */
 type PickableMode = (typeof ANALYSIS_MODES)[number]
@@ -73,6 +74,8 @@ export function DocumentViewPage() {
   const [scanFailed, setScanFailed] = useState(false)
   const [icsError, setIcsError] = useState<string | null>(null)
   const [icsSavedPath, setIcsSavedPath] = useState<string | null>(null)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
+  const deleteConfirm = useConfirmClick()
 
   const todayIso = useMemo(() => todayIsoLocal(), [])
 
@@ -133,11 +136,21 @@ export function DocumentViewPage() {
     [doc, garbledDismissed]
   )
 
+  // Zweistufig: der erste Klick fragt nach, erst der zweite loescht Dokument,
+  // Analysen und Fristen.
   const handleDelete = async () => {
-    if (!id) return
-    await window.api.documents.delete(id)
-    navigate('/')
+    if (!id || !deleteConfirm.confirmOrArm(id)) return
+    setDeleteError(null)
+    try {
+      await window.api.documents.delete(id)
+      navigate('/')
+    } catch (err) {
+      setDeleteError(
+        t('document.deleteFailed', { error: err instanceof Error ? err.message : String(err) })
+      )
+    }
   }
+  const deleteArmed = deleteConfirm.armed === id
 
   const handleReImport = async () => {
     if (!id) return
@@ -256,13 +269,24 @@ export function DocumentViewPage() {
         </button>
         <button
           onClick={handleDelete}
-          aria-label={t('document.delete')}
-          title={t('document.delete')}
-          className="flex h-9 w-9 items-center justify-center rounded-lg text-brand-text-dim transition-colors hover:bg-brand-red/10 hover:text-brand-red"
+          aria-label={deleteArmed ? t('settings.confirmDelete') : t('document.delete')}
+          title={deleteArmed ? t('settings.confirmDeleteHint') : t('document.delete')}
+          className={`flex h-9 items-center justify-center gap-1.5 rounded-lg px-2 text-xs font-semibold transition-colors ${
+            deleteArmed
+              ? 'border border-brand-red/40 bg-brand-red/20 text-brand-red'
+              : 'w-9 text-brand-text-dim hover:bg-brand-red/10 hover:text-brand-red'
+          }`}
         >
-          <Trash2 size={16} aria-hidden="true" />
+          <Trash2 size={deleteArmed ? 12 : 16} aria-hidden="true" />
+          {deleteArmed && t('settings.confirmDelete')}
         </button>
       </div>
+
+      {deleteError && (
+        <p role="alert" className="text-sm text-brand-red">
+          {deleteError}
+        </p>
+      )}
 
       {/* Scan-Hinweis: OCR verwechselt Ziffern, bei einem Bescheid haengt daran viel Geld. */}
       {doc.ocrUsed && (
