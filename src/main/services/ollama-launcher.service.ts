@@ -66,6 +66,14 @@ export function detectOllamaInstallation(): OllamaInstallation {
 }
 
 /**
+ * PID des Ollama-Servers, den DoZii selbst gestartet hat. Nur DIESEN beendet
+ * der Stopp-Knopf - frueher traf `taskkill /IM ollama.exe` jede Instanz im
+ * System, auch eine, die der Nutzer selbst betreibt (z. B. fuer andere
+ * Programme).
+ */
+let ownServerPid: number | null = null
+
+/**
  * Launch the Ollama server as a detached background process.
  * On Windows this uses `ollama serve` which listens on localhost:11434.
  * The process is unref'd so it survives the DoZii app exit.
@@ -88,6 +96,10 @@ export async function startOllamaServer(): Promise<{
 
     // Let the child run independently of the parent
     child.unref()
+    ownServerPid = child.pid ?? null
+    child.once('exit', () => {
+      if (ownServerPid === child.pid) ownServerPid = null
+    })
 
     // Watchdog: erst "gestartet" melden, wenn der Server wirklich antwortet.
     const reachable = await waitForOllama(15_000)
@@ -110,33 +122,35 @@ export async function startOllamaServer(): Promise<{
 }
 
 /**
- * Stop the running Ollama server using execFileSync (safe, no shell).
- * Cross-platform kill commands.
+ * Stoppt den Ollama-Server, den DoZii selbst gestartet hat (ownServerPid).
+ * Ein fremdes Ollama bleibt unberuehrt; die Oberflaeche zeigt dann den Grund.
  */
 export async function stopOllamaServer(): Promise<{
   stopped: boolean
   error?: string
 }> {
+  const pid = ownServerPid
+  if (pid === null) {
+    return {
+      stopped: false,
+      error:
+        'Dieses Ollama hat DoZii nicht selbst gestartet - es wird deshalb nicht beendet. ' +
+        'Beende es dort, wo es gestartet wurde (z. B. über das Ollama-Symbol in der Taskleiste).'
+    }
+  }
   try {
     if (process.platform === 'win32') {
-      execFileSync('taskkill', ['/F', '/IM', 'ollama.exe'], {
-        encoding: 'utf8',
-        timeout: 5000,
-        stdio: 'pipe'
-      })
-    } else if (process.platform === 'darwin') {
-      execFileSync('pkill', ['-f', 'ollama serve'], {
+      // /T: auch die Runner-Prozesse, die `ollama serve` fuer Modelle startet.
+      execFileSync('taskkill', ['/F', '/T', '/PID', String(pid)], {
         encoding: 'utf8',
         timeout: 5000,
         stdio: 'pipe'
       })
     } else {
-      execFileSync('killall', ['ollama'], {
-        encoding: 'utf8',
-        timeout: 5000,
-        stdio: 'pipe'
-      })
+      // detached gestartet -> eigene Prozessgruppe; -pid trifft auch die Runner.
+      process.kill(-pid, 'SIGTERM')
     }
+    ownServerPid = null
 
     // Give the process a moment to fully exit, then verify
     await new Promise((r) => setTimeout(r, 500))
@@ -153,8 +167,10 @@ export async function stopOllamaServer(): Promise<{
     if (
       message.includes('nicht gefunden') ||
       message.includes('not found') ||
-      message.includes('no matching')
+      message.includes('no matching') ||
+      message.includes('ESRCH')
     ) {
+      ownServerPid = null
       return { stopped: true }
     }
     return { stopped: false, error: message }
