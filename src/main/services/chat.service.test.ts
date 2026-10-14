@@ -9,7 +9,7 @@ vi.mock('./logger.service', () => ({
   logger: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() }
 }))
 
-import { buildSystemPrompt } from './chat.service'
+import { buildSystemPrompt, trimHistory } from './chat.service'
 
 describe('buildSystemPrompt', () => {
   it('antwortet bei deutscher UI auf Deutsch', () => {
@@ -23,5 +23,30 @@ describe('buildSystemPrompt', () => {
 
   it('enthaelt das Dokument', () => {
     expect(buildSystemPrompt('Bescheid vom 12.03.2026', 'fr')).toContain('Bescheid vom 12.03.2026')
+  })
+})
+
+describe('trimHistory', () => {
+  const sys = { role: 'system', content: 's' }
+  const msg = (role: 'user' | 'assistant', len: number) => ({ role, content: 'x'.repeat(len) })
+
+  it('entfernt Frage und Antwort gemeinsam', () => {
+    const messages = [
+      sys,
+      msg('user', 50),
+      msg('assistant', 50),
+      msg('user', 5),
+      msg('assistant', 5),
+      msg('user', 5)
+    ]
+    trimHistory(messages, 30)
+    expect(messages.map((m) => m.role)).toEqual(['system', 'user', 'assistant', 'user'])
+  })
+
+  it('behaelt immer System-Prompt und neue Frage', () => {
+    const messages = [sys, msg('user', 500), msg('assistant', 500), msg('user', 500)]
+    trimHistory(messages, 10)
+    expect(messages.map((m) => m.role)).toEqual(['system', 'user'])
+    expect(messages[1].content).toHaveLength(500)
   })
 })

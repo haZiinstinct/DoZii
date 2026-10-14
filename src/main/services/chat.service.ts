@@ -64,6 +64,25 @@ function saveMessage(
 }
 
 /**
+ * Kuerzt den Verlauf von vorn, bis er in `maxChars` passt. System-Prompt
+ * (Index 0) und die neue Nutzerfrage (letzter Eintrag) bleiben immer.
+ *
+ * Entfernt wird paarweise (Frage + Antwort). Einzeln geloescht stand sonst
+ * eine Antwort ohne ihre Frage am Anfang - zwei assistant-Nachrichten
+ * hintereinander bringen kleine Modelle aus dem Tritt.
+ */
+export function trimHistory(messages: Message[], maxChars: number): void {
+  const total = (): number => messages.reduce((sum, m) => sum + m.content.length, 0)
+  while (total() > maxChars && messages.length > 2) {
+    const pair = messages[1]?.role === 'user' && messages[2]?.role === 'assistant'
+    // Nie die neue Nutzerfrage (letzter Eintrag) entfernen.
+    const count = pair && messages.length > 3 ? 2 : 1
+    if (1 + count > messages.length - 1) break
+    messages.splice(1, count)
+  }
+}
+
+/**
  * Send a chat message. Saves user + assistant messages as a pair AFTER the
  * stream completes (or aborts with partial text), so a failing stream doesn't
  * leave orphaned user messages in the history.
@@ -116,13 +135,7 @@ export async function sendChatMessage(
     { role: 'user', content: userMessage }
   ]
 
-  // Truncate oldest user/assistant pairs if total content grows too large
-  while (
-    messages.reduce((sum, m) => sum + m.content.length, 0) > MAX_HISTORY_CHARS &&
-    messages.length > 3
-  ) {
-    messages.splice(1, 1)
-  }
+  trimHistory(messages, MAX_HISTORY_CHARS)
 
   const startTime = Date.now()
   let fullResponse: string
