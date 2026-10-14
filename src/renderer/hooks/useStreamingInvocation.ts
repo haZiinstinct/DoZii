@@ -9,27 +9,41 @@ import { useCallback, useEffect, useRef } from 'react'
  * - Listeners are always removed on component unmount (no leaks on navigation)
  * - Multiple streams on the same component don't stack up (previous run's
  *   listeners are removed before the next run's are registered)
+ *
+ * Jeder Lauf hat eine eigene ID, die der Hauptprozess an jedes Event haengt.
+ * Events fremder Laeufe werden verworfen: ohne das landeten nach einem
+ * Moduswechsel die Reste der alten Analyse im Text der neuen, und deren
+ * "complete" beendete die neue vorzeitig.
  */
 
-export interface StreamChannel<TComplete> {
-  onChunk: (cb: (chunk: string) => void) => () => void
-  onComplete: (cb: (result: TComplete) => void) => () => void
-  onError: (cb: (error: string) => void) => () => void
-  /** Bricht den laufenden Durchgang im Hauptprozess ab. */
-  abort: () => Promise<void>
+type RunListener<T> = (value: T, runId?: string) => void
+
+export interface StreamChannel<TComplete, TPhase = never> {
+  onChunk: (cb: RunListener<string>) => () => void
+  onComplete: (cb: RunListener<TComplete>) => () => void
+  onError: (cb: RunListener<string>) => () => void
+  onPhase?: (cb: RunListener<TPhase>) => () => void
+  /** Bricht den Lauf mit dieser ID im Hauptprozess ab. */
+  abort: (runId?: string) => Promise<void>
 }
 
-export interface StreamHandlers<TComplete> {
+export interface StreamHandlers<TComplete, TPhase = never> {
   onChunk: (chunk: string) => void
   onComplete: (result: TComplete) => void
   onError: (error: string) => void
+  onPhase?: (phase: TPhase) => void
 }
 
-export function useStreamingInvocation<TComplete = unknown>(channel: StreamChannel<TComplete>) {
-  // Track removers for the currently-registered listener trio
+/** Fallback-Meldung, wenn der Lauf endet, ohne complete oder error zu senden. */
+const NO_RESULT_MESSAGE = 'Der Lauf wurde ohne Ergebnis beendet.'
+
+export function useStreamingInvocation<TComplete = unknown, TPhase = never>(
+  channel: StreamChannel<TComplete, TPhase>
+) {
+  // Track removers for the currently-registered listeners
   const removersRef = useRef<Array<() => void>>([])
-  /** Laeuft gerade ein Durchgang? Entscheidet, ob beim Unmount abgebrochen wird. */
-  const runningRef = useRef(false)
+  /** ID des laufenden Durchgangs, null = keiner. */
+  const runIdRef = useRef<string | null>(null)
 
   const cleanup = useCallback(() => {
     for (const remove of removersRef.current) {
@@ -53,39 +67,75 @@ export function useStreamingInvocation<TComplete = unknown>(channel: StreamChann
 
   // Beim Unmount nicht nur die Listener entfernen, sondern auch den Lauf im
   // Hauptprozess abbrechen. Sonst laeuft die alte Analyse weiter, belegt das
-  // Modell und schreibt am Ende ein Ergebnis, das niemand angefordert hat -
-  // startet der Nutzer inzwischen eine neue, konkurrieren beide um Ollama.
+  // Modell und schreibt am Ende ein Ergebnis, das niemand angefordert hat.
   useEffect(() => {
     return () => {
       cleanup()
-      if (runningRef.current) {
-        runningRef.current = false
-        void channel.abort()
+      const running = runIdRef.current
+      if (running) {
+        runIdRef.current = null
+        void channel.abort(running)
       }
     }
   }, [cleanup, channel])
 
-  const run = useCallback(
-    async (invoke: () => Promise<unknown>, handlers: StreamHandlers<TComplete>) => {
-      // Remove any previous listeners before registering new ones
-      cleanup()
+  /** Bricht den laufenden Durchgang ab (Stopp-Knopf). */
+  const abort = useCallback(async () => {
+    const running = runIdRef.current
+    if (running) await channel.abort(running)
+  }, [channel])
 
-      runningRef.current = true
-      const chunkRemover = channel.onChunk(handlers.onChunk)
-      const completeRemover = channel.onComplete((result) => {
-        runningRef.current = false
-        handlers.onComplete(result)
+  const run = useCallback(
+    async (
+      invoke: (runId: string) => Promise<unknown>,
+      handlers: StreamHandlers<TComplete, TPhase>
+    ) => {
+      // Ein noch laufender Durchgang wird abgebrochen, bevor der neue startet.
+      const previous = runIdRef.current
+      cleanup()
+      if (previous) void channel.abort(previous)
+
+      const runId = crypto.randomUUID()
+      runIdRef.current = runId
+      const isOwn = (id?: string): boolean => id === runId && runIdRef.current === runId
+      const finish = (): void => {
+        if (runIdRef.current === runId) runIdRef.current = null
         cleanup()
-      })
-      const errorRemover = channel.onError((err) => {
-        runningRef.current = false
-        handlers.onError(err)
-        cleanup()
-      })
-      removersRef.current = [chunkRemover, completeRemover, errorRemover]
+      }
+
+      const removers = [
+        channel.onChunk((chunk, id) => {
+          if (isOwn(id)) handlers.onChunk(chunk)
+        }),
+        channel.onComplete((result, id) => {
+          if (!isOwn(id)) return
+          finish()
+          handlers.onComplete(result)
+        }),
+        channel.onError((err, id) => {
+          if (!isOwn(id)) return
+          finish()
+          handlers.onError(err)
+        })
+      ]
+      if (channel.onPhase && handlers.onPhase) {
+        const onPhase = handlers.onPhase
+        removers.push(
+          channel.onPhase((phase, id) => {
+            if (isOwn(id)) onPhase(phase)
+          })
+        )
+      }
+      removersRef.current = removers
 
       try {
-        await invoke()
+        await invoke(runId)
+        // Der Hauptprozess sendet complete/error vor der Rueckgabe. Kam keins
+        // davon an, haengt die Oberflaeche sonst im Ladezustand fest.
+        if (runIdRef.current === runId) {
+          finish()
+          handlers.onError(NO_RESULT_MESSAGE)
+        }
       } catch (err) {
         // If the invoke itself rejects (IPC error), log it, surface to the
         // handlers (so UI can show the error), clean up and bubble up.
@@ -98,18 +148,20 @@ export function useStreamingInvocation<TComplete = unknown>(channel: StreamChann
           .catch(() => {
             /* non-critical */
           })
-        runningRef.current = false
-        try {
-          handlers.onError(message)
-        } catch {
-          /* handler itself should not prevent cleanup */
+        const own = runIdRef.current === runId
+        finish()
+        if (own) {
+          try {
+            handlers.onError(message)
+          } catch {
+            /* handler itself should not prevent cleanup */
+          }
         }
-        cleanup()
         throw err
       }
     },
     [channel, cleanup]
   )
 
-  return { run, cleanup }
+  return { run, abort, cleanup }
 }

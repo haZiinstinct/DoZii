@@ -1,6 +1,6 @@
 import { ipcMain, BrowserWindow } from 'electron'
 import { runAnalysis, getAnalysisHistory, getAllAnalyses } from '../services/analysis.service'
-import { abortAllStreams } from '../services/ollama-client.service'
+import { abortRun, withRun } from '../services/stream-run'
 import {
   resolveActiveModel,
   setSelectedModel as setSelectedModelInResolver,
@@ -23,27 +23,41 @@ export function getSelectedModel(): string {
 export function registerAnalysisIpc(): void {
   ipcMain.handle(
     'analysis:run',
-    async (event, docId: string, mode: string, userQuestion?: string, rawExtra?: unknown) => {
+    async (
+      event,
+      docId: string,
+      mode: string,
+      userQuestion?: string,
+      rawExtra?: unknown,
+      runId?: unknown
+    ) => {
       const win = BrowserWindow.fromWebContents(event.sender)
       if (!win) throw new Error('No window found')
 
+      // Jedes Event traegt die Lauf-ID; der Renderer verwirft fremde.
+      if (!isValidId(runId)) {
+        logger.warn('analysis.ipc', 'Analysis request without valid run id rejected', { docId })
+        win.webContents.send('analysis:error', 'Ungültige Analyse-Anfrage')
+        return null
+      }
+      const send = (channel: string, payload: unknown): void => {
+        if (!win.isDestroyed()) win.webContents.send(channel, payload, runId)
+      }
+
       if (!isValidId(docId) || !isValidAnalysisMode(mode)) {
         logger.warn('analysis.ipc', 'Invalid analysis request rejected', { docId, mode })
-        win.webContents.send('analysis:error', 'Ungültige Analyse-Anfrage')
+        send('analysis:error', 'Ungültige Analyse-Anfrage')
         return null
       }
       if (userQuestion !== undefined) {
         if (typeof userQuestion !== 'string' || userQuestion.length > MAX_USER_QUESTION_CHARS) {
-          win.webContents.send(
-            'analysis:error',
-            `Die Frage ist zu lang (max. ${MAX_USER_QUESTION_CHARS} Zeichen)`
-          )
+          send('analysis:error', `Die Frage ist zu lang (max. ${MAX_USER_QUESTION_CHARS} Zeichen)`)
           return null
         }
       }
       const extra = sanitizeAnalysisExtra(rawExtra, MAX_USER_QUESTION_CHARS)
       if (mode === 'letter' && !extra.letterKind) {
-        win.webContents.send('analysis:error', 'Es wurde keine Briefart ausgewählt.')
+        send('analysis:error', 'Es wurde keine Briefart ausgewählt.')
         return null
       }
 
@@ -54,7 +68,7 @@ export function registerAnalysisIpc(): void {
           docId,
           mode
         })
-        win.webContents.send('analysis:error', resolution.message)
+        send('analysis:error', resolution.message)
         return null
       }
       const model = resolution.model
@@ -62,7 +76,9 @@ export function registerAnalysisIpc(): void {
       logger.info('analysis.ipc', 'Running analysis', { docId, mode, model })
 
       try {
-        const result = await runAnalysis(docId, mode, win, model, userQuestion, extra)
+        const result = await withRun('analysis', runId, () =>
+          runAnalysis(docId, mode, win, model, userQuestion, extra)
+        )
         logger.info('analysis.ipc', 'Analysis completed', {
           docId,
           mode,
@@ -70,9 +86,7 @@ export function registerAnalysisIpc(): void {
           durationMs: result.analysis.durationMs,
           aborted: result.aborted
         })
-        if (!win.isDestroyed()) {
-          win.webContents.send('analysis:complete', result)
-        }
+        send('analysis:complete', result)
         return result
       } catch (err) {
         const raw = err instanceof Error ? err.message : 'Analyse fehlgeschlagen'
@@ -84,17 +98,16 @@ export function registerAnalysisIpc(): void {
           userFacing,
           stack: err instanceof Error ? err.stack : undefined
         })
-        if (!win.isDestroyed()) {
-          win.webContents.send('analysis:error', userFacing)
-        }
+        send('analysis:error', userFacing)
         return null
       }
     }
   )
 
-  ipcMain.handle('analysis:abort', () => {
-    logger.info('analysis.ipc', 'Analysis abort requested')
-    abortAllStreams()
+  // Nur den eigenen Lauf - ein laufender Modell-Download bleibt unberuehrt.
+  ipcMain.handle('analysis:abort', (_event, runId?: unknown) => {
+    const aborted = abortRun('analysis', isValidId(runId) ? runId : undefined)
+    logger.info('analysis.ipc', 'Analysis abort requested', { aborted })
   })
 
   ipcMain.handle('analysis:getHistory', (_event, docId: string) => {

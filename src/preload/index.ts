@@ -40,6 +40,21 @@ function subscribe<T>(channel: string) {
   }
 }
 
+/**
+ * Wie subscribe, reicht aber die Lauf-ID mit, die der Hauptprozess an jedes
+ * Stream-Event haengt. Der Renderer verwirft damit Events fremder Laeufe.
+ */
+function subscribeRun<T>(channel: string) {
+  return (callback: (value: T, runId?: string) => void) => {
+    const handler = (_event: Electron.IpcRendererEvent, value: T, runId?: string): void =>
+      callback(value, runId)
+    ipcRenderer.on(channel, handler)
+    return (): void => {
+      ipcRenderer.removeListener(channel, handler)
+    }
+  }
+}
+
 export const api = {
   // Window controls (frameless window)
   window: {
@@ -87,31 +102,32 @@ export const api = {
     run: (
       docId: string,
       mode: AnalysisMode,
-      userQuestion?: string,
-      extra?: AnalysisExtra
+      userQuestion: string | undefined,
+      extra: AnalysisExtra | undefined,
+      runId: string
     ): Promise<AnalysisRunResult | null> =>
-      ipcRenderer.invoke('analysis:run', docId, mode, userQuestion, extra),
-    abort: (): Promise<void> => ipcRenderer.invoke('analysis:abort'),
-    onChunk: subscribe<string>('analysis:chunk'),
-    onPhase: subscribe<AnalysisPhaseEvent>('analysis:phase'),
-    onComplete: subscribe<AnalysisRunResult>('analysis:complete'),
-    onError: subscribe<string>('analysis:error'),
+      ipcRenderer.invoke('analysis:run', docId, mode, userQuestion, extra, runId),
+    abort: (runId?: string): Promise<void> => ipcRenderer.invoke('analysis:abort', runId),
+    onChunk: subscribeRun<string>('analysis:chunk'),
+    onPhase: subscribeRun<AnalysisPhaseEvent>('analysis:phase'),
+    onComplete: subscribeRun<AnalysisRunResult>('analysis:complete'),
+    onError: subscribeRun<string>('analysis:error'),
     getHistory: (docId: string) => ipcRenderer.invoke('analysis:getHistory', docId),
     getAll: () => ipcRenderer.invoke('analysis:getAll')
   },
 
   // Chat (follow-up conversation per document)
   chat: {
-    send: (documentId: string, message: string): Promise<ChatMessage | null> =>
-      ipcRenderer.invoke('chat:send', documentId, message),
-    abort: (): Promise<void> => ipcRenderer.invoke('chat:abort'),
+    send: (documentId: string, message: string, runId: string): Promise<ChatMessage | null> =>
+      ipcRenderer.invoke('chat:send', documentId, message, runId),
+    abort: (runId?: string): Promise<void> => ipcRenderer.invoke('chat:abort', runId),
     getHistory: (documentId: string): Promise<ChatMessage[]> =>
       ipcRenderer.invoke('chat:getHistory', documentId),
     clearHistory: (documentId: string): Promise<void> =>
       ipcRenderer.invoke('chat:clearHistory', documentId),
-    onChunk: subscribe<string>('chat:chunk'),
-    onComplete: subscribe<ChatMessage>('chat:complete'),
-    onError: subscribe<string>('chat:error')
+    onChunk: subscribeRun<string>('chat:chunk'),
+    onComplete: subscribeRun<ChatMessage>('chat:complete'),
+    onError: subscribeRun<string>('chat:error')
   },
 
   // Hardware detection

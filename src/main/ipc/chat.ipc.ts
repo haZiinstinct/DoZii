@@ -1,6 +1,6 @@
 import { ipcMain, BrowserWindow } from 'electron'
 import { sendChatMessage, getChatHistory, clearChatHistory } from '../services/chat.service'
-import { abortAllStreams } from '../services/ollama-client.service'
+import { abortRun, withRun } from '../services/stream-run'
 import { resolveActiveModel } from '../services/model-resolver.service'
 import { logger } from '../services/logger.service'
 import { friendlyError } from './_error-mapping'
@@ -8,58 +8,58 @@ import { MAX_CHAT_MESSAGE_CHARS } from '../config/constants'
 import { isValidId } from './_validators'
 
 export function registerChatIpc(): void {
-  ipcMain.handle('chat:send', async (event, documentId: string, userMessage: string) => {
-    const win = BrowserWindow.fromWebContents(event.sender)
-    if (!win) throw new Error('No window found')
-
-    if (!isValidId(documentId) || typeof userMessage !== 'string') {
-      logger.warn('chat.ipc', 'Invalid chat request rejected', { documentId })
-      win.webContents.send('chat:error', 'Ungültige Chat-Anfrage')
-      return null
-    }
-    if (userMessage.length > MAX_CHAT_MESSAGE_CHARS) {
-      win.webContents.send(
-        'chat:error',
-        `Die Nachricht ist zu lang (max. ${MAX_CHAT_MESSAGE_CHARS} Zeichen)`
-      )
-      return null
-    }
-
-    const resolution = await resolveActiveModel()
-    if (resolution.kind !== 'ok') {
-      logger.warn('chat.ipc', 'Cannot send chat: ' + resolution.kind, { documentId })
-      if (!win.isDestroyed()) {
-        win.webContents.send('chat:error', resolution.message)
+  ipcMain.handle(
+    'chat:send',
+    async (event, documentId: string, userMessage: string, runId?: unknown) => {
+      const win = BrowserWindow.fromWebContents(event.sender)
+      if (!win) throw new Error('No window found')
+      // Jedes Event traegt die Lauf-ID; der Renderer verwirft fremde.
+      const send = (channel: string, payload: unknown): void => {
+        if (!win.isDestroyed()) win.webContents.send(channel, payload, runId)
       }
-      return null
-    }
-    const model = resolution.model
 
-    try {
-      const result = await sendChatMessage(documentId, userMessage, model, win)
-      if (!win.isDestroyed()) {
-        win.webContents.send('chat:complete', result)
+      if (!isValidId(documentId) || !isValidId(runId) || typeof userMessage !== 'string') {
+        logger.warn('chat.ipc', 'Invalid chat request rejected', { documentId })
+        send('chat:error', 'Ungültige Chat-Anfrage')
+        return null
       }
-      return result
-    } catch (err) {
-      const raw = err instanceof Error ? err.message : 'Chat fehlgeschlagen'
-      const userFacing = friendlyError(raw)
-      logger.error('chat.ipc', 'Chat send failed', {
-        documentId,
-        error: raw,
-        userFacing,
-        stack: err instanceof Error ? err.stack : undefined
-      })
-      if (!win.isDestroyed()) {
-        win.webContents.send('chat:error', userFacing)
+      if (userMessage.length > MAX_CHAT_MESSAGE_CHARS) {
+        send('chat:error', `Die Nachricht ist zu lang (max. ${MAX_CHAT_MESSAGE_CHARS} Zeichen)`)
+        return null
       }
-      return null
-    }
-  })
 
-  ipcMain.handle('chat:abort', () => {
-    logger.info('chat.ipc', 'Chat abort requested')
-    abortAllStreams()
+      const resolution = await resolveActiveModel()
+      if (resolution.kind !== 'ok') {
+        logger.warn('chat.ipc', 'Cannot send chat: ' + resolution.kind, { documentId })
+        send('chat:error', resolution.message)
+        return null
+      }
+      const model = resolution.model
+
+      try {
+        const result = await withRun('chat', runId, () =>
+          sendChatMessage(documentId, userMessage, model, win)
+        )
+        send('chat:complete', result)
+        return result
+      } catch (err) {
+        const raw = err instanceof Error ? err.message : 'Chat fehlgeschlagen'
+        const userFacing = friendlyError(raw)
+        logger.error('chat.ipc', 'Chat send failed', {
+          documentId,
+          error: raw,
+          userFacing,
+          stack: err instanceof Error ? err.stack : undefined
+        })
+        send('chat:error', userFacing)
+        return null
+      }
+    }
+  )
+
+  ipcMain.handle('chat:abort', (_event, runId?: unknown) => {
+    const aborted = abortRun('chat', isValidId(runId) ? runId : undefined)
+    logger.info('chat.ipc', 'Chat abort requested', { aborted })
   })
 
   ipcMain.handle('chat:getHistory', (_event, documentId: string) => {

@@ -24,6 +24,7 @@ import { pickNumCtx } from '@shared/context-window-calc'
 import { isHeavyModeCapable } from '@shared/model-catalog'
 import { extractJsonObject } from '../lib/extract-json'
 import { logger } from './logger.service'
+import { currentRun } from './stream-run'
 import {
   CHARS_PER_TOKEN,
   CHUNK_OVERLAP_TOKENS,
@@ -63,7 +64,7 @@ const JSON_MODES = new Set<AnalysisMode>(['arbeitszeugnis', 'contract'])
 
 function sendPhase(win: BrowserWindow, phase: AnalysisPhaseEvent): void {
   if (!win.isDestroyed()) {
-    win.webContents.send('analysis:phase', phase)
+    win.webContents.send('analysis:phase', phase, currentRun()?.id)
   }
 }
 

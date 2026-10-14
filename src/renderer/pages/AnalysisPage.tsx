@@ -146,7 +146,9 @@ export function AnalysisPage() {
 
   // Streaming hooks - these centralize listener lifecycle so listeners
   // are always removed on unmount and before re-registering for a new run.
-  const analysisStream = useStreamingInvocation<AnalysisRunResult>(window.api.analysis)
+  const analysisStream = useStreamingInvocation<AnalysisRunResult, AnalysisPhaseEvent>(
+    window.api.analysis
+  )
   const chatStream = useStreamingInvocation<ChatMessage>(window.api.chat)
 
   // Auto-scroll during analysis streaming
@@ -212,22 +214,6 @@ export function AnalysisPage() {
       })
   }, [])
 
-  // Subscribe to analysis:phase events.
-  // Beim Wechsel auf "verifizieren" oder "zusammenfuehren" wird `text`
-  // zurueckgesetzt: die saubere Endausgabe ersetzt die Zwischenstaende.
-  useEffect(() => {
-    const unsub = window.api.analysis.onPhase((phase) => {
-      setAnalysis((s) => {
-        if (s.kind !== 'streaming') return s
-        if (phase.kind === 'verifying' || phase.kind === 'merging') {
-          return { ...s, phase, text: '' }
-        }
-        return { ...s, phase }
-      })
-    })
-    return unsub
-  }, [])
-
   const startAnalysis = useCallback(
     async (question?: string, extra?: AnalysisExtra) => {
       if (!docId) return
@@ -236,31 +222,45 @@ export function AnalysisPage() {
       setShowOriginal(false)
       setAnalysis({ kind: 'streaming', text: '', phase: { kind: 'analyzing' } })
 
-      await analysisStream.run(() => window.api.analysis.run(docId, mode, question, extra), {
-        onChunk: (chunk) => {
-          setAnalysis((s) => (s.kind === 'streaming' ? { ...s, text: s.text + chunk } : s))
-        },
-        onComplete: (result) => {
-          setAnalysis((s) => {
-            const text = s.kind === 'streaming' ? s.text : ''
-            if (result?.aborted) {
-              // Freeform re-opens the input after abort so user can ask again
-              if (mode === 'freeform') {
-                return { kind: 'idle' }
+      await analysisStream.run(
+        (runId) => window.api.analysis.run(docId, mode, question, extra, runId),
+        {
+          // Beim Wechsel auf "verifizieren" oder "zusammenfuehren" wird `text`
+          // zurueckgesetzt: die saubere Endausgabe ersetzt die Zwischenstaende.
+          onPhase: (phase) => {
+            setAnalysis((s) => {
+              if (s.kind !== 'streaming') return s
+              if (phase.kind === 'verifying' || phase.kind === 'merging') {
+                return { ...s, phase, text: '' }
               }
-              return { kind: 'aborted', text }
-            }
-            return { kind: 'done', text, result }
-          })
-        },
-        onError: (err) => {
-          setAnalysis((s) => ({
-            kind: 'error',
-            message: err,
-            partial: s.kind === 'streaming' ? s.text : ''
-          }))
+              return { ...s, phase }
+            })
+          },
+          onChunk: (chunk) => {
+            setAnalysis((s) => (s.kind === 'streaming' ? { ...s, text: s.text + chunk } : s))
+          },
+          onComplete: (result) => {
+            setAnalysis((s) => {
+              const text = s.kind === 'streaming' ? s.text : ''
+              if (result?.aborted) {
+                // Freeform re-opens the input after abort so user can ask again
+                if (mode === 'freeform') {
+                  return { kind: 'idle' }
+                }
+                return { kind: 'aborted', text }
+              }
+              return { kind: 'done', text, result }
+            })
+          },
+          onError: (err) => {
+            setAnalysis((s) => ({
+              kind: 'error',
+              message: err,
+              partial: s.kind === 'streaming' ? s.text : ''
+            }))
+          }
         }
-      })
+      )
     },
     [docId, mode, analysisStream]
   )
@@ -304,12 +304,12 @@ export function AnalysisPage() {
   }, [docId, analysis, navigate])
 
   const handleStopAnalysis = useCallback(() => {
-    window.api.analysis.abort()
-  }, [])
+    void analysisStream.abort()
+  }, [analysisStream])
 
   const handleStopChat = useCallback(() => {
-    window.api.chat.abort()
-  }, [])
+    void chatStream.abort()
+  }, [chatStream])
 
   const sendChatMessage = useCallback(async () => {
     if (!docId || !chatInput.trim() || chat.kind === 'streaming') return
@@ -329,7 +329,7 @@ export function AnalysisPage() {
     }
     setChatMessages((prev) => [...prev, tempUserMsg])
 
-    await chatStream.run(() => window.api.chat.send(docId, userText), {
+    await chatStream.run((runId) => window.api.chat.send(docId, userText, runId), {
       onChunk: (chunk) => {
         setChat((s) => (s.kind === 'streaming' ? { ...s, buffer: s.buffer + chunk } : s))
       },
@@ -526,8 +526,12 @@ export function AnalysisPage() {
             : ''
   const displayMarkdown =
     mode === 'arbeitszeugnis' ? stripTrailingJsonBlock(currentText) : currentText
+  // Waehrend eine Analyse streamt, kein Chat: beide wuerden um das Modell
+  // konkurrieren, und die Antwort bezoege sich auf ein halbes Ergebnis.
   const showChat =
-    analysis.kind === 'done' || analysis.kind === 'aborted' || chatMessages.length > 0
+    analysis.kind === 'done' ||
+    analysis.kind === 'aborted' ||
+    (analysis.kind !== 'streaming' && chatMessages.length > 0)
   // Neue Analyse = frisch montierte Ansicht. Sonst blieben abgehakte Punkte und
   // aufgeklappte Karten aus dem vorherigen Ergebnis stehen.
   const resultKey =

@@ -3,6 +3,7 @@ import { BrowserWindow, net } from 'electron'
 import { logger } from './logger.service'
 import { stripThinking } from '@shared/strip-thinking'
 import { getSettings } from './settings.service'
+import { abortAllRuns, currentRun, type StreamRun } from './stream-run'
 
 export const DEFAULT_OLLAMA_URL = 'http://localhost:11434'
 
@@ -62,15 +63,40 @@ function getClient(): Ollama {
   return client
 }
 
+/** Je Lauf ein eigener Client, dessen fetch das Abbruchsignal des Laufs traegt. */
+const runClients = new WeakMap<StreamRun, Ollama>()
+
 /**
- * Abort all currently active Ollama streams (chat + pull).
- * Used when the user clicks "Stop" during an analysis or chat.
+ * Client fuer Analyse und Chat. Innerhalb eines Laufs (stream-run.withRun)
+ * haengt an JEDEM fetch das Abbruchsignal des Laufs - so greift "Stopp" auch,
+ * solange Ollama noch keine Antwortkopfzeilen geschickt hat, und trifft nur
+ * diesen Lauf, nicht etwa einen laufenden Modell-Download.
+ */
+function getRunClient(): Ollama {
+  const run = currentRun()
+  if (!run) return getClient()
+  let runClient = runClients.get(run)
+  if (!runClient) {
+    const runSignal = run.controller.signal
+    const runFetch = (input: string | Request, init?: RequestInit): Promise<Response> =>
+      net.fetch(input, {
+        ...init,
+        signal: init?.signal ? AbortSignal.any([init.signal, runSignal]) : runSignal
+      })
+    runClient = new Ollama({ host: getOllamaUrl(), fetch: runFetch as unknown as typeof fetch })
+    runClients.set(run, runClient)
+  }
+  return runClient
+}
+
+/**
+ * Bricht ALLES ab: alle Laeufe und den Modell-Download. Nur fuer das
+ * Schliessen des Fensters - "Stopp" in der Oberflaeche nimmt stream-run.abortRun.
  */
 export function abortAllStreams(): void {
-  if (client) {
-    logger.info('ollama-client', 'Aborting all active streams')
-    client.abort()
-  }
+  logger.info('ollama-client', 'Aborting all active streams')
+  abortAllRuns()
+  client?.abort()
 }
 
 // ============================================================================
@@ -179,7 +205,7 @@ export async function chatOnce(options: {
   numCtx?: number
   numPredict?: number
 }): Promise<string> {
-  const ollama = getClient()
+  const ollama = getRunClient()
   const modelOptions: Record<string, number> = {}
   if (options.temperature !== undefined) modelOptions.temperature = options.temperature
   if (options.numCtx !== undefined) modelOptions.num_ctx = options.numCtx
@@ -323,7 +349,7 @@ export async function pullModel(name: string, win: BrowserWindow): Promise<void>
  * if warmup fails, the main request will still run (and retry if needed).
  */
 export async function warmupModel(model: string): Promise<void> {
-  const ollama = getClient()
+  const ollama = getRunClient()
   try {
     logger.info('ollama-client', 'Warming up model', { model })
     await ollama.generate({
@@ -395,10 +421,13 @@ async function consumeStream(
   const chunks: string[] = []
   let pending = ''
   let lastFlush = Date.now()
+  // Der Renderer verwirft Chunks fremder Laeufe - ohne ID landeten nach einem
+  // Moduswechsel die Reste der alten Analyse in der neuen.
+  const runId = currentRun()?.id
 
   const flush = (): void => {
     if (pending && !win.isDestroyed()) {
-      win.webContents.send(channel, pending)
+      win.webContents.send(channel, pending, runId)
     }
     pending = ''
   }
@@ -431,7 +460,7 @@ async function consumeStream(
 
 export async function streamChat(options: StreamOptions): Promise<StreamResult> {
   const { model, prompt, system, win, channel = 'analysis:chunk', temperature, numCtx } = options
-  const ollama = getClient()
+  const ollama = getRunClient()
 
   logger.info('ollama-client', 'Starting chat stream', {
     model,
@@ -500,7 +529,7 @@ export async function streamConversation(
   options: ConversationStreamOptions
 ): Promise<StreamResult> {
   const { model, messages, win, channel, temperature, numCtx } = options
-  const ollama = getClient()
+  const ollama = getRunClient()
 
   logger.info('ollama-client', 'Starting conversation stream', {
     model,
