@@ -117,6 +117,21 @@ Der Knopf erscheint, findet aber nichts — er gehört dort ausgeblendet.
 
 Eine über Mitternacht offene Ansicht zeigt eine um einen Tag falsche Restlaufzeit.
 
+### Renderer kann beliebige lesbare Pfade importieren
+`src/main/ipc/documents.ipc.ts`
+
+`documents:import` nimmt jeden Pfad an, den der Renderer schickt. Relevant ist das nur mit
+einem kompromittierten Renderer (Sandbox, contextIsolation, strenge CSP und gesperrte
+Navigation sind aktiv); Dateityp- und Größenprüfung greifen trotzdem. Bewusst so gelassen:
+eine Freigabeliste müsste Drag & Drop und den Ordner-Import abbilden. (Audit 1.3.8)
+
+### CI prüft nur unter Windows
+`.github/workflows/ci.yml`
+
+Typecheck, Tests und Build laufen auf `windows-latest`. macOS und Linux werden erst im
+Release-Workflow gebaut – ein plattformspezifischer Fehler fällt also erst beim Tag auf.
+Bewusst so gelassen, um die CI schnell zu halten. (Audit 1.3.8)
+
 ### Abbruch während des ersten Abschnitts
 `src/main/services/analysis.service.ts`
 

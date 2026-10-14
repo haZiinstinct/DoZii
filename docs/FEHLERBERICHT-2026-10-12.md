@@ -255,7 +255,7 @@ morgen. M8 – fremdes Ollama wird nicht mehr beendet, die Einstellungen nennen 
 
 | | ID | Titel | Aufwand | Erledigt in |
 |---|---|---|---|---|
-| [ ] | H1 | Electron 33 → 39+ (mit electron-builder 26) | L | Branch chore/electron-upgrade (Electron 44, nicht gemergt) |
+| [x] | H1 | Electron 33 → 39+ (mit electron-builder 26) | L | 7ae3ec2 (Electron 44) |
 | [x] | H2 | `xlsx` ersetzen (SheetJS-CDN-Tarball 0.20.x oder `exceljs`) | M | 1b1d2ae |
 | [x] | M15 | Schwärzung: Fehlalarme (0-Nummern, Kreditkarte), Lücken (IBAN klein, Steuernummer, Geb.-Datum), Regex-Laufzeit | M | 412d15d |
 | [x] | L5 | Duplikate zusammenführen: `MODE_LABELS`, Monatsnamen, Zahlwörter, `CHARS_PER_TOKEN` | S | 8050369 |
@@ -265,9 +265,15 @@ morgen. M8 – fremdes Ollama wird nicht mehr beendet, die Einstellungen nennen 
 | [x] | L11 | RTF: Links, `####`, Flanking-Regel für `*` | S | f5443cf |
 | [x] | L12 | `chunk-text`: Dokumentation der Budget-Obergrenze korrigieren | S | 6797e72 |
 | [x] | — | Settings-Provider im Renderer statt fünf `settings.get()` | M | f3ab87f |
-| [ ] | — | `AnalysisPage` in Chat- und Export-Komponenten aufteilen | M | |
+| [x] | — | `AnalysisPage` in Chat- und Export-Komponenten aufteilen | M | 9c675ff |
 
 **H1** · `package.json`
+- Umgesetzt mit Electron **44.7.2** statt 39: 39 war beim Abarbeiten selbst schon ohne
+  Support. Dazu electron-builder 26, @electron-toolkit/utils 4 und better-sqlite3 13 (N-API,
+  Binaries für jede Electron-Version im Paket). `npm audit` gesamt: 13 high + 1 critical → 0.
+  `node-sqlite.d.ts` entfernt (@types/node bringt die Typen mit). Geprüft: Tests, Build,
+  net.fetch-Abbruch, native Module und Rauchtests in Electron 44; der Installer selbst nur
+  über das CI-Release.
 - Vorgehen: Branch `chore/electron-upgrade`; `electron@^39`, `electron-builder@^26`,
   `@electron-toolkit/utils@^4`; `src/main/db/node-sqlite.d.ts` gegen die neue Node-Version
   prüfen (ab Node 22.13 liefert `@types/node` eigene Typen); `scripts/netfetch-probe.cjs`
@@ -293,9 +299,11 @@ morgen. M8 – fremdes Ollama wird nicht mehr beendet, die Einstellungen nennen 
 
 Diese Punkte sind bewusst offen und gehören in `OFFENE-PUNKTE.md`, falls sie dort noch fehlen:
 
-- [ ] Renderer kann über `documents:import` jeden lesbaren Pfad importieren (L-Kategorie im
+- [x] Renderer kann über `documents:import` jeden lesbaren Pfad importieren (L-Kategorie im
   Audit, nur mit kompromittiertem Renderer relevant; Dateityp- und Größenprüfung vorhanden).
-- [ ] CI läuft nur auf `windows-latest`; macOS/Linux werden erst im Release gebaut.
+- [x] CI läuft nur auf `windows-latest`; macOS/Linux werden erst im Release gebaut.
+
+Beide stehen jetzt in `OFFENE-PUNKTE.md`.
 
 ## Fortschritt
 
@@ -303,4 +311,4 @@ Diese Punkte sind bewusst offen und gehören in `OFFENE-PUNKTE.md`, falls sie do
 |---|---|---|
 | 1 · Sofort | 10 | 10 |
 | 2 · Minor | 34 | 34 |
-| 3 · Größer | 11 | 0 |
+| 3 · Größer | 11 | 11 |

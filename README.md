@@ -14,9 +14,9 @@ deinem Rechner. Keine Cloud, keine Telemetrie, kein CDN.</p>
 
 <p>
   <a href="https://github.com/haZiinstinct/DoZii/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/haZiinstinct/DoZii/actions/workflows/ci.yml/badge.svg" /></a>
-  <img alt="Version" src="https://img.shields.io/badge/version-1.4.0-00d4ff?labelColor=0a0a0f" />
+  <img alt="Version" src="https://img.shields.io/badge/version-1.5.0-00d4ff?labelColor=0a0a0f" />
   <img alt="License MIT" src="https://img.shields.io/badge/license-MIT-00d4ff?labelColor=0a0a0f" />
-  <img alt="Electron 33" src="https://img.shields.io/badge/Electron-33-00d4ff?labelColor=0a0a0f&logo=electron&logoColor=white" />
+  <img alt="Electron 44" src="https://img.shields.io/badge/Electron-44-00d4ff?labelColor=0a0a0f&logo=electron&logoColor=white" />
   <img alt="React 19" src="https://img.shields.io/badge/React-19-00d4ff?labelColor=0a0a0f&logo=react&logoColor=white" />
   <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-strict-00d4ff?labelColor=0a0a0f&logo=typescript&logoColor=white" />
   <img alt="Windows 10/11" src="https://img.shields.io/badge/Windows-10%2F11-94a3b8?labelColor=0a0a0f&logo=windows&logoColor=white" />
@@ -135,7 +135,7 @@ offline.
 
 ## 🛠️ Entwicklung
 
-Electron 33 · electron-vite · React 19 · TypeScript (strict) · Tailwind CSS v4 ·
+Electron 44 · electron-vite · React 19 · TypeScript (strict) · Tailwind CSS v4 ·
 better-sqlite3 + Drizzle ORM · Ollama · unpdf / mammoth / xlsx / tesseract.js / sharp.
 Qualität gesichert durch CI (Typecheck · Lint · Format · Tests · Build) auf jeden Push.
 

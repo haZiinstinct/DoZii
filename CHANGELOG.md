@@ -5,6 +5,43 @@ Das Format orientiert sich an [Keep a Changelog](https://keepachangelog.com/de/1
 
 ## [Unveröffentlicht]
 
+## [1.5.0] – 2026-10-14
+
+Abschluss des Audits zu 1.3.8 (Paket 3): neue Electron-Generation, Excel-Import ohne offene
+Sicherheitslücke, genauere Schwärzung.
+
+### Sicherheit
+
+- **Electron 44** statt 33 – Electron 33 bekam seit langem keine Sicherheitsupdates mehr.
+  Damit sinken die bekannten Lücken in den Abhängigkeiten von 13 schweren und einer
+  kritischen auf null.
+- **Excel-Import über SheetJS 0.20.3** – die bisherige Fassung hatte zwei offene Lücken
+  (Prototype Pollution, ReDoS), für die es im npm-Register keinen Fix gibt. Dateien, die
+  gar keine Excel-Datei sind, werden jetzt abgelehnt statt als Tabelle eingelesen.
+
+### Behoben
+
+- **Schwärzung genauer**: keine falschen Treffer mehr bei Bescheid- und Kontonummern
+  („Telefon"), Belegnummern („Kreditkarte") oder beliebigen 11-stelligen Zahlen
+  („Steuer-ID", jetzt mit Prüfziffer). Neu erkannt: IBAN in Kleinbuchstaben, BIC,
+  13-stellige Steuernummern, „Geb.-Datum" und „* 15.03.1980". Sehr lange Zeichenketten
+  bremsen die Schwärzung nicht mehr aus (vorher Sekunden, jetzt Millisekunden).
+- Ein „</think>" mitten in einer Antwort schneidet keinen Text mehr ab.
+- E-Mails: ein einzelnes „<" im HTML-Text verschluckt nichts mehr.
+- RTF-Export: Links erscheinen als „Text (Adresse)", Überschriften ab „####" werden
+  formatiert, „5 * 3 * 2" wird nicht mehr kursiv.
+- PDF-Export: Dateinamen und Titel nennen jetzt auch „Einfach erklärt", „Vertrags-Check"
+  und „Briefentwurf" statt „Analyse".
+- Design-, Schrift- und Kontrasteinstellungen gelten überall gleich – vorher konnte eine
+  Änderung in den Einstellungen an anderer Stelle nicht ankommen.
+
+### Intern
+
+- Einstellungen zentral im Renderer (`SettingsProvider`), Analyseseite in Chat- und
+  Export-Bausteine aufgeteilt, doppelte Tabellen (Monate, Modusnamen) zusammengeführt,
+  Typen geschärft.
+- `better-sqlite3` 13 bringt seine Binärdateien für jede Electron-Version mit.
+
 ## [1.4.0] – 2026-10-14
 
 Abarbeitung des Full-Stack-Audits zu 1.3.8 (`docs/AUDIT-2026-10-12.md`, Pakete 1 und 2).
