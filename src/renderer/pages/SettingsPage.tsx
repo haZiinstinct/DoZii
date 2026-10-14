@@ -255,13 +255,23 @@ export function SettingsPage() {
     }
 
     setOllamaUrlInvalid(false)
-    persistedOllamaUrl.current = value
-    const next = await window.api.settings.update({ ollamaUrl: value })
-    setSettings(next)
-    setOllamaUrlDraft(next.ollamaUrl)
-    persistedOllamaUrl.current = next.ollamaUrl
-    setOllamaUrlSaved(true)
-    setTimeout(() => setOllamaUrlSaved(false), 3000)
+    // Erst nach Antwort des Hauptprozesses als gespeichert melden. Er prueft
+    // selbst noch einmal und behaelt bei einem abgelehnten Wert den alten -
+    // dann stimmt die Rueckgabe nicht mit der Eingabe ueberein.
+    try {
+      const next = await window.api.settings.update({ ollamaUrl: value })
+      setSettings(next)
+      persistedOllamaUrl.current = next.ollamaUrl
+      if (next.ollamaUrl !== value) {
+        setOllamaUrlInvalid(true)
+        return
+      }
+      setOllamaUrlDraft(next.ollamaUrl)
+      setOllamaUrlSaved(true)
+      setTimeout(() => setOllamaUrlSaved(false), 3000)
+    } catch (err) {
+      logRejection('SettingsPage', 'settings.update ollamaUrl')(err)
+    }
   }
 
   const handleToggleOcrLanguage = async (lang: OcrLanguage) => {
