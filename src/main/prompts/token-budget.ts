@@ -37,7 +37,9 @@ export function fitTextToTokenBudget(text: string, maxTokens: number): FitResult
   const maxChars = Math.max(0, Math.floor(maxTokens * CHARS_PER_TOKEN) - TRUNCATION_MARKER.length)
   let cut = text.slice(0, maxChars)
   const lastBreak = Math.max(cut.lastIndexOf('\n\n'), cut.lastIndexOf('. '))
-  if (lastBreak > maxChars - 500) {
+  // lastBreak >= 0: bei kleinem Budget (< 500 Zeichen) ohne Umbruch war
+  // -1 > negativ wahr - und der ganze Text wurde verworfen.
+  if (lastBreak >= 0 && lastBreak > maxChars - 500) {
     cut = cut.slice(0, lastBreak + 1)
   }
   return { text: cut + TRUNCATION_MARKER, truncated: true }

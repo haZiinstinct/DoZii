@@ -16,6 +16,7 @@ import {
 } from '../services/model-resolver.service'
 import { updateSettings } from '../services/settings.service'
 import { logger } from '../services/logger.service'
+import { isValidModelName } from './_validators'
 
 export function registerOllamaIpc(): void {
   ipcMain.handle('ollama:status', async () => {
@@ -40,13 +41,15 @@ export function registerOllamaIpc(): void {
     return listModels()
   })
 
-  ipcMain.handle('ollama:pullModel', async (event, name: string) => {
+  ipcMain.handle('ollama:pullModel', async (event, name: unknown) => {
+    if (!isValidModelName(name)) throw new Error('Ungültiger Modellname')
     const win = BrowserWindow.fromWebContents(event.sender)
     if (!win) return
     await pullModel(name, win)
   })
 
-  ipcMain.handle('ollama:deleteModel', async (_event, name: string) => {
+  ipcMain.handle('ollama:deleteModel', async (_event, name: unknown) => {
+    if (!isValidModelName(name)) throw new Error('Ungültiger Modellname')
     await deleteModel(name)
     // If the deleted model was currently selected, reset it in BOTH
     // the in-memory resolver AND the persisted settings store.
@@ -63,7 +66,9 @@ export function registerOllamaIpc(): void {
     }
   })
 
-  ipcMain.handle('ollama:selectModel', (_event, name: string) => {
+  ipcMain.handle('ollama:selectModel', (_event, name: unknown) => {
+    // Leerer Name = Auswahl aufheben.
+    if (name !== '' && !isValidModelName(name)) throw new Error('Ungültiger Modellname')
     setResolverSelectedModel(name)
     // Persist the choice so it survives restarts
     try {

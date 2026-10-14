@@ -37,3 +37,13 @@ describe('fitTextToTokenBudget', () => {
     expect(/[.\n]\s*$/.test(cut)).toBe(true)
   })
 })
+
+describe('fitTextToTokenBudget - kleines Budget', () => {
+  it('behaelt bei Budget unter 500 Zeichen ohne Umbruch den Textanfang', () => {
+    const text = 'x'.repeat(5000)
+    const result = fitTextToTokenBudget(text, 50)
+    expect(result.truncated).toBe(true)
+    expect(result.text.length).toBeGreaterThan(TRUNCATION_MARKER.length)
+    expect(result.text.startsWith('xxxx')).toBe(true)
+  })
+})

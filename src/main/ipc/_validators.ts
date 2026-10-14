@@ -25,6 +25,16 @@ export function isValidAnalysisMode(val: unknown): val is AnalysisMode {
   return typeof val === 'string' && VALID_MODES.has(val as AnalysisMode)
 }
 
+/**
+ * Ollama-Modellnamen: "qwen3:4b", "library/llama3.1:8b-instruct-q4_K_M".
+ * Kein Leerzeichen, keine Steuerzeichen, begrenzte Laenge.
+ */
+const MODEL_NAME_RE = /^[A-Za-z0-9][A-Za-z0-9._:/-]{0,199}$/
+
+export function isValidModelName(val: unknown): val is string {
+  return typeof val === 'string' && MODEL_NAME_RE.test(val)
+}
+
 export function isValidLetterKind(val: unknown): val is LetterKind {
   return typeof val === 'string' && VALID_LETTER_KINDS.has(val as LetterKind)
 }

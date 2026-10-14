@@ -4,6 +4,7 @@ import { join, extname, basename } from 'path'
 import { copyFile, mkdir, stat, unlink, writeFile } from 'fs/promises'
 import { eq, desc, or, sql } from 'drizzle-orm'
 import { getDb, schema } from '../db'
+import { isInsideDir } from '../lib/path-inside'
 import { extractPdf } from './pdf-extractor.service'
 import { extractDocx } from './docx-extractor.service'
 import { extractXlsx } from './xlsx-extractor.service'
@@ -496,7 +497,7 @@ export async function deleteDocument(id: string): Promise<void> {
 
   // Safety: only unlink files that live inside our managed documents dir
   const docsDir = getDocumentsDir()
-  if (!doc.originalPath.startsWith(docsDir)) {
+  if (!isInsideDir(docsDir, doc.originalPath)) {
     logger.warn('document-store', 'Refusing to unlink file outside managed dir', {
       id,
       originalPath: doc.originalPath
