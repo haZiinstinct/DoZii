@@ -36,5 +36,4 @@ export function stripThinking(text: string): string {
 }
 
 /** `</think>` bzw. `</thinking>` allein am Zeilenanfang oder am Zeilenende. */
-const ORPHAN_CLOSE_RE =
-  /(?:^|\n)[ \t]*<\/think(?:ing)?>|<\/think(?:ing)?>[ \t]*(?=\n|$)/gi
+const ORPHAN_CLOSE_RE = /(?:^|\n)[ \t]*<\/think(?:ing)?>|<\/think(?:ing)?>[ \t]*(?=\n|$)/gi
