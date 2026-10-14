@@ -97,8 +97,9 @@ describe('redactText - IBAN', () => {
 
   it('zieht bei nachfolgendem BIC nur die IBAN selbst ein', () => {
     const result = redactText('DE89 3704 0044 0532 0130 00 BIC COBADEFFXXX')
-    expect(result.text).toBe('[IBAN geschwaerzt] BIC COBADEFFXXX')
+    expect(result.text).toBe('[IBAN geschwaerzt] BIC [BIC geschwaerzt]')
     expect(result.countByKind.iban).toBe(1)
+    expect(result.countByKind.bic).toBe(1)
   })
 })
 
@@ -126,7 +127,7 @@ describe('redactText - Kreditkarte', () => {
 
 describe('redactText - Nummern mit Pruefformat', () => {
   it('schwaerzt die Steuer-Identifikationsnummer in beiden Schreibweisen', () => {
-    expect(redactText('Steuer-ID 12345678901 vormerken').text).toBe(
+    expect(redactText('Steuer-ID 47036892816 vormerken').text).toBe(
       'Steuer-ID [Steuer-ID geschwaerzt] vormerken'
     )
     expect(redactText('Steuer-ID 86 095742719 vormerken').text).toBe(
@@ -353,10 +354,64 @@ describe('redactText - Gesamtdurchlauf', () => {
 
 describe('Konstanten', () => {
   it('kennt alle Arten und beschriftet jede', () => {
-    expect(ALL_REDACTION_KINDS).toHaveLength(12)
-    expect(DEFAULT_REDACTION_KINDS).toHaveLength(11)
+    expect(ALL_REDACTION_KINDS).toHaveLength(13)
+    expect(DEFAULT_REDACTION_KINDS).toHaveLength(12)
     for (const kind of ALL_REDACTION_KINDS) {
       expect(REDACTION_KIND_LABELS[kind]).toBeTruthy()
+    }
+  })
+})
+
+describe('redactText - Fehlalarme und Luecken (Audit M15)', () => {
+  it.each([
+    ['Bescheid-Nr. 0123/456789', 'phone'],
+    ['Kto 012345678', 'phone'],
+    ['Belegnummer R-2024-12345678901', 'creditcard'],
+    ['Wert 12345678901', 'steuerid']
+  ])('kein Fehlalarm: %s', (input, kind) => {
+    expect(redactText(input).countByKind[kind]).toBeUndefined()
+  })
+
+  it('erkennt Telefonnummern weiterhin', () => {
+    expect(redactText('Tel. 030 1234567').countByKind.phone).toBe(1)
+    expect(redactText('Rufen Sie 0201/123456 an').countByKind.phone).toBe(1)
+    expect(redactText('Tel: 030123456').countByKind.phone).toBe(1)
+    expect(redactText('+49 30 1234567').countByKind.phone).toBe(1)
+  })
+
+  it('erkennt echte Kreditkarten weiterhin', () => {
+    expect(redactText('Karte 4111 1111 1111 1111').countByKind.creditcard).toBe(1)
+    expect(redactText('Amex 3782 822463 10005').countByKind.creditcard).toBe(1)
+  })
+
+  it('schwaerzt IBAN in Kleinschreibung', () => {
+    expect(redactText('iban de89 3704 0044 0532 0130 00').countByKind.iban).toBe(1)
+  })
+
+  it('trennt IBAN und BIC auch ohne Leerzeichen', () => {
+    const result = redactText('IBAN:DE89370400440532013000BIC:COBADEFFXXX')
+    expect(result.text).toBe('IBAN:[IBAN geschwaerzt]BIC:[BIC geschwaerzt]')
+  })
+
+  it('schwaerzt 13-stellige Steuernummern mit Schluesselwort', () => {
+    expect(redactText('Steuernummer: 2181508150123').text).toBe(
+      'Steuernummer: [Steuernummer geschwaerzt]'
+    )
+    expect(redactText('St.-Nr. 21 815 08150').countByKind.steuernummer).toBe(1)
+  })
+
+  it.each(['Geb.-Datum: 15.03.1980', '* 15.03.1980', 'Geburtsdat. 15.03.1980'])(
+    'schwaerzt Geburtsdatum: %s',
+    (input) => {
+      expect(redactText(input).countByKind.birthdate).toBe(1)
+    }
+  )
+
+  it('bleibt bei langen Zeichenketten linear', () => {
+    for (const input of ['Az ' + 'A1-'.repeat(20000), 'a.'.repeat(20000)]) {
+      const t0 = performance.now()
+      redactText(input)
+      expect(performance.now() - t0).toBeLessThan(300)
     }
   })
 })
