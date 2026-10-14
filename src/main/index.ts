@@ -25,12 +25,18 @@ import { shutdownOcr } from './services/ocr.service'
  * Build the Content-Security-Policy. In production we drop `'unsafe-inline'`
  * for scripts (keeping it only for styles because Tailwind injects them).
  * In dev we allow inline scripts because Vite HMR needs them.
+ *
+ * Gilt nur fuer Antworten mit HTTP-Kopfzeilen (Dev-Server). Die gebaute App
+ * laedt per file:// - dort zaehlt das Meta-Tag, das electron.vite.config.ts
+ * (productionCsp) im Build verschaerft.
  */
 function buildCsp(): string {
   const scriptSrc = is.dev ? "script-src 'self' 'unsafe-inline'" : "script-src 'self'"
+  // Ollama spricht nur der Hauptprozess an; der Renderer braucht keinen Zugang.
+  const connectSrc = is.dev ? "connect-src 'self' http://localhost:11434" : "connect-src 'self'"
   return (
     "default-src 'self'; " +
-    "connect-src 'self' http://localhost:11434; " +
+    `${connectSrc}; ` +
     "font-src 'self'; " +
     "img-src 'self' data: blob:; " +
     "style-src 'self' 'unsafe-inline'; " +
@@ -108,25 +114,37 @@ function createWindow(): void {
     return { action: 'deny' }
   })
 
-  if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
-    win.loadURL(process.env['ELECTRON_RENDERER_URL'])
+  /*
+   * Das Fenster verlaesst nie die eigene Oberflaeche. Ein Link im gerenderten
+   * Markdown, ein Drag&Drop einer URL oder ein Redirect wuerde sonst eine
+   * fremde Seite IN das Fenster laden - mit Zugriff auf window.api.
+   * Die App navigiert intern nur ueber den Hash (HashRouter), das loest
+   * will-navigate nicht aus.
+   */
+  const devUrl = is.dev ? process.env['ELECTRON_RENDERER_URL'] : undefined
+  const isOwnPage = (target: string): boolean => {
+    try {
+      const url = new URL(target)
+      if (devUrl) return url.origin === new URL(devUrl).origin
+      return url.protocol === 'file:' && url.pathname.endsWith('/renderer/index.html')
+    } catch {
+      return false
+    }
+  }
+  const blockForeignNavigation = (event: Electron.Event, target: string): void => {
+    if (isOwnPage(target)) return
+    event.preventDefault()
+    logger.warn('main', 'Navigation aus der App heraus blockiert')
+  }
+  win.webContents.on('will-navigate', blockForeignNavigation)
+  win.webContents.on('will-redirect', blockForeignNavigation)
+
+  if (devUrl) {
+    win.loadURL(devUrl)
   } else {
     win.loadFile(join(__dirname, '../renderer/index.html'))
   }
 }
-
-// Nur eine Instanz: zweite Starts fokussieren das bestehende Fenster.
-// Verhindert konkurrierende Zugriffe auf dozii.db und Settings.
-if (!app.requestSingleInstanceLock()) {
-  app.quit()
-}
-
-app.on('second-instance', () => {
-  if (mainWindow) {
-    if (mainWindow.isMinimized()) mainWindow.restore()
-    mainWindow.focus()
-  }
-})
 
 // Global error handlers BEFORE app.whenReady
 process.on('uncaughtException', (err) => {
@@ -142,55 +160,79 @@ process.on('unhandledRejection', (reason) => {
   })
 })
 
-app.whenReady().then(() => {
-  electronApp.setAppUserModelId('org.hazii.dozii')
-  initLogger()
-  logger.info('main', 'App starting', {
-    version: app.getVersion(),
-    platform: process.platform,
-    electron: process.versions.electron,
-    node: process.versions.node
+/**
+ * Nur eine Instanz: zweite Starts fokussieren das bestehende Fenster.
+ * Verhindert konkurrierende Zugriffe auf dozii.db und Settings.
+ *
+ * Alles Weitere steckt in main() und laeuft nur mit dem Lock. Frueher ging es
+ * nach app.quit() einfach weiter: die zweite Instanz registrierte noch ihre
+ * Handler, initialisierte Logger und DB und oeffnete womoeglich ein Fenster,
+ * bevor sie wirklich beendet war.
+ */
+function main(): void {
+  app.on('second-instance', () => {
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore()
+      mainWindow.focus()
+    }
   })
 
-  // Register all IPC handlers
-  registerWindowIpc()
-  registerHardwareIpc()
-  registerOllamaIpc()
-  registerSettingsIpc()
-  // Bestandsnutzer nicht nachtraeglich durch den Assistenten schicken.
-  markExistingInstallAsOnboarded()
-  registerDocumentsIpc()
-  registerAnalysisIpc()
-  registerChatIpc()
-  registerLogsIpc()
-  registerExporterIpc()
-  registerDeadlinesIpc()
-  registerSystemIpc()
-  registerDiagnosticsIpc()
-  registerUpdateIpc()
-  initUpdater()
+  app.whenReady().then(() => {
+    electronApp.setAppUserModelId('org.hazii.dozii')
+    initLogger()
+    logger.info('main', 'App starting', {
+      version: app.getVersion(),
+      platform: process.platform,
+      electron: process.versions.electron,
+      node: process.versions.node
+    })
 
-  // DB eager initialisieren: Migrationen sollen beim Start laufen (und bei
-  // Fehlern sofort sichtbar scheitern), nicht erst beim ersten DB-Zugriff.
-  getDb()
+    // Register all IPC handlers
+    registerWindowIpc()
+    registerHardwareIpc()
+    registerOllamaIpc()
+    registerSettingsIpc()
+    // Bestandsnutzer nicht nachtraeglich durch den Assistenten schicken.
+    markExistingInstallAsOnboarded()
+    registerDocumentsIpc()
+    registerAnalysisIpc()
+    registerChatIpc()
+    registerLogsIpc()
+    registerExporterIpc()
+    registerDeadlinesIpc()
+    registerSystemIpc()
+    registerDiagnosticsIpc()
+    registerUpdateIpc()
+    initUpdater()
 
-  app.on('browser-window-created', (_, window) => {
-    optimizer.watchWindowShortcuts(window)
+    // DB eager initialisieren: Migrationen sollen beim Start laufen (und bei
+    // Fehlern sofort sichtbar scheitern), nicht erst beim ersten DB-Zugriff.
+    getDb()
+
+    app.on('browser-window-created', (_, window) => {
+      optimizer.watchWindowShortcuts(window)
+    })
+
+    createWindow()
+
+    app.on('activate', function () {
+      if (BrowserWindow.getAllWindows().length === 0) createWindow()
+    })
   })
 
-  createWindow()
-
-  app.on('activate', function () {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow()
+  app.on('window-all-closed', () => {
+    logger.info('main', 'App shutting down')
+    abortAllStreams()
+    void shutdownOcr()
+    closeDb()
+    if (process.platform !== 'darwin') {
+      app.quit()
+    }
   })
-})
+}
 
-app.on('window-all-closed', () => {
-  logger.info('main', 'App shutting down')
-  abortAllStreams()
-  void shutdownOcr()
-  closeDb()
-  if (process.platform !== 'darwin') {
-    app.quit()
-  }
-})
+if (!app.requestSingleInstanceLock()) {
+  app.quit()
+} else {
+  main()
+}
