@@ -212,30 +212,37 @@ morgen. M8 – fremdes Ollama wird nicht mehr beendet, die Einstellungen nennen 
 
 | | ID | Titel | Aufwand | Erledigt in |
 |---|---|---|---|---|
-| [ ] | M2 | `!src{,/**/*}`, `!eval{,/**/*}`; Ressourcen nur einmal im Paket | S | |
-| [ ] | L20b | Dependabot/Renovate, `npm audit --audit-level=high` in CI, `concurrency`-Block | S | |
+| [x] | M2 | `!src{,/**/*}`, `!eval{,/**/*}`; Ressourcen nur einmal im Paket | S | a80e4cb |
+| [x] | L20b | Dependabot/Renovate, `npm audit --audit-level=high` in CI, `concurrency`-Block | S | 3fe2c81 |
 
 **M2** · `electron-builder.yml:6-9,21-23,86-88`, `electron.vite.config.ts:36`
+- Umgesetzt ohne `resources/public`: `publicDir: false`, die zwei Schriften bindet
+  `globals.css` direkt ein. Lokal mit `electron-builder --dir` geprüft (kein `src/`, kein
+  `traineddata` in `app.asar`). Installer-Größe 1.3.8: 120,3 MB – Vergleich beim nächsten
+  CI-Release.
 - Fix: Muster ändern; `publicDir` auf `resources/public` (nur Icons, Fonts) zeigen lassen,
   `tesseract/` in `resources/` belassen und nur über `extraResources` ausliefern,
   `asarUnpack` entfernen (Tesseract liest aus `process.resourcesPath`).
 - Prüfung: `npx asar list dist/win-unpacked/resources/app.asar | grep -c '^/src/'` → 0;
   Installer-Größe vorher/nachher notieren.
 
+**L20b:** Audit-Schwelle in der CI vorerst `critical` (nur Produktions-Abhängigkeiten), weil
+`xlsx` erst mit H2 verschwindet – danach auf `high` heben.
+
 ### Renderer
 
 | | ID | Titel | Aufwand | Erledigt in |
 |---|---|---|---|---|
-| [ ] | M16 | Ordner-Import per Tastatur erreichbar, kein Button in `role=button` | S | |
-| [ ] | M17 | Lade-Zustände mit `catch`/`finally`; Sidebar zeigt `selectedModel` | S | |
-| [ ] | M18 | Dialog-Abbruch als `cancelled: true` statt String „Abgebrochen" | S | |
-| [ ] | M19 | Kommandopalette: Fokusfalle, Escape global, Fokus-Rückgabe | S | |
-| [ ] | M20 | Dokument löschen mit Rückfrage und Fehlerbehandlung | S | |
-| [ ] | M21 | Hart kodierte Strings durch `t()` ersetzen (Liste im Audit) | S | |
-| [ ] | L13 | Globale Fehler-Handler und offene Promises mit `catch` | S | |
-| [ ] | L14 | `useOllamaStatus` einmal pro App; Ersteindruck per Push statt Polling | S | |
-| [ ] | L15 | `role="radiogroup"` für Auswahlen; Export-Menü mit Escape/Outside-Click | S | |
-| [ ] | L16 | `handleSaveOllamaUrl` erst nach IPC-Erfolg als gespeichert markieren | S | |
+| [x] | M16 | Ordner-Import per Tastatur erreichbar, kein Button in `role=button` | S | aeb9818 |
+| [x] | M17 | Lade-Zustände mit `catch`/`finally`; Sidebar zeigt `selectedModel` | S | 7337327 |
+| [x] | M18 | Dialog-Abbruch als `cancelled: true` statt String „Abgebrochen" | S | 2961825 |
+| [x] | M19 | Kommandopalette: Fokusfalle, Escape global, Fokus-Rückgabe | S | 9c76eb9 |
+| [x] | M20 | Dokument löschen mit Rückfrage und Fehlerbehandlung | S | 97a417b |
+| [x] | M21 | Hart kodierte Strings durch `t()` ersetzen (Liste im Audit) | S | 8bf003e |
+| [x] | L13 | Globale Fehler-Handler und offene Promises mit `catch` | S | f64384f |
+| [x] | L14 | `useOllamaStatus` einmal pro App; Ersteindruck per Push statt Polling | S | 8367670 |
+| [x] | L15 | `role="radiogroup"` für Auswahlen; Export-Menü mit Escape/Outside-Click | S | 4c4cfed, aeb9818 |
+| [x] | L16 | `handleSaveOllamaUrl` erst nach IPC-Erfolg als gespeichert markieren | S | 089c751 |
 
 **M18** · `src/main/services/export.service.ts:191`, `pdf-exporter.service.ts:52`,
 `DocumentViewPage.tsx:189`, `AnalysisPage.tsx:375`
@@ -295,5 +302,5 @@ Diese Punkte sind bewusst offen und gehören in `OFFENE-PUNKTE.md`, falls sie do
 | Paket | Punkte | Erledigt |
 |---|---|---|
 | 1 · Sofort | 10 | 10 |
-| 2 · Minor | 34 | 0 |
+| 2 · Minor | 34 | 34 |
 | 3 · Größer | 11 | 0 |
