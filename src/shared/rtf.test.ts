@@ -208,3 +208,27 @@ describe('markdownToRtf', () => {
     expect(rtf.endsWith('}')).toBe(true)
   })
 })
+
+describe('markdownToRtf - Links, tiefe Ueberschriften, Sternchen (L11)', () => {
+  it('schreibt Links als "Text (Adresse)"', () => {
+    const rtf = markdownToRtf('Siehe [Verbraucherzentrale](https://example.org/hilfe).')
+    expect(rtf).toContain('Verbraucherzentrale (https://example.org/hilfe).')
+    expect(rtf).not.toContain('](')
+  })
+
+  it('formatiert #### als Ueberschrift statt Fliesstext mit Rauten', () => {
+    const rtf = markdownToRtf('#### Details')
+    expect(rtf).not.toContain('####')
+    expect(rtf).toMatch(/\\b\\fs\d+ Details/)
+  })
+
+  it('macht aus "5 * 3 * 2" nichts Kursives', () => {
+    const rtf = markdownToRtf('Rechnung: 5 * 3 * 2 = 30')
+    expect(rtf).not.toContain('{\\i')
+    expect(rtf).toContain('5 * 3 * 2 = 30')
+  })
+
+  it('kursiv bleibt kursiv', () => {
+    expect(markdownToRtf('ein *wichtiges* Wort')).toContain('{\\i wichtiges}')
+  })
+})

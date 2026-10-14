@@ -172,7 +172,9 @@ function renderBlocks(markdown: string, base: number): string[] {
       continue
     }
 
-    const heading = /^(#{1,3})\s+(.*)$/.exec(raw)
+    // Bis ###### - tiefere Ebenen bekommen das Format von ### statt als
+    // Fliesstext mit Rauten zu enden.
+    const heading = /^(#{1,6})\s+(.*)$/.exec(raw)
     if (heading) {
       flushText()
       out.push(paragraph(headingProps(heading[1].length, base), renderInline(heading[2].trim())))
@@ -309,7 +311,23 @@ function renderInline(text: string): string {
       }
     }
 
-    if (char === '*') {
+    // Markdown-Link: im Brief steht "Text (Adresse)" statt "[Text](Adresse)".
+    if (char === '[') {
+      const close = text.indexOf('](', i + 1)
+      const end = close === -1 ? -1 : text.indexOf(')', close + 2)
+      if (close > i + 1 && end > close + 2) {
+        flush()
+        const label = text.slice(i + 1, close)
+        const href = text.slice(close + 2, end)
+        out += renderInline(label) + (href !== label ? escapeRtf(` (${href})`) : '')
+        i = end + 1
+        continue
+      }
+    }
+
+    // Kursiv nur, wenn direkt nach dem '*' kein Leerzeichen steht - sonst
+    // wurde "5 * 3 * 2" zu "5 *kursiv* 2".
+    if (char === '*' && text[i + 1] !== undefined && !/\s/.test(text[i + 1])) {
       const end = findClosingStar(text, i + 1)
       if (end !== -1) {
         flush()
@@ -339,6 +357,8 @@ function findClosingStar(text: string, from: number): number {
       i++
       continue
     }
+    // Schliessend nur ohne Leerzeichen davor (Flanking-Regel wie in Markdown).
+    if (/\s/.test(text[i - 1])) continue
     return i > from ? i : -1
   }
   return -1
