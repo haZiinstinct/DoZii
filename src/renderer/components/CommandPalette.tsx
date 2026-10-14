@@ -36,6 +36,12 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
   const [docs, setDocs] = useState<DocumentSummary[]>([])
   const [selectedIndex, setSelectedIndex] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
+  // onClose kommt als Inline-Funktion - ueber die Ref haengt der Dialog-Effekt
+  // nur an `open` und laeuft nicht bei jedem Re-Render neu.
+  const onCloseRef = useRef(onClose)
+  useEffect(() => {
+    onCloseRef.current = onClose
+  }, [onClose])
 
   // Zuruecksetzen und Fokus, wenn die Palette aufgeht
   useEffect(() => {
@@ -45,6 +51,28 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
     setSelectedIndex(0)
     // Focus input after render
     setTimeout(() => inputRef.current?.focus(), 0)
+  }, [open])
+
+  // Modaler Dialog: Tab bleibt im Dialog (einziges Fokusziel ist das
+  // Suchfeld, die Treffer laufen ueber aria-activedescendant), Escape wirkt
+  // ueberall, und beim Schliessen kehrt der Fokus dorthin zurueck, wo er war.
+  useEffect(() => {
+    if (!open) return
+    const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null
+    const onKey = (e: KeyboardEvent): void => {
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        onCloseRef.current()
+      } else if (e.key === 'Tab') {
+        e.preventDefault()
+        inputRef.current?.focus()
+      }
+    }
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      previous?.focus()
+    }
   }, [open])
 
   // Volltextsuche laeuft im Hauptprozess (SQLite). Frueher wurden ALLE
@@ -149,10 +177,8 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        e.preventDefault()
-        onClose()
-      } else if (e.key === 'ArrowDown') {
+      // Escape behandelt der Dialog-Listener oben.
+      if (e.key === 'ArrowDown') {
         e.preventDefault()
         setSelectedIndex((i) => Math.min(i + 1, allItems.length - 1))
       } else if (e.key === 'ArrowUp') {
@@ -163,7 +189,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps) {
         runSelected()
       }
     },
-    [allItems, runSelected, onClose]
+    [allItems, runSelected]
   )
 
   if (!open) return null
