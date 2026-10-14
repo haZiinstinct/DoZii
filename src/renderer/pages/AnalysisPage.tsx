@@ -372,7 +372,7 @@ export function AnalysisPage() {
         setTimeout(() => setExportNotice(null), 8000)
         return
       }
-      if (res.error && res.error !== 'Abgebrochen') {
+      if (!res.cancelled && res.error) {
         window.api.logs.write('error', 'AnalysisPage', 'Export failed', {
           format,
           error: res.error

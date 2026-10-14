@@ -513,6 +513,11 @@ export interface ExportResult {
   ok: boolean
   path?: string
   error?: string
+  /**
+   * Speichern-Dialog abgebrochen - kein Fehler. Frueher kam hier der String
+   * 'Abgebrochen', den die Oberflaeche in jeder Sprache als roten Fehler zeigte.
+   */
+  cancelled?: true
   /** Anzahl geschwaerzter Fundstellen (nur wenn redact aktiv war). */
   redactedCount?: number
 }

@@ -185,7 +185,7 @@ export function DocumentViewPage() {
     const result = await window.api.deadlines.exportIcs(id)
     if (result.ok) {
       setIcsSavedPath(result.path ?? null)
-    } else {
+    } else if (!result.cancelled) {
       setIcsError(result.error ?? '')
     }
   }, [id])

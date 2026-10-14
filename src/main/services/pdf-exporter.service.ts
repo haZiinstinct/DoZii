@@ -12,6 +12,8 @@ export interface PdfExportResult {
   error?: string
   /** Anzahl geschwaerzter Fundstellen, wenn `redact` aktiv war. */
   redactedCount?: number
+  /** Speichern-Dialog abgebrochen - kein Fehler. */
+  cancelled?: true
 }
 
 /**
@@ -46,7 +48,7 @@ export async function exportAnalysisAsPdf(
     filters: [{ name: 'PDF', extensions: ['pdf'] }]
   })
   if (saveResult.canceled || !saveResult.filePath) {
-    return { ok: false, error: 'Abgebrochen' }
+    return { ok: false, cancelled: true }
   }
 
   const redaction = redact ? redactText(analysis.result) : null

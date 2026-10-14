@@ -107,7 +107,7 @@ export async function exportAnalysis(
     filters: [{ name: meta.name, extensions: [meta.ext] }]
   })
   if (saveResult.canceled || !saveResult.filePath) {
-    return { ok: false, error: 'Abgebrochen' }
+    return { ok: false, cancelled: true }
   }
 
   try {
@@ -188,7 +188,7 @@ export async function exportDeadlinesAsIcs(
     filters: [{ name: 'Kalender', extensions: ['ics'] }]
   })
   if (saveResult.canceled || !saveResult.filePath) {
-    return { ok: false, error: 'Abgebrochen' }
+    return { ok: false, cancelled: true }
   }
 
   try {
