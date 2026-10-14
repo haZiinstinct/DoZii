@@ -37,24 +37,17 @@ austauschbare Binärdatei bei.
 
 ## Apache-2.0
 
-- adler-32@1.3.1 (https://github.com/SheetJS/js-adler32)
-- cfb@1.2.2 (https://github.com/SheetJS/js-cfb)
-- codepage@1.15.0 (https://github.com/SheetJS/js-codepage)
 - crc-32@1.2.2 (https://github.com/SheetJS/js-crc32)
 - detect-libc@2.1.2 (https://github.com/lovell/detect-libc)
 - drizzle-orm@0.45.2 (https://github.com/drizzle-team/drizzle-orm)
-- frac@1.1.2 (https://github.com/SheetJS/frac)
 - idb-keyval@6.2.2 (https://github.com/jakearchibald/idb-keyval)
 - sharp@0.34.5 (https://github.com/lovell/sharp)
-- ssf@0.11.2 (https://github.com/SheetJS/ssf)
 - tesseract.js-core@7.0.0 (https://github.com/naptha/tesseract.js-core)
 - tesseract.js@7.0.0 (https://github.com/naptha/tesseract.js)
 - tunnel-agent@0.6.0 (https://github.com/mikeal/tunnel-agent)
 - typescript@5.9.3 (https://github.com/microsoft/TypeScript)
 - wasm-feature-detect@1.8.0 (https://github.com/GoogleChromeLabs/wasm-feature-detect)
-- wmf@1.0.2 (https://github.com/SheetJS/js-wmf)
-- word@0.3.0 (https://github.com/SheetJS/js-word)
-- xlsx@0.18.5 (https://github.com/SheetJS/sheetjs)
+- xlsx@0.20.3 (https://git.sheetjs.com/sheetjs/sheetjs, bezogen von https://cdn.sheetjs.com)
 
 ## Apache-2.0 AND LGPL-3.0-or-later
 

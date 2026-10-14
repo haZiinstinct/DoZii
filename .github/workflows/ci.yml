@@ -26,10 +26,9 @@ jobs:
         run: npm ci
 
       # Nur Produktions-Abhaengigkeiten: Electron & Co. sind devDependencies und
-      # werden gesondert angehoben (H1). Schwelle 'critical', solange xlsx
-      # (high, ohne Fix im npm-Register) noch drin ist - nach H2 auf 'high' heben.
+      # werden gesondert angehoben (H1).
       - name: Sicherheitsaudit
-        run: npm audit --omit=dev --audit-level=critical
+        run: npm audit --omit=dev --audit-level=high
 
       - name: Typecheck
         run: npm run typecheck

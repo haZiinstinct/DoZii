@@ -52,7 +52,7 @@
     "sharp": "^0.35.5",
     "tesseract.js": "^7.0.0",
     "unpdf": "^1.8.1",
-    "xlsx": "^0.18.5"
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
   },
   "devDependencies": {
     "@electron-toolkit/preload": "^3.0.0",
