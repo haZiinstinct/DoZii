@@ -24,10 +24,17 @@ export function stripThinking(text: string): string {
    * Korrektur war das der Grund, warum qwen3:4b bei ALLEN sieben Zeugnissen
    * nichts Verwertbares lieferte - obwohl es gut 5000 Token dafuer schrieb.
    */
-  const orphan = cleaned.lastIndexOf('</think>')
-  if (orphan !== -1) return cleaned.slice(orphan + '</think>'.length).trim()
-  const orphanLong = cleaned.lastIndexOf('</thinking>')
-  if (orphanLong !== -1) return cleaned.slice(orphanLong + '</thinking>'.length).trim()
-
-  return cleaned
+  //
+  // Nur wenn das Tag am Zeilenanfang oder -ende steht, so wie Ollama es
+  // hinterlaesst. Ein "</think>" mitten im Satz ist Teil der Antwort (etwa
+  // eine Erklaerung zu genau diesen Tags) - frueher ging dann alles davor verloren.
+  let cut = -1
+  for (const m of cleaned.matchAll(ORPHAN_CLOSE_RE)) {
+    cut = (m.index ?? 0) + m[0].length
+  }
+  return cut === -1 ? cleaned : cleaned.slice(cut).trim()
 }
+
+/** `</think>` bzw. `</thinking>` allein am Zeilenanfang oder am Zeilenende. */
+const ORPHAN_CLOSE_RE =
+  /(?:^|\n)[ \t]*<\/think(?:ing)?>|<\/think(?:ing)?>[ \t]*(?=\n|$)/gi

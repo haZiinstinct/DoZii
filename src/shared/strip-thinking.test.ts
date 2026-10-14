@@ -27,3 +27,15 @@ describe('stripThinking', () => {
     expect(stripThinking('<think>a</think>A<think>b</think>B')).toBe('AB')
   })
 })
+
+describe('stripThinking - verwaistes Schluss-Tag', () => {
+  it('schneidet den Gedankengang vor einem Tag auf eigener Zeile ab', () => {
+    expect(stripThinking('Ich ueberlege...\n</think>\n\nAntwort')).toBe('Antwort')
+    expect(stripThinking('Ich ueberlege.</think>\n\nAntwort')).toBe('Antwort')
+  })
+
+  it('laesst ein Tag mitten im Satz stehen', () => {
+    const text = 'Modelle schreiben manchmal </think> in den Text. Das ist harmlos.'
+    expect(stripThinking(text)).toBe(text)
+  })
+})
