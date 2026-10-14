@@ -4,18 +4,27 @@ directories:
   buildResources: build
 files:
   - '!**/.vscode/*'
-  - '!src/*'
+  # '{,/**/*}' schliesst den Ordner samt Inhalt aus - '!src/*' liess die
+  # Unterordner stehen, der Quelltext landete im Paket.
+  - '!src{,/**/*}'
   # Eval-Harness ist Entwicklungswerkzeug: Beispieldokumente und Testlaeufe
   # haben im Installationspaket nichts verloren.
-  - '!eval/*'
+  - '!eval{,/**/*}'
+  - '!scripts{,/**/*}'
+  - '!docs{,/**/*}'
+  # Lokale Arbeitsordner (Claude-Worktrees, alte Builds) nie mitpacken.
+  - '!.claude{,/**/*}'
+  - '!dist{,/**/*}'
+  # Tesseract-Daten kommen ueber extraResources (dort sucht ocr.service),
+  # die Schriften stecken im Renderer-Build. In app.asar bleiben nur die Icons.
+  - '!resources/tesseract{,/**/*}'
+  - '!resources/fonts{,/**/*}'
   - '!vitest.config.ts'
   - '!vitest.eval.config.ts'
   - '!eslint.config.mjs'
   - '!electron.vite.config.*'
   - '!{.eslintignore,.eslintrc.cjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md}'
   - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
-asarUnpack:
-  - resources/**
 win:
   executableName: DoZii
   icon: resources/icon.ico

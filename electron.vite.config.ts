@@ -67,7 +67,10 @@ export default defineConfig({
       }
     },
     plugins: [react(), tailwindcss(), productionCsp()],
-    publicDir: resolve('resources'),
+    // Kein publicDir: der Renderer braucht aus resources/ nur die Schriften,
+    // und die bindet globals.css direkt ein (Vite haengt sie gehasht an).
+    // Frueher landete so der ganze Ordner samt Tesseract-Daten in out/renderer.
+    publicDir: false,
     build: {
       rollupOptions: {
         output: {
