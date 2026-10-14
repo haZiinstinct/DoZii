@@ -10,6 +10,8 @@
  * Keine Node-/DOM-APIs -> in Main (Export) und Renderer (Vorschau) nutzbar.
  */
 
+import { MONTHS_FULL_CAPITALIZED_PATTERN } from './german-months'
+
 export type RedactionKind =
   | 'iban'
   | 'bic'
@@ -297,8 +299,7 @@ const KUNDENNUMMER_RE = new RegExp(
 
 const DATE_VALUE =
   '(?:\\d{1,2}\\. ?\\d{1,2}\\. ?\\d{2,4}' +
-  '|\\d{1,2}\\. ?(?:Januar|Februar|März|Maerz|April|Mai|Juni|Juli|August|September' +
-  '|Oktober|November|Dezember) \\d{4}' +
+  `|\\d{1,2}\\. ?(?:${MONTHS_FULL_CAPITALIZED_PATTERN}) \\d{4}` +
   '|\\d{4}-\\d{2}-\\d{2})'
 
 /** Geburtsdatum nur mit Schluesselwort - sonst faellt jedes Bescheiddatum darunter. */

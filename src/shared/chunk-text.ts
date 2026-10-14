@@ -16,8 +16,12 @@
  * Keine Node-/Electron-APIs -> in Main und Renderer nutzbar und testbar.
  */
 
-/** Konservative Schaetzung Zeichen/Token fuer deutschen Text - wie CHARS_PER_TOKEN im Main. */
-const DEFAULT_CHARS_PER_TOKEN = 3.5
+/**
+ * Konservative Schaetzung Zeichen/Token fuer deutschen Text (englisch ~4).
+ * Einzige Quelle - src/main/config/constants reicht sie weiter.
+ */
+export const CHARS_PER_TOKEN = 3.5
+const DEFAULT_CHARS_PER_TOKEN = CHARS_PER_TOKEN
 /** Spiegelt CHUNK_OVERLAP_TOKENS; shared darf src/main nicht importieren. */
 const DEFAULT_OVERLAP_TOKENS = 200
 /** Spiegelt MAX_CHUNKS; shared darf src/main nicht importieren. */

@@ -5,6 +5,7 @@ import { getDb, schema } from '../db'
 import { getDocumentById } from './document-store.service'
 import { logger } from './logger.service'
 import { redactText } from '@shared/redaction'
+import { modeExportLabel } from '@shared/mode-labels'
 
 export interface PdfExportResult {
   ok: boolean
@@ -109,15 +110,7 @@ export async function exportAnalysisAsPdf(
 function buildDefaultFilename(docName: string, mode: string): string {
   const safe = docName.replace(/\.[^.]+$/, '').replace(/[^\wäöüÄÖÜß .-]+/g, '_')
   const timestamp = new Date().toISOString().slice(0, 10)
-  const modeLabel: Record<string, string> = {
-    grammar: 'Rechtschreibung',
-    formulation: 'Formulierungen',
-    arbeitszeugnis: 'Zeugnis-Decoder',
-    summary: 'Zusammenfassung',
-    freeform: 'Analyse'
-  }
-  const label = modeLabel[mode] ?? 'Analyse'
-  return `${safe} - ${label} - ${timestamp}.pdf`
+  return `${safe} - ${modeExportLabel(mode)} - ${timestamp}.pdf`
 }
 
 function escapeHtml(s: string): string {
@@ -232,16 +225,6 @@ interface BuildParams {
 
 function buildAnalysisHtml(params: BuildParams): string {
   const { documentName, mode, modelUsed, createdAt, resultMarkdown, redactedCount } = params
-  const modeLabel: Record<string, string> = {
-    plain: 'Einfach erklaert',
-    grammar: 'Rechtschreibung & Grammatik',
-    formulation: 'Bessere Formulierungen',
-    arbeitszeugnis: 'Arbeitszeugnis-Decoder',
-    contract: 'Vertrags-Check',
-    summary: 'Zusammenfassung',
-    freeform: 'Freie Frage',
-    letter: 'Briefentwurf'
-  }
   const formatted = new Date(createdAt).toLocaleString('de-DE', {
     dateStyle: 'long',
     timeStyle: 'short'
@@ -340,7 +323,7 @@ function buildAnalysisHtml(params: BuildParams): string {
 <body>
 <header>
   <div class="brand">DoZii</div>
-  <div class="mode">${escapeHtml(modeLabel[mode] ?? mode)}</div>
+  <div class="mode">${escapeHtml(modeExportLabel(mode))}</div>
   <div class="meta">
     <div><strong>Dokument:</strong> ${escapeHtml(documentName)}</div>
     <div><strong>Modell:</strong> ${escapeHtml(modelUsed)}</div>

@@ -10,19 +10,9 @@ import { markdownToRtf } from '@shared/rtf'
 import { buildIcsCalendar, type IcsEvent } from '@shared/ics'
 import { redactText } from '@shared/redaction'
 import type { Deadline, ExportFormat, ExportRequest, ExportResult } from '@shared/types'
+import { modeExportLabel } from '@shared/mode-labels'
 
 const SOURCE = 'export.service'
-
-const MODE_LABELS: Record<string, string> = {
-  plain: 'Einfach erklaert',
-  grammar: 'Rechtschreibung',
-  formulation: 'Formulierungen',
-  arbeitszeugnis: 'Zeugnis-Decoder',
-  contract: 'Vertrags-Check',
-  summary: 'Zusammenfassung',
-  freeform: 'Analyse',
-  letter: 'Briefentwurf'
-}
 
 const FORMAT_META: Record<Exclude<ExportFormat, 'pdf'>, { ext: string; name: string }> = {
   markdown: { ext: 'md', name: 'Markdown' },
@@ -33,7 +23,7 @@ const FORMAT_META: Record<Exclude<ExportFormat, 'pdf'>, { ext: string; name: str
 function safeBaseName(docName: string, mode: string): string {
   const safe = docName.replace(/\.[^.]+$/, '').replace(/[^\wäöüÄÖÜß .-]+/g, '_')
   const timestamp = new Date().toISOString().slice(0, 10)
-  return `${safe} - ${MODE_LABELS[mode] ?? 'Analyse'} - ${timestamp}`
+  return `${safe} - ${modeExportLabel(mode)} - ${timestamp}`
 }
 
 /**
@@ -93,7 +83,7 @@ export async function exportAnalysis(
   }
 
   const header =
-    `# ${MODE_LABELS[analysis.mode] ?? 'Analyse'}\n\n` +
+    `# ${modeExportLabel(analysis.mode)}\n\n` +
     `**Dokument:** ${docName}  \n` +
     `**Modell:** ${analysis.modelUsed}  \n` +
     `**Erstellt:** ${new Date(analysis.createdAt).toLocaleString('de-DE')}\n\n` +
@@ -113,7 +103,7 @@ export async function exportAnalysis(
   try {
     const content =
       request.format === 'rtf'
-        ? markdownToRtf(markdown, { title: `${MODE_LABELS[analysis.mode]} - ${docName}` })
+        ? markdownToRtf(markdown, { title: `${modeExportLabel(analysis.mode)} - ${docName}` })
         : request.format === 'txt'
           ? markdownToPlainText(markdown)
           : markdown

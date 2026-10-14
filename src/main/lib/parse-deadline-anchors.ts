@@ -18,6 +18,7 @@ import type {
 } from '@shared/types'
 import { isPlausiblePeriod } from '@shared/deadline-calc'
 import { extractJsonObject } from './extract-json'
+import { MONTHS_LENIENT } from '@shared/german-months'
 
 const DEADLINE_KINDS: readonly DeadlineKind[] = [
   'widerspruch',
@@ -49,37 +50,6 @@ const FALLBACK_LABELS: Record<DeadlineKind, string> = {
 /** Plausibler Jahresbereich fuer Datumsangaben in Behoerdenpost und Vertraegen. */
 const MIN_YEAR = 1990
 const MAX_YEAR = 2100
-
-/** Deutsche Monatsnamen inkl. gaengiger Abkuerzungen, Umlaute bereits gefaltet. */
-const MONTH_NAMES: Record<string, number> = {
-  januar: 1,
-  jaenner: 1,
-  jan: 1,
-  februar: 2,
-  feb: 2,
-  maerz: 3,
-  marz: 3,
-  mrz: 3,
-  mar: 3,
-  april: 4,
-  apr: 4,
-  mai: 5,
-  juni: 6,
-  jun: 6,
-  juli: 7,
-  jul: 7,
-  august: 8,
-  aug: 8,
-  september: 9,
-  sept: 9,
-  sep: 9,
-  oktober: 10,
-  okt: 10,
-  november: 11,
-  nov: 11,
-  dezember: 12,
-  dez: 12
-}
 
 /**
  * Liest die Anker aus einer Modell-Antwort. Alles, was nicht sauber validiert,
@@ -165,7 +135,7 @@ export function normalizeGermanDate(input: string): string | null {
   // 15. Maerz 2026, 1. Mai 2026, 15 Dez. 2026
   const named = /^(\d{1,2})\.?\s*(\p{L}+)\.?\s*(\d{4})$/iu.exec(text)
   if (named) {
-    const month = MONTH_NAMES[foldUmlauts(named[2].toLowerCase())]
+    const month = MONTHS_LENIENT[foldUmlauts(named[2].toLowerCase())]
     if (month === undefined) return null
     return toIsoDate(Number(named[3]), month, Number(named[1]))
   }

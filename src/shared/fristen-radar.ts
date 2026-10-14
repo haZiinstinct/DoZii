@@ -24,6 +24,7 @@ import type { DeadlineAnchor, DeadlineKind, DeadlinePeriodUnit } from './types'
 import { daysInMonth, toIsoDate } from './german-holidays'
 import { sentenceAround } from './sentence'
 import { NUMBER_WORD_PATTERN, numberWordValue } from './number-words'
+import { MONTHS_FULL } from './german-months'
 
 const WS = '[\\s\\u00a0]+'
 /** Optionaler Zwischenraum. `${WSO}` waere ein laessiges "ein oder mehr". */
@@ -35,22 +36,6 @@ const UNIT_WORDS: ReadonlyArray<[RegExp, DeadlinePeriodUnit]> = [
   [/^Tag/i, 'day'],
   [/^Jahr/i, 'year']
 ]
-
-const MONTHS: Readonly<Record<string, number>> = {
-  januar: 1,
-  februar: 2,
-  maerz: 3,
-  märz: 3,
-  april: 4,
-  mai: 5,
-  juni: 6,
-  juli: 7,
-  august: 8,
-  september: 9,
-  oktober: 10,
-  november: 11,
-  dezember: 12
-}
 
 /**
  * Stichwoerter je Fristart. Die Reihenfolge entscheidet: "Klage" steht vor
@@ -90,14 +75,14 @@ const PERIOD_RE = new RegExp(
  * 26. Februar.
  */
 const DATE_RE = new RegExp(
-  `(?<![\\d.])(\\d{1,2})\\.${WSO}(?:(${Object.keys(MONTHS).join('|')})|(\\d{1,2})\\.)${WSO}(\\d{4})(?!\\d)`,
+  `(?<![\\d.])(\\d{1,2})\\.${WSO}(?:(${Object.keys(MONTHS_FULL).join('|')})|(\\d{1,2})\\.)${WSO}(\\d{4})(?!\\d)`,
   'giu'
 )
 
 /** "bis zum 30. April 2026", "spaetestens am 15.05.2026". */
 const EXPLICIT_RE = new RegExp(
   `(?:bis${WS}(?:zum|spätestens|spaetestens)?|sp(?:ä|ae)testens${WS}(?:am|bis${WS}zum))${WSO}` +
-    `(\\d{1,2}\\.${WSO}(?:${Object.keys(MONTHS).join('|')}|\\d{1,2}\\.)${WSO}\\d{4})`,
+    `(\\d{1,2}\\.${WSO}(?:${Object.keys(MONTHS_FULL).join('|')}|\\d{1,2}\\.)${WSO}\\d{4})`,
   'giu'
 )
 
@@ -119,7 +104,7 @@ export function parseGermanDate(raw: string): string | null {
   const m = DATE_RE.exec(raw)
   if (!m) return null
   const day = Number.parseInt(m[1], 10)
-  const month = m[2] ? MONTHS[m[2].toLowerCase()] : Number.parseInt(m[3], 10)
+  const month = m[2] ? MONTHS_FULL[m[2].toLowerCase()] : Number.parseInt(m[3], 10)
   const year = Number.parseInt(m[4], 10)
   if (!month || month > 12 || year < 1900 || year > 2200) return null
   if (day < 1 || day > daysInMonth(year, month)) return null
@@ -327,7 +312,7 @@ export function findDeadlineAnchors(text: string): DeadlineAnchor[] {
  */
 const FIXED_DATE_RE = new RegExp(
   `(?:bis${WS}(?:zum|sp(?:ä|ae)testens)|sp(?:ä|ae)testens(?:${WS}(?:am|bis${WS}zum))?)${WS}` +
-    `(\\d{1,2}\\.${WSO}(?:${Object.keys(MONTHS).join('|')}|\\d{1,2}\\.)${WSO}\\d{4})`,
+    `(\\d{1,2}\\.${WSO}(?:${Object.keys(MONTHS_FULL).join('|')}|\\d{1,2}\\.)${WSO}\\d{4})`,
   'giu'
 )
 

@@ -31,8 +31,8 @@ export const RESPONSE_RESERVE_TOKENS = 1500
 export const JSON_RESPONSE_RESERVE_TOKENS = 6000
 
 // --- Token-Schaetzung ---
-/** Konservative Schaetzung Zeichen/Token fuer deutschen Text (englisch ~4). */
-export const CHARS_PER_TOKEN = 3.5
+/** Zeichen pro Token - gemeinsam mit dem Chunking in src/shared/chunk-text. */
+export { CHARS_PER_TOKEN } from '@shared/chunk-text'
 
 // --- Eingabe-Limits (IPC-Validierung) ---
 /** Maximale Laenge einer Freitext-Frage (Freeform-Analyse). */
