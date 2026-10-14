@@ -102,6 +102,7 @@ function ToggleRow({
  * Umschalter im Stil des Theme-Schalters. Die Schalter duerfen umbrechen,
  * damit sie bei Schriftgroesse "xlarge" nicht ineinanderlaufen.
  */
+/** Auswahl genau einer Option - semantisch eine Radiogruppe, kein Tab-Reiter. */
 function SegmentedChoice<T extends string>({
   label,
   value,
@@ -114,14 +115,14 @@ function SegmentedChoice<T extends string>({
   onChange: (next: T) => void
 }) {
   return (
-    <div role="tablist" aria-label={label} className="flex flex-wrap gap-2">
+    <div role="radiogroup" aria-label={label} className="flex flex-wrap gap-2">
       {options.map((option) => {
         const active = option.value === value
         return (
           <button
             key={option.value}
-            role="tab"
-            aria-selected={active}
+            role="radio"
+            aria-checked={active}
             onClick={() => onChange(option.value)}
             className={`flex min-w-[7rem] flex-1 items-center justify-center gap-2 rounded-xl border px-4 py-3 text-center text-sm font-medium transition-all ${
               active
@@ -474,7 +475,7 @@ export function SettingsPage() {
         </h2>
         <p className="mb-4 text-xs text-brand-text-dim">{t('settings.languageHint')}</p>
         <div
-          role="tablist"
+          role="radiogroup"
           aria-label={t('settings.language')}
           className="grid grid-cols-2 gap-2 sm:grid-cols-3"
         >
@@ -483,8 +484,8 @@ export function SettingsPage() {
             return (
               <button
                 key={code}
-                role="tab"
-                aria-selected={active}
+                role="radio"
+                aria-checked={active}
                 onClick={() => handleSetLanguage(code)}
                 className={`flex items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-medium transition-all ${
                   active
@@ -504,7 +505,7 @@ export function SettingsPage() {
         <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-brand-text-dim">
           {t('settings.theme')}
         </h2>
-        <div role="tablist" aria-label={t('settings.theme')} className="flex gap-2">
+        <div role="radiogroup" aria-label={t('settings.theme')} className="flex gap-2">
           {[
             { value: 'dark' as ThemeMode, label: t('settings.themeDark'), icon: Moon },
             { value: 'light' as ThemeMode, label: t('settings.themeLight'), icon: Sun },
@@ -512,8 +513,8 @@ export function SettingsPage() {
           ].map(({ value, label, icon: Icon }) => (
             <button
               key={value}
-              role="tab"
-              aria-selected={themeMode === value}
+              role="radio"
+              aria-checked={themeMode === value}
               onClick={() => setThemeMode(value)}
               className={`flex flex-1 items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-medium transition-all ${
                 themeMode === value

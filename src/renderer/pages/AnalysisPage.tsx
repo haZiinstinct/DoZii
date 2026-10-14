@@ -132,6 +132,8 @@ export function AnalysisPage() {
   const [exportError, setExportError] = useState<string | null>(null)
   const [exportNotice, setExportNotice] = useState<string | null>(null)
   const [exportOpen, setExportOpen] = useState(false)
+  const exportMenuRef = useRef<HTMLDivElement>(null)
+  const exportButtonRef = useRef<HTMLButtonElement>(null)
   const [redactOnExport, setRedactOnExport] = useState(false)
   const [doc, setDoc] = useState<DoziiDocument | null>(null)
   const [documentType, setDocumentType] = useState<string | null>(null)
@@ -151,6 +153,26 @@ export function AnalysisPage() {
     window.api.analysis
   )
   const chatStream = useStreamingInvocation<ChatMessage>(window.api.chat)
+
+  // Export-Menue: Escape und ein Klick daneben schliessen es - vorher blieb es
+  // offen, bis man erneut auf den Knopf klickte.
+  useEffect(() => {
+    if (!exportOpen) return
+    const onPointer = (e: MouseEvent): void => {
+      if (!exportMenuRef.current?.contains(e.target as Node)) setExportOpen(false)
+    }
+    const onKey = (e: KeyboardEvent): void => {
+      if (e.key !== 'Escape') return
+      setExportOpen(false)
+      exportButtonRef.current?.focus()
+    }
+    document.addEventListener('mousedown', onPointer)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('mousedown', onPointer)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [exportOpen])
 
   // Auto-scroll during analysis streaming
   useEffect(() => {
@@ -650,8 +672,9 @@ export function AnalysisPage() {
 
         {/* Export - nur bei erfolgreichem Ergebnis */}
         {analysis.kind === 'done' && (
-          <div className="relative">
+          <div className="relative" ref={exportMenuRef}>
             <button
+              ref={exportButtonRef}
               onClick={() => setExportOpen((v) => !v)}
               title={t('analysis.exportMenu')}
               aria-expanded={exportOpen}
