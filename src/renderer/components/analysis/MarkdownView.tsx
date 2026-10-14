@@ -88,16 +88,23 @@ export function MarkdownView({ content, className = '' }: MarkdownViewProps) {
             </td>
           ),
           hr: () => <hr className="my-4 border-brand-border" />,
-          a: ({ children, href }) => (
-            <a
-              href={href}
-              className="text-brand-cyan underline hover:text-brand-cyan-dim"
-              target="_blank"
-              rel="noreferrer"
-            >
-              {children}
-            </a>
-          )
+          /*
+           * Links aus Modellausgaben sind nicht klickbar. Das Modell schreibt,
+           * was im Dokument steht - ein manipuliertes Dokument koennte so einen
+           * Phishing-Link unter "Wo du Hilfe bekommst" platzieren, der sich mit
+           * einem Klick im Browser oeffnet. Die Adresse bleibt sichtbar und
+           * kopierbar; oeffnen muss der Nutzer sie bewusst selbst.
+           */
+          a: ({ children, href }) => {
+            const label = typeof children === 'string' ? children : null
+            const showHref = href && href !== label && !href.startsWith('#')
+            return (
+              <span className="text-brand-cyan">
+                {children}
+                {showHref && <span className="select-all text-brand-text-dim"> ({href})</span>}
+              </span>
+            )
+          }
         }}
       >
         {content}

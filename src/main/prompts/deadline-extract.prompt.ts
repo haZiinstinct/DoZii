@@ -13,6 +13,7 @@
  */
 
 import type { PromptPair } from './prompt-builder'
+import { createFence } from './document-fence'
 
 export function buildDeadlineExtractPrompt(text: string): PromptPair {
   const system = `Du findest Fristen in deutschen Dokumenten (Bescheide, Rechnungen, Vertraege, Mahnungen). Du EXTRAHIERST nur, was dasteht - du RECHNEST NICHT.
@@ -42,12 +43,11 @@ Harte Regeln:
 - Keine Frist im Dokument -> {"anchors":[]}
 - Keine Erklaerung, keine Ueberschrift, kein Text ausserhalb des json-Blocks.`
 
+  const fence = createFence(text)
   const user = `Dokument:
----
-${text}
----
+${fence.wrap(text)}
 
 Fristanker als JSON:`
 
-  return { system, user }
+  return { system: `${system}\n\n${fence.rule('de')}`, user }
 }

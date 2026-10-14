@@ -1,5 +1,6 @@
 import type { PromptPair } from './prompt-builder'
 import { withLanguageDirective } from './language-directive'
+import { createFence } from './document-fence'
 
 export function buildFormulationPrompt(text: string, language: string): PromptPair {
   const isGerman = language === 'de'
@@ -173,9 +174,13 @@ Use salutation, structure, content signals to classify.
 
 <complete text with improvements>`
 
+  const fence = createFence(text)
   const user = isGerman
-    ? `Bitte analysiere und verbessere den folgenden Text:\n\n---\n${text}\n---`
-    : `Please analyze and improve the following text:\n\n---\n${text}\n---`
+    ? `Bitte analysiere und verbessere den folgenden Text:\n\n${fence.wrap(text)}`
+    : `Please analyze and improve the following text:\n\n${fence.wrap(text, 'DOCUMENT')}`
 
-  return { system: withLanguageDirective(system, language), user }
+  return {
+    system: `${withLanguageDirective(system, language)}\n\n${fence.rule(isGerman ? 'de' : 'en')}`,
+    user
+  }
 }

@@ -1,5 +1,6 @@
 import type { PromptPair } from './prompt-builder'
 import { withLanguageDirective } from './language-directive'
+import { createFence } from './document-fence'
 
 /**
  * Vertrags-Check mit Klausel-Ampel. Gleicher Mechanismus wie der
@@ -11,9 +12,10 @@ export function buildContractCheckPrompt(text: string, language: string): Prompt
 
   const system = isGerman ? GERMAN_SYSTEM : ENGLISH_SYSTEM
 
+  const fence = createFence(text)
   const user = isGerman
-    ? `Bitte pruefe den folgenden Vertrag:\n\n---\n${text}\n---`
-    : `Please review the following contract:\n\n---\n${text}\n---`
+    ? `Bitte pruefe den folgenden Vertrag:\n\n${fence.wrap(text)}`
+    : `Please review the following contract:\n\n${fence.wrap(text, 'DOCUMENT')}`
 
   // Die Sprach-Direktive weist das Modell an, severity als "high|medium|low"
   // zu schreiben - das ist fuer die anderen Modi richtig, hier aber falsch:
@@ -31,7 +33,10 @@ For THIS task the "severity" field uses exactly "red", "yellow" or "green" - nev
 "importance" uses "high", "medium", "low". "level" in overallRisk uses "low", "medium", "high".
 These are data values, not prose: never translate them.`
 
-  return { system: withDirective + enumOverride, user }
+  return {
+    system: `${withDirective}${enumOverride}\n\n${fence.rule(isGerman ? 'de' : 'en')}`,
+    user
+  }
 }
 
 const GERMAN_SYSTEM = `Du bist ein erfahrener Vertragspruefer. Seit 15 Jahren liest du Miet-, Arbeits-, Kauf-, Darlehens- und Abo-Vertraege und erklaerst Privatpersonen in klarer Alltagssprache, was sie da eigentlich unterschreiben sollen.

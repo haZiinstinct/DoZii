@@ -13,6 +13,7 @@
 
 import type { PromptPair } from './prompt-builder'
 import { withLanguageDirective } from './language-directive'
+import { createFence } from './document-fence'
 
 /** Ueberschriften + Feldlabels eines Ergebnisses, in einer Sprache. */
 export interface PlainHeadings {
@@ -236,9 +237,13 @@ export function buildPlainLanguagePrompt(text: string, language: string): Prompt
   const isGerman = language === 'de'
 
   const system = isGerman ? germanSystem() : englishSystem()
+  const fence = createFence(text)
   const user = isGerman
-    ? `Erklaere das folgende Dokument in einfacher Sprache:\n\n---\n${text}\n---`
-    : `Explain the following document in plain language:\n\n---\n${text}\n---`
+    ? `Erklaere das folgende Dokument in einfacher Sprache:\n\n${fence.wrap(text)}`
+    : `Explain the following document in plain language:\n\n${fence.wrap(text, 'DOCUMENT')}`
 
-  return { system: withLanguageDirective(system, language), user }
+  return {
+    system: `${withLanguageDirective(system, language)}\n\n${fence.rule(isGerman ? 'de' : 'en')}`,
+    user
+  }
 }

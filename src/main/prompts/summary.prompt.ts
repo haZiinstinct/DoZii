@@ -1,5 +1,6 @@
 import type { PromptPair } from './prompt-builder'
 import { withLanguageDirective } from './language-directive'
+import { createFence } from './document-fence'
 
 export function buildSummaryPrompt(text: string, language: string): PromptPair {
   const isGerman = language === 'de'
@@ -326,9 +327,13 @@ Jetzt analysiere das folgende Dokument. Liefere AUSSCHLIESSLICH das Markdown-For
 - <notable>
 - ⚠ PHISHING-WARNING: <reason> (only if detected)`
 
+  const fence = createFence(text)
   const user = isGerman
-    ? `Bitte analysiere und fasse das folgende Dokument zusammen:\n\n---\n${text}\n---`
-    : `Please analyze and summarize the following document:\n\n---\n${text}\n---`
+    ? `Bitte analysiere und fasse das folgende Dokument zusammen:\n\n${fence.wrap(text)}`
+    : `Please analyze and summarize the following document:\n\n${fence.wrap(text, 'DOCUMENT')}`
 
-  return { system: withLanguageDirective(system, language), user }
+  return {
+    system: `${withLanguageDirective(system, language)}\n\n${fence.rule(isGerman ? 'de' : 'en')}`,
+    user
+  }
 }

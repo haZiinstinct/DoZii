@@ -1,5 +1,6 @@
 import type { PromptPair } from './prompt-builder'
 import { withLanguageDirective } from './language-directive'
+import { createFence } from './document-fence'
 
 export function buildFreeformPrompt(
   text: string,
@@ -87,9 +88,13 @@ Bei einfachen Fragen: kurzer Fliesstext reicht.`
 
 Inline: According to the document, "X" is the case.`
 
+  const fence = createFence(text)
   const user = isGerman
-    ? `Hier ist das Dokument:\n\n---\n${text}\n---\n\nFrage: ${question}`
-    : `Here is the document:\n\n---\n${text}\n---\n\nQuestion: ${question}`
+    ? `Frage: ${question}\n\nDas Dokument dazu:\n\n${fence.wrap(text)}`
+    : `Question: ${question}\n\nThe document:\n\n${fence.wrap(text, 'DOCUMENT')}`
 
-  return { system: withLanguageDirective(system, language), user }
+  return {
+    system: `${withLanguageDirective(system, language)}\n\n${fence.rule(isGerman ? 'de' : 'en')}`,
+    user
+  }
 }

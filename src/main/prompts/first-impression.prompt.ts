@@ -8,6 +8,7 @@
  */
 
 import { englishNameFor } from '@shared/languages'
+import { createFence } from './document-fence'
 
 export interface FirstImpressionPrompt {
   system: string
@@ -37,7 +38,8 @@ Regeln:
 - Das Feld "firstImpression" MUSS in ${langName} geschrieben sein.
 - NUR JSON, keine Erklaerung davor oder danach.`
 
-  const user = `Text:\n${textSample}\n\nJSON:`
+  const fence = createFence(textSample)
+  const user = `Text:\n${fence.wrap(textSample)}\n\nJSON:`
 
-  return { system, user }
+  return { system: `${system}\n\n${fence.rule('de')}`, user }
 }

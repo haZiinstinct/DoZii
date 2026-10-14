@@ -1,5 +1,6 @@
 import type { PromptPair } from './prompt-builder'
 import { withLanguageDirective } from './language-directive'
+import { createFence } from './document-fence'
 
 export function buildGrammarPrompt(text: string, language: string): PromptPair {
   const isGerman = language === 'de'
@@ -212,9 +213,13 @@ Final cleaned list only.
 
 Provide ONLY this format.`
 
+  const fence = createFence(text)
   const user = isGerman
-    ? `Bitte pruefe den folgenden Text auf Fehler:\n\n---\n${text}\n---`
-    : `Please check the following text for errors:\n\n---\n${text}\n---`
+    ? `Bitte pruefe den folgenden Text auf Fehler:\n\n${fence.wrap(text)}`
+    : `Please check the following text for errors:\n\n${fence.wrap(text, 'DOCUMENT')}`
 
-  return { system: withLanguageDirective(system, language), user }
+  return {
+    system: `${withLanguageDirective(system, language)}\n\n${fence.rule(isGerman ? 'de' : 'en')}`,
+    user
+  }
 }

@@ -1,4 +1,5 @@
 import type { PromptPair } from './prompt-builder'
+import { createFence } from './document-fence'
 
 // Pass 1: full analysis, Dual-Grade, strict JSON.
 // Pass 2 verifier lives in arbeitszeugnis-verify.prompt.ts.
@@ -279,7 +280,8 @@ Alle nicht-zutreffenden Abschnitte (z.B. Fuehrungsverhalten wenn keine Fuehrungs
 
 Jetzt analysiere das folgende Arbeitszeugnis nach diesem Schema. Antworte AUSSCHLIESSLICH mit einem einzigen \`\`\`json-Block, kein Text davor oder danach.`
 
-  const user = `Bitte decodiere das folgende Arbeitszeugnis:\n\n---\n${text}\n---`
+  const fence = createFence(text)
+  const user = `Bitte decodiere das folgende Arbeitszeugnis:\n\n${fence.wrap(text)}`
 
-  return { system, user }
+  return { system: `${system}\n\n${fence.rule('de')}`, user }
 }

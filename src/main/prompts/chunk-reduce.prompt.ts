@@ -1,5 +1,6 @@
 import type { PromptPair } from './prompt-builder'
 import { withLanguageDirective } from './language-directive'
+import { createFence, type DocumentFence } from './document-fence'
 
 /**
  * Map-Reduce fuer lange Dokumente.
@@ -25,9 +26,16 @@ const COMMON_RULES = `# HARTE REGELN
 5. **FORMAT EXAKT BEIBEHALTEN**: Die Ausgabe hat genau dieselbe Struktur wie ein einzelnes
    Teilergebnis. Kein Vorwort, kein Nachwort, keine Meta-Bemerkung ueber die Abschnitte.`
 
-function joinParts(parts: string[]): string {
+/**
+ * Die Teilergebnisse stammen vom Modell und enthalten Zitate aus dem Dokument -
+ * also Text, dem nicht zu trauen ist. Deshalb ebenfalls hinter Markern.
+ */
+function joinParts(parts: string[], fence: DocumentFence): string {
   return parts
-    .map((part, index) => `--- TEILERGEBNIS ${index + 1} von ${parts.length} ---\n${part}`)
+    .map(
+      (part, index) =>
+        `Teilergebnis ${index + 1} von ${parts.length}:\n${fence.wrap(part, `TEIL${index + 1}`)}`
+    )
     .join('\n\n')
 }
 
@@ -48,9 +56,13 @@ ${COMMON_RULES}
 
 ${formatReminder}`
 
-  const user = `Hier sind die Teilergebnisse desselben Dokuments. Fasse sie zu EINER Analyse im vorgegebenen Format zusammen:\n\n${joinParts(parts)}`
+  const fence = createFence(...parts)
+  const user = `Hier sind die Teilergebnisse desselben Dokuments. Fasse sie zu EINER Analyse im vorgegebenen Format zusammen:\n\n${joinParts(parts, fence)}`
 
-  return { system: withLanguageDirective(system, language), user }
+  return {
+    system: `${withLanguageDirective(system, language)}\n\n${fence.rule(language === 'de' ? 'de' : 'en')}`,
+    user
+  }
 }
 
 /**
@@ -80,7 +92,11 @@ ${COMMON_RULES}
 Antworte AUSSCHLIESSLICH mit einem einzigen \`\`\`json-Block im exakt selben Schema wie die
 Teilergebnisse. Kein Text davor oder danach.`
 
-  const user = `Teilergebnisse desselben Vertrags:\n\n${joinParts(parts)}`
+  const fence = createFence(...parts)
+  const user = `Teilergebnisse desselben Vertrags:\n\n${joinParts(parts, fence)}`
 
-  return { system: withLanguageDirective(system, language), user }
+  return {
+    system: `${withLanguageDirective(system, language)}\n\n${fence.rule(language === 'de' ? 'de' : 'en')}`,
+    user
+  }
 }

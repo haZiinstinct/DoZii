@@ -1,4 +1,5 @@
 import type { PromptPair } from './prompt-builder'
+import { createFence } from './document-fence'
 
 /**
  * Pass 2 verifier prompt. Takes the original Zeugnis text + the JSON analysis
@@ -60,17 +61,14 @@ Liefere AUSSCHLIESSLICH das bereinigte JSON-Objekt in einem einzigen \`\`\`json-
 
 Wenn du nichts aendern musstest: gib das JSON unveraendert zurueck.`
 
+  const fence = createFence(originalText, pass1Output)
   const user = `ORIGINAL-ARBEITSZEUGNIS:
----
-${originalText}
----
+${fence.wrap(originalText, 'ZEUGNIS')}
 
 ANALYSE (JSON zu pruefen):
----
-${pass1Output}
----
+${fence.wrap(pass1Output, 'ANALYSE')}
 
 Pruefe jeden Befund im JSON gegen das Original. Streiche alles was nicht durch EXAKTE Zitate belegt ist. Liefere das bereinigte JSON in einem \`\`\`json-Block zurueck.`
 
-  return { system, user }
+  return { system: `${system}\n\n${fence.rule('de')}`, user }
 }
