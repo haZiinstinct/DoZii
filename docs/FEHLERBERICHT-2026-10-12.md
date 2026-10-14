@@ -162,19 +162,19 @@ Modell-Startdatum nur noch mit wörtlichem Beleg (`910c705`).
 
 | | ID | Titel | Aufwand | Erledigt in |
 |---|---|---|---|---|
-| [ ] | H7 | Lauf-ID pro Stream, Renderer bricht alten Lauf vor neuem ab | M | |
-| [ ] | M5 | AbortController pro Stream statt `client.abort()` global | M | |
-| [ ] | M6 | `will-navigate` im Hauptprozess blockieren | S | |
-| [ ] | M7 | Production-CSP ohne `unsafe-inline` und ohne Ollama-Host | S | |
-| [ ] | M8 | Ollama-Stop nur für den eigenen Kindprozess oder mit Hinweis | S | |
-| [ ] | M12 | Prompt-Härtung: Sentinel und Injection-Satz in allen Prompts, Links als Text | M | |
-| [ ] | L1 | Logger rotiert zur Laufzeit (Tageswechsel, Größenlimit) | S | |
-| [ ] | L2 | `requestSingleInstanceLock`: nach `quit()` nichts mehr registrieren | S | |
-| [ ] | L3 | `deleteDocument`: Pfadprüfung mit `path.relative` statt `startsWith` | S | |
-| [ ] | L4 | Typprüfung für `ollama:pullModel/selectModel/deleteModel` | S | |
-| [ ] | L6 | Chat-Historie paarweise kürzen | S | |
-| [ ] | L7 | `fitTextToTokenBudget`: `lastBreak >= 0 &&` Guard | S | |
-| [ ] | L21 | `logs:write`: `meta` auf Größe begrenzen, keine freien Strings loggen | S | |
+| [x] | H7 | Lauf-ID pro Stream, Renderer bricht alten Lauf vor neuem ab | M | c104a51 |
+| [x] | M5 | AbortController pro Stream statt `client.abort()` global | M | c104a51 |
+| [x] | M6 | `will-navigate` im Hauptprozess blockieren | S | 07df081 |
+| [x] | M7 | Production-CSP ohne `unsafe-inline` und ohne Ollama-Host | S | 07df081 |
+| [x] | M8 | Ollama-Stop nur für den eigenen Kindprozess oder mit Hinweis | S | 13ebf2c |
+| [x] | M12 | Prompt-Härtung: Sentinel und Injection-Satz in allen Prompts, Links als Text | M | 68715bd |
+| [x] | L1 | Logger rotiert zur Laufzeit (Tageswechsel, Größenlimit) | S | 6e6eebe |
+| [x] | L2 | `requestSingleInstanceLock`: nach `quit()` nichts mehr registrieren | S | 07df081 |
+| [x] | L3 | `deleteDocument`: Pfadprüfung mit `path.relative` statt `startsWith` | S | 584b414 |
+| [x] | L4 | Typprüfung für `ollama:pullModel/selectModel/deleteModel` | S | 584b414 |
+| [x] | L6 | Chat-Historie paarweise kürzen | S | 74d056b |
+| [x] | L7 | `fitTextToTokenBudget`: `lastBreak >= 0 &&` Guard | S | 584b414 |
+| [x] | L21 | `logs:write`: `meta` auf Größe begrenzen, keine freien Strings loggen | S | 69a9371 |
 
 **H7 + M5** · `src/renderer/hooks/useStreamingInvocation.ts:68-85`,
 `src/main/services/ollama-client.service.ts:70,291,399`, `src/main/ipc/analysis.ipc.ts`
@@ -201,6 +201,12 @@ Modell-Startdatum nur noch mit wörtlichem Beleg (`910c705`).
   zwischen den Markern Daten sind. Satz aus `letter.prompt.ts:574` übernehmen. In
   `freeform.prompt.ts:91` die Nutzerfrage vor das Dokument stellen. In `MarkdownView` `a`
   als `<span>` rendern oder Bestätigungsdialog vor `openExternal`.
+
+**Anmerkungen zum Block:** H7 – die runId erzeugt der Renderer (vom Hauptprozess geprüft),
+nicht der Hauptprozess. M5 – AbortController pro Lauf über AsyncLocalStorage, in echtem Electron
+nachgewiesen (`scripts/netfetch-abort-probe.cjs`). M7 – die eigentliche Lücke war das Meta-Tag:
+unter `file://` greift die Header-CSP nicht. L1 – bei 5 MB eine Folgedatei, danach Pause bis
+morgen. M8 – fremdes Ollama wird nicht mehr beendet, die Einstellungen nennen den Grund.
 
 ### Packaging und CI
 
