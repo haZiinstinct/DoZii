@@ -82,18 +82,30 @@ export function DocumentViewPage() {
   useEffect(() => {
     if (!id) return
     let cancelled = false
-    window.api.documents.getById(id).then((d) => {
-      if (cancelled) return
-      setDoc(d ?? null)
-      setLoading(false)
-    })
+    // Ohne catch drehte der Spinner bei einem IPC-Fehler endlos - jetzt
+    // erscheint "Dokument nicht gefunden".
+    window.api.documents
+      .getById(id)
+      .then((d) => {
+        if (!cancelled) setDoc(d ?? null)
+      })
+      .catch(() => {
+        if (!cancelled) setDoc(null)
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
     setFirstImpressionDismissed(false)
     setGarbledDismissed(false)
     setFirstImpression(null)
-    window.api.documents.getFirstImpression(id).then((fi) => {
-      if (cancelled) return
-      setFirstImpression(fi)
-    })
+    window.api.documents
+      .getFirstImpression(id)
+      .then((fi) => {
+        if (!cancelled) setFirstImpression(fi)
+      })
+      .catch(() => {
+        /* Ersteindruck ist optional */
+      })
     return () => {
       cancelled = true
     }
@@ -105,10 +117,14 @@ export function DocumentViewPage() {
     if (!id) return
     let cancelled = false
     const load = (): void => {
-      window.api.deadlines.forDocument(id).then((found) => {
-        if (cancelled) return
-        setDeadlines(found)
-      })
+      window.api.deadlines
+        .forDocument(id)
+        .then((found) => {
+          if (!cancelled) setDeadlines(found)
+        })
+        .catch(() => {
+          // Bisherige Liste stehen lassen; ein erneuter Scan laedt neu.
+        })
     }
     setIcsError(null)
     setIcsSavedPath(null)
@@ -126,9 +142,13 @@ export function DocumentViewPage() {
   const handleGenerateFirstImpression = async () => {
     if (!id) return
     setFirstImpressionLoading(true)
-    const fi = await window.api.documents.generateFirstImpression(id)
-    setFirstImpression(fi)
-    setFirstImpressionLoading(false)
+    try {
+      setFirstImpression(await window.api.documents.generateFirstImpression(id))
+    } catch {
+      /* optional - ohne Ergebnis bleibt der Knopf einfach stehen */
+    } finally {
+      setFirstImpressionLoading(false)
+    }
   }
 
   const isGarbled = useMemo(

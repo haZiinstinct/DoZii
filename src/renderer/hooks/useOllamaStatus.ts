@@ -30,10 +30,17 @@ export function useOllamaStatus() {
         window.api.ollama.detectInstallation()
       ])
 
+      // Angezeigt wird das Modell, mit dem die Analyse wirklich laeuft: das
+      // gewaehlte, wenn es installiert ist - sonst nimmt die App das erste.
+      // Frueher stand hier immer models[0], auch wenn ein anderes gewaehlt war.
       let model: string | null = null
       if (connection.connected) {
-        const models = await window.api.ollama.listModels()
-        model = models?.[0]?.name ?? null
+        const [models, settings] = await Promise.all([
+          window.api.ollama.listModels(),
+          window.api.settings.get()
+        ])
+        const selected = models.find((m) => m.name === settings.selectedModel)
+        model = selected?.name ?? models[0]?.name ?? null
       }
 
       setStatus((prev) => ({
