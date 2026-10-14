@@ -13,9 +13,11 @@ interface LogEntry {
 }
 
 const MAX_LOG_FILES = 14 // Keep last 14 days
-// Schutz vor Error-Loops: ab dieser Größe pro Tagesdatei nicht mehr auf Disk
-// schreiben (Konsole läuft weiter). Check alle 200 Einträge, um statSync zu sparen.
+// Schutz vor Error-Loops: ab dieser Größe wird in eine Folgedatei des Tages
+// gewechselt, nach MAX_PARTS_PER_DAY Dateien nicht mehr auf Disk geschrieben
+// (Konsole läuft weiter). Check alle 200 Einträge, um statSync zu sparen.
 const MAX_LOG_FILE_BYTES = 5 * 1024 * 1024
+const MAX_PARTS_PER_DAY = 2
 const SIZE_CHECK_INTERVAL = 200
 const LEVEL_COLORS: Record<LogLevel, string> = {
   debug: '\x1b[90m', // gray
@@ -28,6 +30,10 @@ const COLOR_RESET = '\x1b[0m'
 class Logger {
   private logsDir: string | null = null
   private currentFile: string | null = null
+  /** Tag (YYYY-MM-DD, UTC wie die Zeitstempel) der aktuellen Datei. */
+  private currentDay = ''
+  /** 0 = dozii-TAG.log, 1 = dozii-TAG.1.log, ... */
+  private currentPart = 0
   private buffer: LogEntry[] = []
   private initialized = false
   private writesSinceSizeCheck = 0
@@ -52,10 +58,12 @@ class Logger {
     }
   }
 
-  private rotateFile(): void {
+  private rotateFile(day = new Date().toISOString().slice(0, 10), part = 0): void {
     if (!this.logsDir) return
-    const today = new Date().toISOString().slice(0, 10) // YYYY-MM-DD
-    this.currentFile = join(this.logsDir, `dozii-${today}.log`)
+    this.currentDay = day
+    this.currentPart = part
+    const suffix = part === 0 ? '' : `.${part}`
+    this.currentFile = join(this.logsDir, `dozii-${day}${suffix}.log`)
     this.fileSizeExceeded = false
     this.writesSinceSizeCheck = 0
   }
@@ -92,6 +100,14 @@ class Logger {
     // eslint-disable-next-line no-console
     console.log(`${prefix} ${entry.timestamp} [${entry.source}] ${entry.message}`, entry.meta ?? '')
 
+    // Tageswechsel zur Laufzeit: frueher wurde nur beim Start rotiert - wer die
+    // App ueber Mitternacht offen liess, schrieb weiter in die Vortagsdatei.
+    const day = entry.timestamp.slice(0, 10)
+    if (this.logsDir && day !== this.currentDay) {
+      this.rotateFile(day)
+      this.cleanupOldLogs()
+    }
+
     // Write to file
     if (!this.currentFile || this.fileSizeExceeded) return
     try {
@@ -99,18 +115,25 @@ class Logger {
         this.writesSinceSizeCheck = 0
         const size = statSync(this.currentFile).size
         if (size > MAX_LOG_FILE_BYTES) {
-          this.fileSizeExceeded = true
+          const next = this.currentPart + 1
+          const full = next >= MAX_PARTS_PER_DAY
           appendFileSync(
             this.currentFile,
             JSON.stringify({
               ts: new Date().toISOString(),
               lvl: 'warn',
               src: 'logger',
-              msg: `Log-Limit (${MAX_LOG_FILE_BYTES} Bytes) erreicht - Datei-Logging bis zur nächsten Rotation pausiert`
+              msg: full
+                ? `Log-Limit (${MAX_PARTS_PER_DAY} x ${MAX_LOG_FILE_BYTES} Bytes) erreicht - Datei-Logging bis morgen pausiert`
+                : `Log-Limit (${MAX_LOG_FILE_BYTES} Bytes) erreicht - weiter in Folgedatei ${next}`
             }) + '\n',
             'utf8'
           )
-          return
+          if (full) {
+            this.fileSizeExceeded = true
+            return
+          }
+          this.rotateFile(day, next)
         }
       }
       const line = JSON.stringify({
