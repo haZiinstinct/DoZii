@@ -7,12 +7,8 @@ import {
   Send,
   CheckCircle2,
   AlertCircle,
-  User,
-  Sparkles,
-  Trash2,
   Square,
   CircleSlash,
-  FileDown,
   Volume2,
   VolumeX,
   ScanText,
@@ -25,9 +21,7 @@ import type {
   AnalysisNotice,
   AnalysisPhaseEvent,
   AnalysisRunResult,
-  ChatMessage,
   DoziiDocument,
-  ExportFormat,
   LetterKind
 } from '@shared/types'
 import { MarkdownView } from '@/components/analysis/MarkdownView'
@@ -40,6 +34,9 @@ import { ContractCheck } from '@/components/analysis/ContractCheck'
 import { LetterView } from '@/components/analysis/LetterView'
 import { LetterKindPicker } from '@/components/analysis/LetterKindPicker'
 import { HighlightedDocument } from '@/components/analysis/HighlightedDocument'
+import { ChatInput, ChatThread } from '@/components/analysis/AnalysisChat'
+import { ExportMenu } from '@/components/analysis/ExportMenu'
+import { useAnalysisChat } from '@/hooks/useAnalysisChat'
 import { useStreamingInvocation } from '@/hooks/useStreamingInvocation'
 import { useSpeech } from '@/hooks/useSpeech'
 import {
@@ -76,13 +73,6 @@ const EVIDENCE_MODES: ReadonlySet<AnalysisMode> = new Set<AnalysisMode>([
   'contract'
 ])
 
-const EXPORT_FORMATS: { format: ExportFormat; labelKey: string }[] = [
-  { format: 'pdf', labelKey: 'analysis.exportPdf' },
-  { format: 'rtf', labelKey: 'analysis.exportRtf' },
-  { format: 'markdown', labelKey: 'analysis.exportMarkdown' },
-  { format: 'txt', labelKey: 'analysis.exportTxt' }
-]
-
 /**
  * Menschlich lesbarer Fortschritt - bei langen Dokumenten laeuft das minutenlang,
  * und "Analysiere..." ohne Zaehler fuehlt sich dann wie ein Haenger an.
@@ -109,11 +99,6 @@ function phaseLabel(phase: AnalysisPhaseEvent): {
   }
 }
 
-type ChatState =
-  | { kind: 'idle' }
-  | { kind: 'streaming'; buffer: string }
-  | { kind: 'error'; message: string }
-
 export function AnalysisPage() {
   const [params] = useSearchParams()
   const navigate = useNavigate()
@@ -125,20 +110,12 @@ export function AnalysisPage() {
   const sourceAnalysisId = params.get('from') ?? undefined
 
   const [analysis, setAnalysis] = useState<AnalysisState>({ kind: 'idle' })
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
-  const [chat, setChat] = useState<ChatState>({ kind: 'idle' })
-  const [chatInput, setChatInput] = useState('')
+  const chat = useAnalysisChat(docId)
   const [freeQuestion, setFreeQuestion] = useState('')
   const [askedQuestion, setAskedQuestion] = useState<string | null>(null)
   const [exportError, setExportError] = useState<string | null>(null)
   const [exportNotice, setExportNotice] = useState<string | null>(null)
-  const [exportOpen, setExportOpen] = useState(false)
-  const exportMenuRef = useRef<HTMLDivElement>(null)
-  const exportButtonRef = useRef<HTMLButtonElement>(null)
   const { settings } = useSettings()
-  // Vorbelegung aus den Einstellungen, bis der Nutzer im Export-Menue umschaltet.
-  const [redactOverride, setRedactOnExport] = useState<boolean | null>(null)
-  const redactOnExport = redactOverride ?? settings?.redactOnExport ?? false
   const [doc, setDoc] = useState<DoziiDocument | null>(null)
   const [documentType, setDocumentType] = useState<string | null>(null)
   /** Aktuell gewaehltes Modell - fuer die Warnung bei zu kleinen Modellen. */
@@ -149,34 +126,12 @@ export function AnalysisPage() {
   const speech = useSpeech()
 
   const responseRef = useRef<HTMLDivElement>(null)
-  const chatBottomRef = useRef<HTMLDivElement>(null)
 
   // Streaming hooks - these centralize listener lifecycle so listeners
   // are always removed on unmount and before re-registering for a new run.
   const analysisStream = useStreamingInvocation<AnalysisRunResult, AnalysisPhaseEvent>(
     window.api.analysis
   )
-  const chatStream = useStreamingInvocation<ChatMessage>(window.api.chat)
-
-  // Export-Menue: Escape und ein Klick daneben schliessen es - vorher blieb es
-  // offen, bis man erneut auf den Knopf klickte.
-  useEffect(() => {
-    if (!exportOpen) return
-    const onPointer = (e: MouseEvent): void => {
-      if (!exportMenuRef.current?.contains(e.target as Node)) setExportOpen(false)
-    }
-    const onKey = (e: KeyboardEvent): void => {
-      if (e.key !== 'Escape') return
-      setExportOpen(false)
-      exportButtonRef.current?.focus()
-    }
-    document.addEventListener('mousedown', onPointer)
-    document.addEventListener('keydown', onKey)
-    return () => {
-      document.removeEventListener('mousedown', onPointer)
-      document.removeEventListener('keydown', onKey)
-    }
-  }, [exportOpen])
 
   // Auto-scroll during analysis streaming
   useEffect(() => {
@@ -185,21 +140,10 @@ export function AnalysisPage() {
     }
   }, [analysis])
 
-  // Auto-scroll chat
-  useEffect(() => {
-    chatBottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [chatMessages, chat])
-
   // Load chat history when docId changes
   useEffect(() => {
     if (!docId) return
-    window.api.chat
-      .getHistory(docId)
-      .then(setChatMessages)
-      .catch(() => {
-        // silent - chat history load error is non-critical
-      })
-    // Also load the document so parsers can validate evidence quotes against it
+    // Load the document so parsers can validate evidence quotes against it
     window.api.documents
       .getById(docId)
       .then((d) => {
@@ -324,88 +268,19 @@ export function AnalysisPage() {
     void analysisStream.abort()
   }, [analysisStream])
 
-  const handleStopChat = useCallback(() => {
-    void chatStream.abort()
-  }, [chatStream])
-
-  const sendChatMessage = useCallback(async () => {
-    if (!docId || !chatInput.trim() || chat.kind === 'streaming') return
-
-    const userText = chatInput.trim()
-    setChatInput('')
-    setChat({ kind: 'streaming', buffer: '' })
-
-    // Optimistically add the user message
-    const tempUserMsg: ChatMessage = {
-      id: `tmp-${Date.now()}`,
-      documentId: docId,
-      role: 'user',
-      content: userText,
-      modelUsed: null,
-      createdAt: new Date().toISOString()
-    }
-    setChatMessages((prev) => [...prev, tempUserMsg])
-
-    await chatStream.run((runId) => window.api.chat.send(docId, userText, runId), {
-      onChunk: (chunk) => {
-        setChat((s) => (s.kind === 'streaming' ? { ...s, buffer: s.buffer + chunk } : s))
-      },
-      onComplete: () => {
-        setChat({ kind: 'idle' })
-        window.api.chat
-          .getHistory(docId)
-          .then(setChatMessages)
-          .catch(logRejection('AnalysisPage', 'chat.getHistory'))
-      },
-      onError: (err) => {
-        setChat({ kind: 'error', message: err })
-        // Remove the optimistic user message since sending failed
-        setChatMessages((prev) => prev.filter((m) => m.id !== tempUserMsg.id))
-      }
-    })
-  }, [docId, chatInput, chat, chatStream])
-
-  const handleClearChat = useCallback(async () => {
-    if (!docId) return
-    try {
-      await window.api.chat.clearHistory(docId)
-      setChatMessages([])
-    } catch (err) {
-      logRejection('AnalysisPage', 'chat.clearHistory')(err)
-    }
-  }, [docId])
-
-  const handleExport = useCallback(
-    async (format: ExportFormat) => {
-      if (analysis.kind !== 'done' || !analysis.result) return
-      setExportError(null)
-      setExportNotice(null)
-      setExportOpen(false)
-      const res = await window.api.exporter.analysis({
-        analysisId: analysis.result.analysis.id,
-        format,
-        redact: redactOnExport
-      })
-      if (res.ok) {
-        const redacted =
-          res.redactedCount && res.redactedCount > 0
-            ? ` (${t('analysis.redactedCount', { count: res.redactedCount })})`
-            : ''
-        setExportNotice(t('analysis.exportDone', { path: res.path ?? '' }) + redacted)
-        setTimeout(() => setExportNotice(null), 8000)
-        return
-      }
-      if (!res.cancelled && res.error) {
-        window.api.logs.write('error', 'AnalysisPage', 'Export failed', {
-          format,
-          error: res.error
-        })
-        setExportError(t('analysis.exportError', { error: res.error }))
-        setTimeout(() => setExportError(null), 8000)
-      }
-    },
-    [analysis, redactOnExport, t]
-  )
+  // Hinweise aus dem Export-Menue verschwinden nach ein paar Sekunden wieder.
+  const clearExportMessages = useCallback(() => {
+    setExportError(null)
+    setExportNotice(null)
+  }, [])
+  const showExportNotice = useCallback((message: string) => {
+    setExportNotice(message)
+    setTimeout(() => setExportNotice(null), 8000)
+  }, [])
+  const showExportError = useCallback((message: string) => {
+    setExportError(message)
+    setTimeout(() => setExportError(null), 8000)
+  }, [])
 
   const handleCopy = useCallback((text: string) => {
     navigator.clipboard?.writeText(text).catch(() => {
@@ -554,7 +429,7 @@ export function AnalysisPage() {
   const showChat =
     analysis.kind === 'done' ||
     analysis.kind === 'aborted' ||
-    (analysis.kind !== 'streaming' && chatMessages.length > 0)
+    (analysis.kind !== 'streaming' && chat.messages.length > 0)
   // Neue Analyse = frisch montierte Ansicht. Sonst blieben abgehakte Punkte und
   // aufgeklappte Karten aus dem vorherigen Ergebnis stehen.
   const resultKey =
@@ -662,51 +537,13 @@ export function AnalysisPage() {
         )}
 
         {/* Export - nur bei erfolgreichem Ergebnis */}
-        {analysis.kind === 'done' && (
-          <div className="relative" ref={exportMenuRef}>
-            <button
-              ref={exportButtonRef}
-              onClick={() => setExportOpen((v) => !v)}
-              title={t('analysis.exportMenu')}
-              aria-expanded={exportOpen}
-              aria-haspopup="menu"
-              className="flex items-center gap-1.5 rounded-lg border border-brand-border px-3 py-1.5 text-xs text-brand-text-dim transition-colors hover:border-brand-cyan/30 hover:text-brand-cyan"
-            >
-              <FileDown size={12} aria-hidden="true" />
-              {t('analysis.exportMenu')}
-            </button>
-            {exportOpen && (
-              <div
-                role="menu"
-                className="absolute end-0 top-full z-20 mt-1 w-64 rounded-xl border border-brand-border bg-brand-card p-2 shadow-xl"
-              >
-                {EXPORT_FORMATS.map(({ format, labelKey }) => (
-                  <button
-                    key={format}
-                    role="menuitem"
-                    onClick={() => handleExport(format)}
-                    className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-start text-xs text-brand-text transition-colors hover:bg-brand-card-hover"
-                  >
-                    {t(labelKey)}
-                  </button>
-                ))}
-                <label className="mt-1 flex cursor-pointer items-start gap-2 border-t border-brand-border px-3 pb-1 pt-2 text-xs text-brand-text-dim">
-                  <input
-                    type="checkbox"
-                    checked={redactOnExport}
-                    onChange={(e) => setRedactOnExport(e.target.checked)}
-                    className="mt-0.5 accent-[color:var(--color-brand-cyan)]"
-                  />
-                  <span>
-                    {t('analysis.redactBeforeExport')}
-                    <span className="mt-0.5 block text-[10px] leading-snug opacity-80">
-                      {t('analysis.redactBeforeExportHint')}
-                    </span>
-                  </span>
-                </label>
-              </div>
-            )}
-          </div>
+        {analysis.kind === 'done' && analysis.result && (
+          <ExportMenu
+            analysisId={analysis.result.analysis.id}
+            onStart={clearExportMessages}
+            onDone={showExportNotice}
+            onError={showExportError}
+          />
         )}
       </div>
 
@@ -819,9 +656,9 @@ export function AnalysisPage() {
           <p className="break-all text-sm text-brand-green">{exportNotice}</p>
         </div>
       )}
-      {chat.kind === 'error' && (
+      {chat.chat.kind === 'error' && (
         <div className="rounded-xl border border-brand-red/30 bg-brand-red/5 p-4">
-          <p className="text-sm text-brand-red">{chat.message}</p>
+          <p className="text-sm text-brand-red">{chat.chat.message}</p>
         </div>
       )}
 
@@ -915,115 +752,21 @@ export function AnalysisPage() {
         )}
 
         {/* Chat messages */}
-        {showChat && chatMessages.length > 0 && (
-          <div className="mt-8 space-y-4 border-t border-brand-border pt-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Sparkles size={14} className="text-brand-cyan" aria-hidden="true" />
-                <span className="text-xs font-semibold uppercase tracking-wider text-brand-text-dim">
-                  {t('analysis.conversation')}
-                </span>
-              </div>
-              <button
-                onClick={handleClearChat}
-                className="flex items-center gap-1 rounded-lg px-2 py-1 text-xs text-brand-text-dim hover:bg-brand-red/10 hover:text-brand-red"
-              >
-                <Trash2 size={12} aria-hidden="true" />
-                {t('analysis.chatDelete')}
-              </button>
-            </div>
-
-            {chatMessages.map((msg) => (
-              <div
-                key={msg.id}
-                className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
-                {msg.role === 'assistant' && (
-                  <div className="mt-1 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg bg-brand-cyan/10 text-brand-cyan">
-                    <Sparkles size={14} />
-                  </div>
-                )}
-                <div
-                  className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm ${
-                    msg.role === 'user'
-                      ? 'bg-brand-cyan/10 text-brand-text'
-                      : 'border border-brand-border bg-brand-card/60 text-brand-text'
-                  }`}
-                >
-                  {msg.role === 'assistant' ? (
-                    <MarkdownView content={msg.content} />
-                  ) : (
-                    <pre className="whitespace-pre-wrap font-sans leading-relaxed">
-                      {msg.content}
-                    </pre>
-                  )}
-                </div>
-                {msg.role === 'user' && (
-                  <div className="mt-1 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg bg-brand-card text-brand-text-dim">
-                    <User size={14} />
-                  </div>
-                )}
-              </div>
-            ))}
-
-            {chat.kind === 'streaming' && chat.buffer && (
-              <div className="flex gap-3">
-                <div className="mt-1 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg bg-brand-cyan/10 text-brand-cyan">
-                  <Sparkles size={14} />
-                </div>
-                <div className="max-w-[80%] rounded-2xl border border-brand-border bg-brand-card/60 px-4 py-3">
-                  <MarkdownView content={chat.buffer} />
-                  <span className="inline-block h-3 w-1.5 animate-pulse bg-brand-cyan" />
-                </div>
-              </div>
-            )}
-
-            <div ref={chatBottomRef} />
-          </div>
+        {showChat && chat.messages.length > 0 && (
+          <ChatThread messages={chat.messages} chat={chat.chat} onClear={chat.clear} />
         )}
       </div>
 
       {/* Chat input */}
       {showChat && (
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={chatInput}
-            onChange={(e) => setChatInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault()
-                sendChatMessage()
-              }
-            }}
-            disabled={chat.kind === 'streaming'}
-            placeholder={
-              chatMessages.length === 0
-                ? t('analysis.chatPlaceholderEmpty')
-                : t('analysis.chatPlaceholderMore')
-            }
-            className="flex-1 rounded-xl border border-brand-border bg-brand-dark/80 px-4 py-3 text-sm text-brand-text placeholder:text-brand-text-dim/70 focus:border-brand-cyan/50 focus:outline-none focus:ring-1 focus:ring-brand-cyan/20 disabled:opacity-50"
-          />
-          {chat.kind === 'streaming' ? (
-            <button
-              onClick={handleStopChat}
-              className="flex h-11 w-11 items-center justify-center rounded-xl border border-brand-red/30 bg-brand-red/10 text-brand-red transition-colors hover:bg-brand-red/20"
-              title={t('analysis.stopChat')}
-              aria-label={t('analysis.stopChat')}
-            >
-              <Square size={16} fill="currentColor" aria-hidden="true" />
-            </button>
-          ) : (
-            <button
-              onClick={sendChatMessage}
-              disabled={!chatInput.trim()}
-              aria-label={t('analysis.send')}
-              className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-cyan text-brand-dark transition-all hover:bg-brand-cyan-dim disabled:opacity-40"
-            >
-              <Send size={16} aria-hidden="true" />
-            </button>
-          )}
-        </div>
+        <ChatInput
+          value={chat.input}
+          onChange={chat.setInput}
+          onSend={chat.send}
+          onStop={chat.stop}
+          streaming={chat.chat.kind === 'streaming'}
+          hasMessages={chat.messages.length > 0}
+        />
       )}
     </div>
   )
