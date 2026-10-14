@@ -1,6 +1,7 @@
 import { ipcMain, shell } from 'electron'
 import { logger } from '../services/logger.service'
 import type { LogLevel } from '@shared/types'
+import { sanitizeLogMessage, sanitizeLogMeta, sanitizeLogSource } from '../lib/sanitize-log'
 
 const ALLOWED_LEVELS: ReadonlySet<LogLevel> = new Set<LogLevel>(['debug', 'info', 'warn', 'error'])
 
@@ -23,7 +24,9 @@ export function registerLogsIpc(): void {
         logger.warn('logs.ipc', 'Invalid source or message type from renderer')
         return
       }
-      logger[level](source, message, meta)
+      // Begrenzt statt ungeprueft: Fehlertexte aus dem Renderer koennen
+      // Dokumentinhalt tragen (siehe lib/sanitize-log).
+      logger[level](sanitizeLogSource(source), sanitizeLogMessage(message), sanitizeLogMeta(meta))
     }
   )
 
