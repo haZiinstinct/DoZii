@@ -1,6 +1,6 @@
 import { BrowserWindow } from 'electron'
 import { randomUUID } from 'crypto'
-import { eq, desc } from 'drizzle-orm'
+import { eq } from 'drizzle-orm'
 import { getDb, schema } from '../db'
 import { getDocumentById } from './document-store.service'
 import { getSettings } from './settings.service'
@@ -618,23 +618,4 @@ function persistAnalysis(params: {
 
   db.insert(schema.analyses).values(analysisRow).run()
   return { analysis: analysisRow as Analysis, aborted }
-}
-
-export function getAnalysisHistory(docId: string): Analysis[] {
-  const db = getDb()
-  return db
-    .select()
-    .from(schema.analyses)
-    .where(eq(schema.analyses.documentId, docId))
-    .orderBy(desc(schema.analyses.createdAt))
-    .all() as Analysis[]
-}
-
-export function getAllAnalyses(): Analysis[] {
-  const db = getDb()
-  return db
-    .select()
-    .from(schema.analyses)
-    .orderBy(desc(schema.analyses.createdAt))
-    .all() as Analysis[]
 }

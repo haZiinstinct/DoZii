@@ -34,7 +34,6 @@ const PASTE_MIN_CHARS = 80
 const PASTE_MAX_CHARS = 1_000_000
 
 /** Der Ersteindruck entsteht nach dem Import asynchron im Hauptprozess. */
-const IMPRESSION_POLL_MS = 500
 const IMPRESSION_TIMEOUT_MS = 8000
 
 function basename(path: string): string {
@@ -105,25 +104,45 @@ export function UploadPage() {
     }
   }, [])
 
-  /** Pollt den Ersteindruck, bricht nach IMPRESSION_TIMEOUT_MS oder beim Unmount ab. */
+  /**
+   * Wartet auf den Ersteindruck: per Push aus dem Hauptprozess
+   * (documents:firstImpression) statt alle 500 ms nachzufragen. Gibt null
+   * zurueck nach IMPRESSION_TIMEOUT_MS oder beim Unmount.
+   */
   const waitForFirstImpression = useCallback(
-    async (docId: string): Promise<FirstImpression | null> => {
-      const deadline = Date.now() + IMPRESSION_TIMEOUT_MS
-      while (!cancelledRef.current && Date.now() < deadline) {
-        const impression = await window.api.documents.getFirstImpression(docId).catch(() => null)
-        if (impression) return impression
-        if (cancelledRef.current || Date.now() + IMPRESSION_POLL_MS >= deadline) break
-        await new Promise<void>((resolve) => {
-          pollWakeRef.current = resolve
-          pollTimerRef.current = window.setTimeout(() => {
-            pollTimerRef.current = null
-            pollWakeRef.current = null
-            resolve()
-          }, IMPRESSION_POLL_MS)
+    (docId: string): Promise<FirstImpression | null> =>
+      new Promise((resolve) => {
+        let done = false
+        const finish = (value: FirstImpression | null): void => {
+          if (done) return
+          done = true
+          unsubscribe()
+          window.clearTimeout(timer)
+          if (pollTimerRef.current === timer) pollTimerRef.current = null
+          pollWakeRef.current = null
+          resolve(value)
+        }
+        // Erst abonnieren, dann nachsehen - sonst ginge ein Push verloren, der
+        // genau dazwischen eintrifft.
+        const unsubscribe = window.api.documents.onFirstImpression((impression) => {
+          if (impression.documentId === docId) finish(impression)
         })
-      }
-      return null
-    },
+        const timer = window.setTimeout(() => finish(null), IMPRESSION_TIMEOUT_MS)
+        pollTimerRef.current = timer
+        pollWakeRef.current = () => finish(null)
+        if (cancelledRef.current) {
+          finish(null)
+          return
+        }
+        window.api.documents
+          .getFirstImpression(docId)
+          .then((existing) => {
+            if (existing) finish(existing)
+          })
+          .catch(() => {
+            /* dann eben auf den Push warten */
+          })
+      }),
     []
   )
 

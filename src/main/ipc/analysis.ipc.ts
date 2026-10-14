@@ -1,5 +1,5 @@
 import { ipcMain, BrowserWindow } from 'electron'
-import { runAnalysis, getAnalysisHistory, getAllAnalyses } from '../services/analysis.service'
+import { runAnalysis } from '../services/analysis.service'
 import { abortRun, withRun } from '../services/stream-run'
 import {
   resolveActiveModel,
@@ -108,14 +108,5 @@ export function registerAnalysisIpc(): void {
   ipcMain.handle('analysis:abort', (_event, runId?: unknown) => {
     const aborted = abortRun('analysis', isValidId(runId) ? runId : undefined)
     logger.info('analysis.ipc', 'Analysis abort requested', { aborted })
-  })
-
-  ipcMain.handle('analysis:getHistory', (_event, docId: string) => {
-    if (!isValidId(docId)) return []
-    return getAnalysisHistory(docId)
-  })
-
-  ipcMain.handle('analysis:getAll', () => {
-    return getAllAnalyses()
   })
 }

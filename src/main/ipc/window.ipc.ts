@@ -17,8 +17,4 @@ export function registerWindowIpc(): void {
   ipcMain.on('window:close', (event) => {
     BrowserWindow.fromWebContents(event.sender)?.close()
   })
-
-  ipcMain.handle('window:isMaximized', (event) => {
-    return BrowserWindow.fromWebContents(event.sender)?.isMaximized() ?? false
-  })
 }

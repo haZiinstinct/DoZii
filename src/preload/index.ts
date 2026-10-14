@@ -60,8 +60,7 @@ export const api = {
   window: {
     minimize: (): void => ipcRenderer.send('window:minimize'),
     maximize: (): void => ipcRenderer.send('window:maximize'),
-    close: (): void => ipcRenderer.send('window:close'),
-    isMaximized: (): Promise<boolean> => ipcRenderer.invoke('window:isMaximized')
+    close: (): void => ipcRenderer.send('window:close')
   },
 
   // Documents
@@ -111,9 +110,7 @@ export const api = {
     onChunk: subscribeRun<string>('analysis:chunk'),
     onPhase: subscribeRun<AnalysisPhaseEvent>('analysis:phase'),
     onComplete: subscribeRun<AnalysisRunResult>('analysis:complete'),
-    onError: subscribeRun<string>('analysis:error'),
-    getHistory: (docId: string) => ipcRenderer.invoke('analysis:getHistory', docId),
-    getAll: () => ipcRenderer.invoke('analysis:getAll')
+    onError: subscribeRun<string>('analysis:error')
   },
 
   // Chat (follow-up conversation per document)
@@ -195,8 +192,6 @@ export const api = {
 
   // Export
   exporter: {
-    analysisAsPdf: (analysisId: string): Promise<{ ok: boolean; path?: string; error?: string }> =>
-      ipcRenderer.invoke('exporter:analysisAsPdf', analysisId),
     /** Export in PDF, Markdown, Text oder Word-kompatibles RTF, optional geschwaerzt. */
     analysis: (request: ExportRequest): Promise<ExportResult> =>
       ipcRenderer.invoke('exporter:analysis', request)
