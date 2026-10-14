@@ -6,6 +6,7 @@ import { MainLayout } from './components/layout/MainLayout'
 import { applyLanguageDirection } from './hooks/useLanguageDirection'
 import { applyAppearance } from './hooks/useAppearance'
 import { switchLanguage } from './i18n'
+import { useSettings } from './stores/SettingsProvider'
 
 // Route-basiertes Code-Splitting: jede Seite wird erst beim Navigieren geladen,
 // statt alles in einen Renderer-Chunk zu packen. Named exports -> default mappen.
@@ -50,26 +51,40 @@ export function App() {
    * null = noch nicht geprueft. Solange wird nichts gerendert, sonst blitzt
    * die Hochlade-Seite fuer einen Moment auf, bevor umgeleitet wird.
    */
-  const [firstLaunchDone, setFirstLaunchDone] = useState<boolean | null>(null)
+  const { settings, loadFailed } = useSettings()
+  // Der Assistent meldet sein Ende auch direkt - die Einstellung kommt erst
+  // mit der Antwort des Hauptprozesses.
+  const [wizardDone, setWizardDone] = useState(false)
+  // Einstellungen nicht lesbar: lieber die App zeigen als jemanden im
+  // Assistenten festhalten.
+  const firstLaunchDone: boolean | null = loadFailed
+    ? true
+    : settings
+      ? settings.firstLaunchDone || wizardDone
+      : null
 
-  // Persistierte UI-Sprache laden und auf i18n + Schreibrichtung anwenden.
+  // Richtung fuer die Default-Sprache sofort setzen (vermeidet RTL-Flackern).
   useEffect(() => {
-    // Richtung fuer die Default-Sprache sofort setzen (vermeidet RTL-Flackern).
     applyLanguageDirection(i18n.language)
-    window.api.settings
-      .get()
-      .then((s) => {
-        if (s.language && s.language !== i18n.language) void switchLanguage(s.language)
-        if (s.language) applyLanguageDirection(s.language)
-        applyAppearance(s.fontScale, s.highContrast)
-        setFirstLaunchDone(s.firstLaunchDone)
-      })
-      .catch(() => {
-        // Einstellungen nicht lesbar: lieber die App zeigen als jemanden im
-        // Assistenten festhalten.
-        setFirstLaunchDone(true)
-      })
   }, [])
+
+  // Persistierte UI-Sprache auf i18n + Schreibrichtung anwenden.
+  const language = settings?.language
+  useEffect(() => {
+    if (!language) return
+    if (language !== i18n.language) void switchLanguage(language)
+    applyLanguageDirection(language)
+  }, [language])
+
+  // Schrift und Kontrast gelten in der ganzen App, nicht erst auf der
+  // Einstellungsseite.
+  const fontScale = settings?.fontScale
+  const highContrast = settings?.highContrast
+  useEffect(() => {
+    if (fontScale !== undefined && highContrast !== undefined) {
+      applyAppearance(fontScale, highContrast)
+    }
+  }, [fontScale, highContrast])
 
   if (firstLaunchDone === null) return <RouteFallback />
 
@@ -77,10 +92,7 @@ export function App() {
     <HashRouter>
       <Suspense fallback={<RouteFallback />}>
         <Routes>
-          <Route
-            path="/welcome"
-            element={<WelcomeWizard onDone={() => setFirstLaunchDone(true)} />}
-          />
+          <Route path="/welcome" element={<WelcomeWizard onDone={() => setWizardDone(true)} />} />
           <Route element={<MainLayout />}>
             {/*
               Beim allerersten Start zuerst durch den Assistenten. Danach

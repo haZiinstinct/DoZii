@@ -57,6 +57,7 @@ import { DEFAULT_MODEL, isHeavyModeCapable } from '@shared/model-catalog'
 import { DiagnosticReportCard } from '@/components/DiagnosticReportCard'
 import { useTranslation } from 'react-i18next'
 import { logRejection } from '@/lib/log-rejection'
+import { useSettings } from '@/stores/SettingsProvider'
 
 // ============================================================================
 // State machine: discriminated union prevents invalid boolean combinations
@@ -134,11 +135,14 @@ export function AnalysisPage() {
   const [exportOpen, setExportOpen] = useState(false)
   const exportMenuRef = useRef<HTMLDivElement>(null)
   const exportButtonRef = useRef<HTMLButtonElement>(null)
-  const [redactOnExport, setRedactOnExport] = useState(false)
+  const { settings } = useSettings()
+  // Vorbelegung aus den Einstellungen, bis der Nutzer im Export-Menue umschaltet.
+  const [redactOverride, setRedactOnExport] = useState<boolean | null>(null)
+  const redactOnExport = redactOverride ?? settings?.redactOnExport ?? false
   const [doc, setDoc] = useState<DoziiDocument | null>(null)
   const [documentType, setDocumentType] = useState<string | null>(null)
   /** Aktuell gewaehltes Modell - fuer die Warnung bei zu kleinen Modellen. */
-  const [selectedModel, setSelectedModel] = useState('')
+  const selectedModel = settings?.selectedModel ?? ''
   const [letterNotes, setLetterNotes] = useState('')
   const [showOriginal, setShowOriginal] = useState(false)
   const [activeQuoteId, setActiveQuoteId] = useState<string | null>(null)
@@ -226,19 +230,6 @@ export function AnalysisPage() {
         return undefined
     }
   }, [documentType])
-
-  // Vorbelegung der Schwaerzen-Option aus den Einstellungen.
-  useEffect(() => {
-    window.api.settings
-      .get()
-      .then((s) => {
-        setRedactOnExport(s.redactOnExport)
-        setSelectedModel(s.selectedModel)
-      })
-      .catch(() => {
-        /* Default false */
-      })
-  }, [])
 
   const startAnalysis = useCallback(
     async (question?: string, extra?: AnalysisExtra) => {

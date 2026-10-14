@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import type { FirstImpression } from '@shared/types'
+import { useSettings } from '@/stores/SettingsProvider'
 
 interface ImportedDoc {
   id: string
@@ -42,6 +43,7 @@ function basename(path: string): string {
 }
 
 export function UploadPage() {
+  const autoAnalyze = useSettings().settings?.autoAnalyze ?? false
   const navigate = useNavigate()
   const { t, i18n } = useTranslation()
   // Zahlen folgen der UI-Sprache: 12.345 (de) vs 12,345 (en) vs ١٢٬٣٤٥ (ar).
@@ -154,9 +156,8 @@ export function UploadPage() {
     async (docId: string) => {
       // Ohne Luecke im Ladezustand: erst hier endet die Import-Anzeige.
       setWaitingImpression(true)
-      const settings = await window.api.settings.get().catch(() => null)
       if (cancelledRef.current) return
-      if (!settings?.autoAnalyze) {
+      if (!autoAnalyze) {
         setWaitingImpression(false)
         navigate(`/document/${docId}`)
         return
@@ -170,7 +171,7 @@ export function UploadPage() {
         navigate(`/document/${docId}`)
       }
     },
-    [navigate, waitForFirstImpression]
+    [autoAnalyze, navigate, waitForFirstImpression]
   )
 
   const handleImport = useCallback(

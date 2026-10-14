@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { SUPPORTED_LANGUAGES, type LanguageCode } from '@shared/languages'
 import { applyLanguageDirection } from '../../hooks/useLanguageDirection'
 import { switchLanguage } from '../../i18n'
+import { useSettings } from '@/stores/SettingsProvider'
 
 /**
  * Globus-Dropdown in der Titelleiste: schaltet die UI-Sprache um (alle 9
@@ -11,6 +12,7 @@ import { switchLanguage } from '../../i18n'
  * Schreibrichtung. Schliesst bei Klick ausserhalb und mit Escape.
  */
 export function LanguageSwitcher(): React.JSX.Element {
+  const { update: updateSettings } = useSettings()
   const { i18n, t } = useTranslation()
   const [open, setOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -39,11 +41,8 @@ export function LanguageSwitcher(): React.JSX.Element {
     if (code === i18n.language) return
     await switchLanguage(code)
     applyLanguageDirection(code)
-    try {
-      await window.api.settings.update({ language: code })
-    } catch {
-      /* Persistenz ist best-effort - der Wechsel ist visuell schon erfolgt */
-    }
+    // Persistenz ist best-effort - der Wechsel ist visuell schon erfolgt.
+    await updateSettings({ language: code })
   }
 
   return (

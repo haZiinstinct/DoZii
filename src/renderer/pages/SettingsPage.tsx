@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   Settings,
   Cpu,
@@ -42,6 +42,7 @@ import { useTheme } from '@/hooks/useTheme'
 import { useAppearance } from '@/hooks/useAppearance'
 import { applyLanguageDirection } from '@/hooks/useLanguageDirection'
 import { logRejection } from '@/lib/log-rejection'
+import { useSettings } from '@/stores/SettingsProvider'
 
 /**
  * Die Auswahlliste kommt aus dem zentralen Modellkatalog. Frueher standen die
@@ -156,8 +157,8 @@ export function SettingsPage() {
   const { t } = useTranslation()
   const [hardware, setHardware] = useState<HardwareInfo | null>(null)
   const [models, setModels] = useState<OllamaModel[]>([])
-  const [selectedModel, setSelectedModel] = useState('')
-  const [settings, setSettings] = useState<AppSettings | null>(null)
+  const { settings, update: updateSettings, reload: reloadSettings } = useSettings()
+  const selectedModel = settings?.selectedModel ?? ''
   const [pulling, setPulling] = useState<string | null>(null)
   const [pullProgress, setPullProgress] = useState('')
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
@@ -166,12 +167,13 @@ export function SettingsPage() {
   const [modelTab, setModelTab] = useState<'cpu' | 'gpu'>('cpu')
   const [appVersion, setAppVersion] = useState('')
   const [updateStatus, setUpdateStatus] = useState<UpdateStatus>({ state: 'idle' })
-  const [ollamaUrlDraft, setOllamaUrlDraft] = useState('')
+  // null = unveraendert, dann zeigt das Feld den gespeicherten Wert.
+  const [ollamaUrlEdit, setOllamaUrlDraft] = useState<string | null>(null)
+  const ollamaUrlDraft = ollamaUrlEdit ?? settings?.ollamaUrl ?? ''
   const [ollamaUrlInvalid, setOllamaUrlInvalid] = useState(false)
   const [ollamaUrlSaved, setOllamaUrlSaved] = useState(false)
   // Zuletzt gespeicherte Adresse - verhindert doppeltes Speichern, wenn der
   // Klick auf "Speichern" zuerst ein Blur im Textfeld ausloest.
-  const persistedOllamaUrl = useRef('')
   const {
     connected,
     installed,
@@ -206,15 +208,6 @@ export function SettingsPage() {
         }
       })
       .catch(logRejection('SettingsPage', 'hardware.detect'))
-    window.api.settings
-      .get()
-      .then((s) => {
-        setSettings(s)
-        setSelectedModel(s.selectedModel)
-        setOllamaUrlDraft(s.ollamaUrl)
-        persistedOllamaUrl.current = s.ollamaUrl
-      })
-      .catch(logRejection('SettingsPage', 'settings.get'))
     void loadModels()
     window.api.update
       .getState()
@@ -229,21 +222,19 @@ export function SettingsPage() {
 
   const handleToggleAutoUpdate = async () => {
     if (!settings) return
-    const next = await window.api.settings.update({ autoUpdateCheck: !settings.autoUpdateCheck })
-    setSettings(next)
+    await updateSettings({ autoUpdateCheck: !settings.autoUpdateCheck })
   }
 
   const handleToggleSetting = async (key: BooleanSettingKey) => {
     if (!settings) return
     const patch: Partial<AppSettings> = {}
     patch[key] = !settings[key]
-    const next = await window.api.settings.update(patch)
-    setSettings(next)
+    await updateSettings(patch)
   }
 
   const handleSaveOllamaUrl = async () => {
     const value = ollamaUrlDraft.trim()
-    if (value === persistedOllamaUrl.current) return
+    if (value === settings?.ollamaUrl) return
 
     // Muss zur Pruefung im Hauptprozess passen (settings.service:
     // isValidOllamaUrl): nur der eigene Rechner. Ein fremder Host wuerde
@@ -258,20 +249,15 @@ export function SettingsPage() {
     // Erst nach Antwort des Hauptprozesses als gespeichert melden. Er prueft
     // selbst noch einmal und behaelt bei einem abgelehnten Wert den alten -
     // dann stimmt die Rueckgabe nicht mit der Eingabe ueberein.
-    try {
-      const next = await window.api.settings.update({ ollamaUrl: value })
-      setSettings(next)
-      persistedOllamaUrl.current = next.ollamaUrl
-      if (next.ollamaUrl !== value) {
-        setOllamaUrlInvalid(true)
-        return
-      }
-      setOllamaUrlDraft(next.ollamaUrl)
-      setOllamaUrlSaved(true)
-      setTimeout(() => setOllamaUrlSaved(false), 3000)
-    } catch (err) {
-      logRejection('SettingsPage', 'settings.update ollamaUrl')(err)
+    const next = await updateSettings({ ollamaUrl: value })
+    if (!next) return
+    if (next.ollamaUrl !== value) {
+      setOllamaUrlInvalid(true)
+      return
     }
+    setOllamaUrlDraft(null)
+    setOllamaUrlSaved(true)
+    setTimeout(() => setOllamaUrlSaved(false), 3000)
   }
 
   const handleToggleOcrLanguage = async (lang: OcrLanguage) => {
@@ -282,26 +268,25 @@ export function SettingsPage() {
     const ocrLanguages = OCR_LANGUAGES.filter((code) =>
       code === lang ? !active : settings.ocrLanguages.includes(code)
     )
-    const next = await window.api.settings.update({ ocrLanguages })
-    setSettings(next)
+    await updateSettings({ ocrLanguages })
   }
 
   const handleSetOcrQuality = async (ocrQuality: AppSettings['ocrQuality']) => {
-    const next = await window.api.settings.update({ ocrQuality })
-    setSettings(next)
+    await updateSettings({ ocrQuality })
   }
 
   const handleSetLanguage = async (language: AppSettings['language']) => {
     // Nachladen vor dem Umschalten - sonst blitzt kurz Englisch auf.
     await switchLanguage(language)
     applyLanguageDirection(language)
-    const next = await window.api.settings.update({ language })
-    setSettings(next)
+    await updateSettings({ language })
   }
 
+  // Die Auswahl speichert der Hauptprozess (ollama:selectModel) - danach den
+  // gemeinsamen Stand neu laden, damit z.B. die Analyseseite sie kennt.
   const handleSelectModel = async (name: string) => {
-    setSelectedModel(name)
     await window.api.ollama.selectModel(name)
+    await reloadSettings()
   }
 
   const handleDeleteClick = (name: string) => {
@@ -323,7 +308,8 @@ export function SettingsPage() {
     try {
       await window.api.ollama.deleteModel(name)
       await loadModels()
-      if (selectedModel === name) setSelectedModel('')
+      // War es das gewaehlte, hat der Hauptprozess die Auswahl geleert.
+      if (selectedModel === name) await reloadSettings()
     } catch (err) {
       setDeleteError(
         t('settings.deleteFailed', {

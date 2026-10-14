@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect } from 'react'
+import { useSettings } from '@/stores/SettingsProvider'
 import type { FontScale } from '@shared/types'
 
 /**
@@ -24,43 +25,26 @@ export function applyAppearance(fontScale: FontScale, highContrast: boolean): vo
 }
 
 export function useAppearance() {
-  const [fontScale, setFontScaleState] = useState<FontScale>('normal')
-  const [highContrast, setHighContrastState] = useState(false)
+  const { settings, update } = useSettings()
+  const fontScale: FontScale = settings?.fontScale ?? 'normal'
+  const highContrast = settings?.highContrast ?? false
 
   useEffect(() => {
-    let cancelled = false
-    window.api.settings
-      .get()
-      .then((settings) => {
-        if (cancelled) return
-        setFontScaleState(settings.fontScale)
-        setHighContrastState(settings.highContrast)
-        applyAppearance(settings.fontScale, settings.highContrast)
-      })
-      .catch(() => {
-        /* Defaults bleiben aktiv */
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [])
+    applyAppearance(fontScale, highContrast)
+  }, [fontScale, highContrast])
 
   const setFontScale = useCallback(
     async (next: FontScale) => {
-      setFontScaleState(next)
-      applyAppearance(next, highContrast)
-      await window.api.settings.update({ fontScale: next })
+      await update({ fontScale: next })
     },
-    [highContrast]
+    [update]
   )
 
   const setHighContrast = useCallback(
     async (next: boolean) => {
-      setHighContrastState(next)
-      applyAppearance(fontScale, next)
-      await window.api.settings.update({ highContrast: next })
+      await update({ highContrast: next })
     },
-    [fontScale]
+    [update]
   )
 
   return { fontScale, highContrast, setFontScale, setHighContrast }

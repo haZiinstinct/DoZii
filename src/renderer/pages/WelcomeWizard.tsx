@@ -16,12 +16,14 @@ import { useTranslation } from 'react-i18next'
 import type { HardwareInfo } from '@shared/types'
 import { findModel } from '@shared/model-catalog'
 import { usableVramGb } from '@shared/hardware-profile'
+import { useSettings } from '@/stores/SettingsProvider'
 
 type OllamaState = 'checking' | 'connected' | 'installed-not-running' | 'not-installed'
 
 export function WelcomeWizard({ onDone }: { onDone?: () => void }) {
   const navigate = useNavigate()
   const { t } = useTranslation()
+  const { update: updateSettings } = useSettings()
   const [hardware, setHardware] = useState<HardwareInfo | null>(null)
   const [ollamaState, setOllamaState] = useState<OllamaState>('checking')
   const [scanning, setScanning] = useState(true)
@@ -131,7 +133,7 @@ export function WelcomeWizard({ onDone }: { onDone?: () => void }) {
   const cpuOnly = hardware ? usableVramGb(hardware.gpu) === 0 : false
 
   const handleContinue = async () => {
-    await window.api.settings.update({ firstLaunchDone: true })
+    await updateSettings({ firstLaunchDone: true })
     onDone?.()
     navigate('/')
   }

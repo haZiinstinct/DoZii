@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import type { ThemeMode } from '@shared/types'
-import { logRejection } from '@/lib/log-rejection'
+import { useSettings } from '@/stores/SettingsProvider'
 
 /**
  * Theme management. The CSS tokens are defined for dark-first in globals.css;
@@ -17,55 +17,33 @@ function applyTheme(effective: 'dark' | 'light'): void {
   }
 }
 
-function resolveEffective(mode: ThemeMode): 'dark' | 'light' {
-  if (mode === 'system') {
-    return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'
-  }
-  return mode
-}
-
 export function useTheme() {
-  const [mode, setModeState] = useState<ThemeMode>('dark')
-  const [effective, setEffective] = useState<'dark' | 'light'>('dark')
+  const { settings, update } = useSettings()
+  const mode: ThemeMode = settings?.theme ?? 'dark'
+  const [systemLight, setSystemLight] = useState(
+    () => window.matchMedia('(prefers-color-scheme: light)').matches
+  )
+  const effective: 'dark' | 'light' = mode === 'system' ? (systemLight ? 'light' : 'dark') : mode
 
-  // Load persisted setting on mount
   useEffect(() => {
-    let cancelled = false
-    window.api.settings
-      .get()
-      .then((settings) => {
-        if (cancelled) return
-        setModeState(settings.theme)
-        const eff = resolveEffective(settings.theme)
-        setEffective(eff)
-        applyTheme(eff)
-      })
-      .catch(logRejection('useTheme', 'settings.get'))
-    return () => {
-      cancelled = true
-    }
-  }, [])
+    applyTheme(effective)
+  }, [effective])
 
   // Listen to system theme changes when in system mode
   useEffect(() => {
     if (mode !== 'system') return
     const mql = window.matchMedia('(prefers-color-scheme: light)')
-    const handler = () => {
-      const eff = mql.matches ? 'light' : 'dark'
-      setEffective(eff)
-      applyTheme(eff)
-    }
+    const handler = (): void => setSystemLight(mql.matches)
     mql.addEventListener('change', handler)
     return () => mql.removeEventListener('change', handler)
   }, [mode])
 
-  const setMode = useCallback(async (next: ThemeMode) => {
-    setModeState(next)
-    const eff = resolveEffective(next)
-    setEffective(eff)
-    applyTheme(eff)
-    await window.api.settings.update({ theme: next })
-  }, [])
+  const setMode = useCallback(
+    async (next: ThemeMode) => {
+      await update({ theme: next })
+    },
+    [update]
+  )
 
   return { mode, effective, setMode }
 }

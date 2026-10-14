@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import { App } from './App'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import './styles/globals.css'
+import { SettingsProvider } from './stores/SettingsProvider'
 
 // Forward uncaught errors and promise rejections to the main-process logger
 window.addEventListener('error', (event) => {
@@ -38,7 +39,9 @@ window.api.logs.write('info', 'renderer', 'Renderer started').catch(() => {
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <ErrorBoundary>
-      <App />
+      <SettingsProvider>
+        <App />
+      </SettingsProvider>
     </ErrorBoundary>
   </React.StrictMode>
 )
