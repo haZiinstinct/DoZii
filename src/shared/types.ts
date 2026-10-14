@@ -193,7 +193,7 @@ export interface AnalysisNotice {
 export interface Analysis {
   id: string
   documentId: string
-  mode: string
+  mode: AnalysisMode
   prompt: string
   result: string
   structuredResult: string | null
@@ -259,19 +259,27 @@ export interface PullProgress {
 // First Impression (auto-generated classification on document import)
 // ============================================================================
 
-export type DocumentTypeCategory =
-  | 'arbeitszeugnis'
-  | 'vertrag'
-  | 'brief'
-  | 'rechnung'
-  | 'bescheid'
-  | 'zeugnis'
-  | 'bewerbung'
-  | 'sonstiges'
+export const DOCUMENT_TYPE_CATEGORIES = [
+  'arbeitszeugnis',
+  'vertrag',
+  'brief',
+  'rechnung',
+  'bescheid',
+  'zeugnis',
+  'bewerbung',
+  'sonstiges'
+] as const
+
+export type DocumentTypeCategory = (typeof DOCUMENT_TYPE_CATEGORIES)[number]
 
 export interface FirstImpression {
   documentId: string
-  documentType: DocumentTypeCategory | string
+  /**
+   * Frueher `DocumentTypeCategory | string` - das ist nur `string`, die
+   * Kategorien waren damit wertlos. Unbekannte Antworten des Modells werden
+   * beim Speichern und Lesen auf 'sonstiges' abgebildet.
+   */
+  documentType: DocumentTypeCategory
   recommendedMode: AnalysisMode
   firstImpression: string
   modelUsed: string
@@ -417,20 +425,28 @@ export interface SystemMetrics {
  * dem Regelkatalog in `@shared/deadline-rules` - Modelle rechnen mit Daten
  * notorisch falsch. Das Modell liefert nur den Anker (Startdatum + Zitat).
  */
-export type DeadlineKind =
-  | 'widerspruch'
-  | 'einspruch'
-  | 'klage'
-  | 'zahlung'
-  | 'widerruf'
-  | 'kuendigung'
-  | 'mitwirkung'
-  | 'sonstige'
+/** Liste und Typ aus einer Quelle - der Parser prueft gegen dieselbe Liste. */
+export const DEADLINE_KINDS = [
+  'widerspruch',
+  'einspruch',
+  'klage',
+  'zahlung',
+  'widerruf',
+  'kuendigung',
+  'mitwirkung',
+  'sonstige'
+] as const
 
-export type DeadlineConfidence = 'high' | 'medium' | 'low'
+export type DeadlineKind = (typeof DEADLINE_KINDS)[number]
 
-/** Zeiteinheit einer Frist. */
-export type DeadlinePeriodUnit = 'day' | 'week' | 'month' | 'year'
+export const DEADLINE_CONFIDENCES = ['high', 'medium', 'low'] as const
+
+export type DeadlineConfidence = (typeof DEADLINE_CONFIDENCES)[number]
+
+/** Zeiteinheiten einer Frist. */
+export const DEADLINE_PERIOD_UNITS = ['day', 'week', 'month', 'year'] as const
+
+export type DeadlinePeriodUnit = (typeof DEADLINE_PERIOD_UNITS)[number]
 
 /**
  * Roh-Anker, wie ihn das Modell aus dem Dokument liest. Enthaelt bewusst

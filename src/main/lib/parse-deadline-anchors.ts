@@ -10,30 +10,18 @@
  * Liste bzw. null-Felder. Keine Electron-/Node-APIs, damit testbar.
  */
 
-import type {
-  DeadlineAnchor,
-  DeadlineConfidence,
-  DeadlineKind,
-  DeadlinePeriodUnit
+import {
+  DEADLINE_CONFIDENCES,
+  DEADLINE_KINDS,
+  DEADLINE_PERIOD_UNITS,
+  type DeadlineAnchor,
+  type DeadlineConfidence,
+  type DeadlineKind,
+  type DeadlinePeriodUnit
 } from '@shared/types'
 import { isPlausiblePeriod } from '@shared/deadline-calc'
 import { extractJsonObject } from './extract-json'
 import { MONTHS_LENIENT } from '@shared/german-months'
-
-const DEADLINE_KINDS: readonly DeadlineKind[] = [
-  'widerspruch',
-  'einspruch',
-  'klage',
-  'zahlung',
-  'widerruf',
-  'kuendigung',
-  'mitwirkung',
-  'sonstige'
-]
-
-const PERIOD_UNITS: readonly DeadlinePeriodUnit[] = ['day', 'week', 'month', 'year']
-
-const CONFIDENCES: readonly DeadlineConfidence[] = ['high', 'medium', 'low']
 
 /** Fallback, wenn das Modell kein Label liefert - die Fristenliste braucht eine Zeile. */
 const FALLBACK_LABELS: Record<DeadlineKind, string> = {
@@ -192,7 +180,7 @@ function asKind(value: unknown): DeadlineKind {
 /** Unbekannte Confidence wird konservativ als 'low' behandelt. */
 function asConfidence(value: unknown): DeadlineConfidence {
   const text = asText(value)?.toLowerCase()
-  return CONFIDENCES.find((level) => level === text) ?? 'low'
+  return DEADLINE_CONFIDENCES.find((level) => level === text) ?? 'low'
 }
 
 /**
@@ -222,7 +210,7 @@ function asPeriodValue(value: unknown): number | null {
 
 function asPeriodUnit(value: unknown): DeadlinePeriodUnit | null {
   const text = asText(value)?.toLowerCase()
-  return PERIOD_UNITS.find((unit) => unit === text) ?? null
+  return DEADLINE_PERIOD_UNITS.find((unit) => unit === text) ?? null
 }
 
 function toIsoDate(year: number, month: number, day: number): string | null {

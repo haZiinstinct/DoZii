@@ -5,9 +5,23 @@ import { extractJsonObject } from '../lib/extract-json'
 import { getSettings } from './settings.service'
 import { chatOnce } from './ollama-client.service'
 import { logger } from './logger.service'
-import { ANALYSIS_MODES, type FirstImpression, type AnalysisMode } from '@shared/types'
+import {
+  ANALYSIS_MODES,
+  DOCUMENT_TYPE_CATEGORIES,
+  type AnalysisMode,
+  type DocumentTypeCategory,
+  type FirstImpression
+} from '@shared/types'
 
 const ALLOWED_MODES = new Set<AnalysisMode>(ANALYSIS_MODES)
+const DOCUMENT_TYPES = new Set<string>(DOCUMENT_TYPE_CATEGORIES)
+
+/** Unbekanntes vom Modell (oder aus alten Datensaetzen) wird 'sonstiges'. */
+function toDocumentType(value: unknown): DocumentTypeCategory {
+  return typeof value === 'string' && DOCUMENT_TYPES.has(value)
+    ? (value as DocumentTypeCategory)
+    : 'sonstiges'
+}
 
 /**
  * Load an existing first impression for the given document, or null.
@@ -22,7 +36,7 @@ export function getFirstImpression(documentId: string): FirstImpression | null {
   if (!row) return null
   return {
     documentId: row.documentId,
-    documentType: row.documentType,
+    documentType: toDocumentType(row.documentType),
     recommendedMode: row.recommendedMode as AnalysisMode,
     firstImpression: row.firstImpression,
     modelUsed: row.modelUsed,
@@ -87,7 +101,7 @@ export async function generateFirstImpression(
       return null
     }
 
-    const documentType = typeof parsed.documentType === 'string' ? parsed.documentType : 'sonstiges'
+    const documentType = toDocumentType(parsed.documentType)
     const recommendedModeRaw =
       typeof parsed.recommendedMode === 'string' ? parsed.recommendedMode : 'freeform'
     const recommendedMode = ALLOWED_MODES.has(recommendedModeRaw as AnalysisMode)
