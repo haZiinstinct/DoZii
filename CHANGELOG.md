@@ -5,7 +5,63 @@ Das Format orientiert sich an [Keep a Changelog](https://keepachangelog.com/de/1
 
 ## [Unveröffentlicht]
 
+## [1.4.0] – 2026-10-14
+
+Abarbeitung des Full-Stack-Audits zu 1.3.8 (`docs/AUDIT-2026-10-12.md`, Pakete 1 und 2).
+
+### Behoben
+
+- **Der Stopp-Knopf greift sofort, auch ohne Grafikkarte** – bisher erreichte der Abbruch
+  eine Analyse erst, wenn Ollama die ersten Antwortkopfzeilen geschickt hatte; auf der CPU
+  dauert das Minuten. Außerdem brach „Stopp" alles ab, auch einen laufenden
+  Modell-Download. Jede Analyse und jede Chat-Antwort hat jetzt einen eigenen Abbruch.
+- **Nach einem Moduswechsel landen keine Reste der alten Analyse mehr in der neuen** – jeder
+  Lauf trägt eine eigene Kennung, fremde Textstücke werden verworfen.
+- **Fristen-Radar: kein „abgelaufen" mehr, solange die Frist noch läuft** – eine ab dem
+  Bescheiddatum gerechnete Rechtsbehelfsfrist zeigt jetzt „frühestens … / spätestens …"
+  (Bekanntgabe per Post am vierten Tag, § 41 VwVfG). Abgelaufen ist sie erst, wenn auch das
+  späte Datum vorbei ist.
+- **Ein Geburtsdatum im Briefkopf wird nicht mehr zum Fristbeginn** – vorher stand eine
+  Widerspruchsfrist von 1985 als abgelaufen in der Liste.
+- **Weitere Fristen werden erkannt**: Kündigungsschutzklage (drei Wochen, § 4 KSchG),
+  feste Zahlungstermine („bis zum 30.04.2026 zu überweisen"), ausgeschriebene Zahlen wie
+  „vierzehn Tagen", Widerruf und Kündigung. Kündigungstermine am Wochenende werden nicht
+  mehr nach § 193 BGB verschoben.
+- **Die Jahresfrist bei fehlender Rechtsbehelfsbelehrung entfällt** – ob eine Belehrung
+  fehlt, lässt sich am Text nicht sicher erkennen; ein zu Unrecht versprochenes Jahr kostet
+  den Widerspruch.
+- **Schwärzung erfasst Aktenzeichen wie „4 Ca 1234/24" oder „12 Js 456/24"** vollständig.
+- **Der Chat antwortet in der eingestellten Sprache**, nicht in der des Dokuments.
+- **Der Ersteindruck funktioniert mit Denk-Modellen wie qwen3** wieder.
+- **Der Willkommens-Assistent bleibt bedienbar**, wenn die Hardware-Erkennung scheitert.
+- **Abbrechen des Speichern-Dialogs ist kein Fehler mehr** – die Dokumentansicht zeigte
+  „Abgebrochen" als rote Meldung.
+- **Ollama stoppen beendet nur das Ollama, das DoZii selbst gestartet hat** – ein fremdes
+  läuft weiter, die Einstellungen sagen warum.
+- Logdateien wechseln jetzt auch zur Laufzeit (Mitternacht, 5 MB).
+
+### Sicherheit
+
+- **Dokumenttext ist in allen Prompts als Daten markiert** – mit einer Kennung, die das
+  Dokument nicht fälschen kann. Bisher erklärte nur der Brief-Prompt, dass Anweisungen im
+  Dokument nicht befolgt werden.
+- **Links in Ergebnissen sind nicht mehr klickbar** – die Adresse bleibt sichtbar.
+- **Strengere Content-Security-Policy in der gebauten App** – unter `file://` galt bisher
+  nur die lockere Variante aus `index.html`.
+- Das Fenster lässt keine Navigation zu fremden Seiten mehr zu.
+- Einstellungen werden vor dem Speichern geprüft; eine fremde Ollama-Adresse wird verworfen.
+- Renderer-Logeinträge werden begrenzt, damit kein Dokumentinhalt ins Log rutscht.
+- `sharp` 0.35.5 (Sicherheitslücke in 0.34), weitere Abhängigkeiten aktualisiert.
+
 ### Geändert
+
+- **Dokumente löschen nur noch mit Rückfrage** – erster Klick fragt nach, zweiter löscht.
+- Das Installationspaket enthält keinen Quelltext und keine doppelten
+  Texterkennungs-Daten mehr.
+- Barrierefreiheit: Ordner-Import per Tastatur, Kommandopalette mit Fokusfalle,
+  Auswahlen als Radiogruppen, Export-Menü schließt mit Escape.
+- Der Ollama-Status wird nur noch einmal pro App abgefragt und pausiert bei verstecktem
+  Fenster.
 
 - **Der Willkommens-Assistent sagt die 24 Minuten jetzt auch selbst** – die Zahl stand seit
   1.3.8 in den Einstellungen, also dort, wo ein Erstnutzer noch gar nicht war. Im
