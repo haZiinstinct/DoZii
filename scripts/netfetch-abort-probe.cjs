@@ -1,3 +1,4 @@
+/* global setTimeout, AbortController, AbortSignal */
 /**
  * Bricht net.fetch ab, solange der Server noch keine Antwortkopfzeilen
  * geschickt hat? Genau das muss der Stopp-Knopf auf Rechnern ohne
